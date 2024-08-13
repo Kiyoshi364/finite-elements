@@ -39,9 +39,24 @@ $$ \begin{cases}
 
 Contas:
 $$
-  TODO(Simplificar)
   - \alpha \; \frac{u_{i+1} - 2u_i + u_{i-1}}{h^2} + \beta \; u_i = f_i
+$$ $$
+  - \alpha \; u_{i+1} + \alpha \; 2u_i - \alpha \; u_{i-1} + \beta \; u_i \; h^2 = f_i \; h^2
+$$ $$
+  - \alpha \; u_{i+1} + (2\alpha + \beta \; h^2) \; u_i - \alpha \; u_{i-1} = f_i \; h^2
 $$
+Matrix template:
+$$ \begin{bmatrix}
+  2\alpha + \beta \; h^2 & -\alpha & 0 & 0 & 0 & \cdots & 0 \\
+  -\alpha & 2\alpha + \beta \; h^2 & -\alpha & 0 & 0 & \cdots & 0 \\
+  0 & -\alpha & 2\alpha + \beta \; h^2 & -\alpha & 0 & \cdots & 0 \\
+  0 & \ddots & \ddots & \ddots & \ddots & \cdots & \vdots \\
+  0 & \cdots & 0 & -\alpha & 2\alpha + \beta \; h^2 & -\alpha & 0 \\
+  0 & \cdots & 0 & 0 & -\alpha & 2\alpha + \beta \; h^2 & -\alpha \\
+  0 & \cdots & 0 & 0 & 0 & -\alpha & 2\alpha + \beta \; h^2 \\
+\end{bmatrix} \cdot u = \begin{bmatrix}
+  f_1 \; h^2 \\ \\ \\ \vdots \\ \\ \\ f_N \; h^2 \\
+\end{bmatrix} $$
 
 ### Exemplos
 
