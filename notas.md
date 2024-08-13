@@ -46,6 +46,7 @@ $$
 ### Exemplos
 
 * Seja $u(x) = x \; (x-1)$:
+
 $$
   - \alpha \; u_{xx}(x) + \beta \; u(x) = f(x)
   \Rightarrow
@@ -58,13 +59,14 @@ $$ \begin{cases}
   u(0) = u(1) = 0
 \end{cases} $$
 
-* Seja $u(x) = \sen (\pi \; x)$:
+* Seja $u(x) = sen (\pi \; x)$:
 $$
-  f(x) = \pi^2 \; \alpha \; \sen(\pi \; x) + \beta \; \sen(\pi \; x)
+  f(x) = \pi^2 \; \alpha \; sen(\pi \; x) + \beta \; sen(\pi \; x)
 $$
 Logo,
+
 $$ \begin{cases}
-  - \alpha \; u_{xx}(x) + \beta \; u(x) = \pi^2 \; \alpha \; \sen(\pi \; x) + \beta \; \sen(\pi \; x)
+  - \alpha \; u_{xx}(x) + \beta \; u(x) = \pi^2 \; \alpha \; sen(\pi \; x) + \beta \; sen(\pi \; x)
     \quad\text{, em } \Omega = (0, 1) \\
   u(0) = u(1) = 0
 \end{cases} $$
@@ -125,6 +127,7 @@ $$ \begin{cases}
 \end{cases} $$
 
 Notação:
+
 * $$
   a(u, v) =
   \alpha \; \int_0^1{ u_x(x) \; v_x(x) \; dx } + \beta \; \int_0^1{ u(x) \; v(x) \; dx }
