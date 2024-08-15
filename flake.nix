@@ -34,7 +34,14 @@
           };
       in {
         devShells = {
-          default = self.devShells.${system}.md;
+          default = self.devShells.${system}.julia;
+
+          julia = myShell {
+            name = "julia";
+            buildInputs = with pkgs; [
+              julia
+            ];
+          };
 
           md = myShell {
             name = "markdown";
