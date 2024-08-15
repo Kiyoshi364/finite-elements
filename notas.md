@@ -55,7 +55,7 @@ $$ \begin{bmatrix}
   0 & \cdots & 0 & 0 & -\alpha & 2\alpha + \beta \; h^2 & -\alpha \\
   0 & \cdots & 0 & 0 & 0 & -\alpha & 2\alpha + \beta \; h^2 \\
 \end{bmatrix} \cdot u = \begin{bmatrix}
-  f_1 \; h^2 \\ \\ \\ \vdots \\ \\ \\ f_N \; h^2 \\
+  f_1 \; h^2 + \alpha \; u_0 \\ f_2 \; h^2 \\ \\ \vdots \\ \\ f_{N-1} \; h^2 \\ f_N \; h^2 + \alpha \; u_{N+1} \\
 \end{bmatrix} $$
 
 ### Exemplos
