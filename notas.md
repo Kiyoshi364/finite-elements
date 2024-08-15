@@ -184,10 +184,10 @@ $$ \begin{cases}
 
 Logo, $u^h(x) = \sum_{j=1}^m c_j \; \Phi_j(x)$
 $$ \begin{cases}
-  a(\sum_{j=1}^m{ c_j \; \Phi_j }, v^h) = (f, v) \\
+  a(\sum_{j=1}^m{ c_j \; \Phi_j }, v^h) = (f, v^h) \\
   v^h \in V^h
 \end{cases} $$ $$ \begin{cases}
-  \sum_{j=1}^m{ c_j \; a(\Phi_j, v^h) } = (f, v) \\
+  \sum_{j=1}^m{ c_j \; a(\Phi_j, v^h) } = (f, v^h) \\
   v^h \in V^h
 \end{cases} $$
 
@@ -197,6 +197,7 @@ $$ \begin{cases}
 \end{cases} $$
 
 Notação:
+
 * $K_{i,j} = a(\Phi_j, \Phi_i)$
 * $F_i = (f, \Phi_i)$
 
@@ -211,7 +212,152 @@ $$
 S \Rightarrow W \Rightarrow G \Rightarrow M
 $$
 
-* $S$: Strong System
-* $W$: Weak   System
-* $G$: Galerk System (Discretização)
-* $M$: Matrix System
+* $S$: Strong   System
+* $W$: Weak     System
+* $G$: Galerkin System (Discretização)
+* $M$: Matrix   System
+
+---
+# Aula 2 -- 15-08-2024
+
+## Definindo base das funções $\Phi$
+
+Usando os $\Phi_i$, definido da seguinte forma:
+$$
+  \Phi_i(x) := \begin{cases}
+    0 &\quad\text{, if } 0 \le x < x_{i-1} \\
+    \frac{x - x_{i-1}}{x_i - x_{i-1}} &\quad\text{, if } x_{i-1} \le x < x_i \\
+    -\frac{x - x_i}{x_{i+1} - x_i} &\quad\text{, if } x_i \le x < x_{i+1} \\
+    0 &\quad\text{, if } x \le x_{i+1} \le 1 \\
+  \end{cases}
+$$
+Ou usando a notação $h_i = x_i - x_{i-1}$
+$$
+  \Phi_i(x) := \begin{cases}
+    0 &\quad\text{, if } 0 \le x < x_{i-1} \\
+    \frac{x - x_{i-1}}{h_i} &\quad\text{, if } x_{i-1} \le x < x_i \\
+    \frac{x_i - x}{h_{i+1}} &\quad\text{, if } x_i \le x < x_{i+1} \\
+    0 &\quad\text{, if } x \le x_{i+1} \le 1 \\
+  \end{cases}
+$$
+
+Temos:
+
+* Como (quando $|i - j| \ge 2$
+  $\Phi_i(x) \; \Phi_j(x) = 0$),
+  $\mathbb{K}$ é tridiagonal
+* Se $$
+  \Phi_j(x_i) = \begin{cases}
+    1 &\quad\text{, if } i = j \\
+    0 &\quad\text{, if } i \ne j \\
+  \end{cases}
+$$ então $$
+  u^h(x_i)
+  = \sum_{j = 1}^m c_j \; \Phi_j(x_i)
+  = c_i
+$$
+
+Contas para $K_{i, i}$:
+
+$$
+  K_{i, i}
+$$ $$
+  a(\Phi_i, \Phi_i)
+$$ $$
+  \alpha \; \int_0^1{ \frac{d \Phi_i}{dx}(x) \; \frac{d \Phi_i}{dx}(x) \; dx }
+    + \beta \; \int_0^1{ \Phi_i(x) \; \Phi_i(x) \; dx }
+$$ $$
+  \alpha \; \int_{x_{i-1}}^{x_{i+1}}{ \frac{d \Phi_i}{dx}(x) \; \frac{d \Phi_i}{dx}(x) \; dx }
+    + \beta \; \int_{x_{i-1}}^{x_{i+1}}{ \Phi_i(x) \; \Phi_i(x) \; dx }
+$$ $$
+  \alpha \; \int_{x_{i-1}}^{x_i}{ \frac{d \Phi_i}{dx}(x) \; \frac{d \Phi_i}{dx}(x) \; dx }
+    + \alpha \; \int_{x_i}^{x_{i+1}}{ \frac{d \Phi_i}{dx}(x) \; \frac{d \Phi_i}{dx}(x) \; dx }
+    + \beta \; \int_{x_{i-1}}^{x_i}{ \Phi_i(x) \; \Phi_i(x) \; dx }
+    + \beta \; \int_{x_i}^{x_{i+1}}{ \Phi_i(x) \; \Phi_i(x) \; dx }
+$$ $$
+  \alpha \; \int_{x_{i-1}}^{x_i}{ \frac{1}{h_i} \; \frac{1}{h_i} \; dx }
+    + \alpha \; \int_{x_i}^{x_{i+1}}{ \frac{-1}{h_{i+1}} \; \frac{-1}{h_{i+1}} \; dx }
+    + \beta \; \int_{x_{i-1}}^{x_i}{ \frac{x - x_{i-1}}{h_i} \; \frac{x - x_{i-1}}{h_i} \; dx }
+    + \beta \; \int_{x_i}^{x_{i+1}}{ \frac{x_{i+1} - x}{h_{i+1}} \; \frac{x_{i+1} - x}{h_{i+1}} \; dx }
+$$ $$
+  \frac{\alpha}{{h_i}^2} \; h_i
+    + \frac{\alpha}{{h_{i+1}}^2} \; h_{i+1}
+    + \frac{\beta}{{h_i}^2} \; \left( \frac{(x - x_{i-1})^3}{3} \right|_{x_i}^{x_{i-1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \left( \frac{(-1) \; (x_{i+1} - x)^3}{3} \right|_{x_{i+1}}^{x_i}
+$$ $$
+  \alpha \; \left( \frac{1}{h_i} + \frac{1}{h_{i+1}} \right)
+    + \beta \; \left( \frac{h_i}{3} + \frac{h_{i+1}}{3} \right)
+$$
+
+Contas para $K_{i, i+1}$ e $K_{i+1, i}$:
+$$
+  K_{i, i+1} = K_{i+1, i}
+$$ $$
+  a(\Phi_i, \Phi_{i+1})
+$$ $$
+  \alpha \; \int_0^1{ \frac{d \Phi_i}{dx}(x) \; \frac{d \Phi_{i+1}}{dx}(x) \; dx }
+    + \beta \; \int_0^1{ \Phi_i(x) \; \Phi_{i+1}(x) \; dx }
+$$ $$
+  \alpha \; \int_{x_i}^{x_{i+1}}{ \frac{d \Phi_i}{dx}(x) \; \frac{d \Phi_{i+1}}{dx}(x) \; dx }
+    + \beta \; \int_{x_i}^{x_{i+1}}{ \Phi_i(x) \; \Phi_{i+1}(x) \; dx }
+$$ $$
+  \alpha \; \int_{x_i}^{x_{i+1}}{ \left( \frac{-1}{h_{i+1}} \right) \; \left( \frac{1}{h_{i+1}} \right) \; dx }
+    + \beta \; \int_{x_i}^{x_{i+1}}{ \left( \frac{x_{i+1} - x}{h_{i+1}} \right) \; \left( \frac{x - x_i}{h_{i+1}} \right) \; dx }
+$$ $$
+  \frac{-\alpha}{{h_{i+1}}^2} \; h_{i+1}
+    + \beta \; \int_{x_i}^{x_{i+1}}{ \left( \frac{x_{i+1} - x}{h_{i+1}} \right) \; \left( \frac{x - x_i}{h_{i+1}} \right) \; dx }
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \int_{x_i}^{x_{i+1}}{ (x_{i+1} - x) \; (x - x_i) \; dx }
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \int_{x_i}^{x_{i+1}}{ (-x^2 + (x_{i+1} + x_i)x - x_{i+1}x_i) \; dx }
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \left( -\frac{x^3}{3} + (x_{i+1} + x_i)\frac{x^2}{2} - x_{i+1}x_ix \right|_{x_i}^{x_{i+1}}
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \left( -\frac{{x_{i+1}}^3 - {x_i}^3}{3} + (x_{i+1} + x_i)\frac{{x_{i+1}}^2 - {x_i}^2}{2} - x_{i+1}x_i(x_{i+1} - x_i) \right)
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \left( -\frac{{x_{i+1}}^3 - {x_i}^3}{3} + \frac{{x_{i+1}}^3 + {x_{i+1}}^2x_i - x_{i+1}{x_i}^2 - {x_i}^3}{2} - {x_{i+1}}^2x_i + x_{i+1}{x_i}^2 \right)
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \left( -\frac{{x_{i+1}}^3 - {x_i}^3}{3} + \frac{{x_{i+1}}^3 + {x_{i+1}}^2x_i - x_{i+1}{x_i}^2 - {x_i}^3}{2} - {x_{i+1}}^2x_i + x_{i+1}{x_i}^2 \right)
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \left( -2{x_{i+1}}^3 - 2{x_i}^3 + 3{x_{i+1}}^3 + 3{x_{i+1}}^2x_i - 3x_{i+1}{x_i}^2 - 3{x_i}^3 - 6{x_{i+1}}^2x_i + 6x_{i+1}{x_i}^2 \right)
+$$ TODO $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{{h_{i+1}}^2} \; \left( {x_{i+1}}^3 - 2{x_i}^3 + 3{x_{i+1}}^2x_i - 3x_{i+1}{x_i}^2 - 3{x_i}^3 - 6{x_{i+1}}^2x_i + 6x_{i+1}{x_i}^2 \right)
+$$
+
+Contas para $F_i$:
+$$
+  F_i
+$$ $$
+  \int_0^1{ f(x) \; \Phi_i(x) dx }
+$$ $$
+  \int_{x_{i-1}}^{x_{i+1}}{ f(x) \; \Phi_i(x) dx }
+$$ TODO $$
+  asdf
+$$
+
+Então:
+$$
+  K_{i, i} =
+  \alpha \; \left( \frac{1}{h_i} + \frac{1}{h_{i+1}} \right)
+    + \beta \; \left( \frac{h_i}{3} + \frac{h_{i+1}}{3} \right)
+$$ $$
+  K_{i, i+1} = K_{i, i+1} =
+  -\frac{\alpha}{h_{i+1}} + \frac{\beta}{6} \; h_{i+1}
+$$ $$
+  F_i =
+  ???
+$$
+
+Passo a passo:
+
+1. Montar $\mathbb{K}$
+2. Montar $\mathbb{F}$
+3. Resolver $\mathbb{K} \; \mathbb{C} = \mathbb{F}$
