@@ -1,5 +1,5 @@
 # begin utils
-deep(f, xs) = f.(xs)
+broadcast(f, xs) = f.(xs)
 # end utils
 
 using LinearAlgebra
@@ -70,7 +70,7 @@ uhs = finite_difference.(func, alpha, beta, bgn, nd, Ns)
 us = build_vec.(exact, 0, bgn, nd, 1, Ns)
 
 # errs = norm.(uhs .- us) ./ norm.(us)
-errs = maximum.(deep.(abs, (uhs .- us)))
+errs = maximum.(broadcast.(abs, (uhs .- us)))
 
 println(errs[1])
 for i = 2:length(errs)
