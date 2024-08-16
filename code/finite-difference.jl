@@ -40,8 +40,8 @@ function build_vec(f, alpha, a, b, hsqr, dim)
     return ret
 end
 
-function finite_difference(f, alpha, beta, r_begin, r_end, N)
-    h = (r_end - r_begin) / (N + 1)
+function finite_difference(f, alpha, beta, r_begin, r_end, h, N)
+    @assert h == (r_end - r_begin) / (N + 1)
     hsqr = h * h
     A = build_mat(alpha, beta, hsqr, N)
     b = build_vec(f, alpha, r_begin, r_end, hsqr, N)
@@ -65,7 +65,8 @@ func(x) = (deriv_2(x) * alpha) + (beta * exact(x))
 min_max = 3:10
 
 Ns = (1 .<< min_max) .- 1
-uhs = finite_difference.(func, alpha, beta, bgn, nd, Ns)
+hs = (nd - bgn) ./ (Ns .+ 1)
+uhs = finite_difference.(func, alpha, beta, bgn, nd, hs, Ns)
 
 us = build_vec.(exact, 0, bgn, nd, 1, Ns)
 
