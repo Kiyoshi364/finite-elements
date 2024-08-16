@@ -1,8 +1,13 @@
+module FiniteDifferences
+
 # begin utils
 broadcast(f, xs) = f.(xs)
 # end utils
 
 using LinearAlgebra
+using Plots
+using LaTeXStrings
+using DataFrames
 
 function build_mat(alpha, beta, hsqr, dim)
     #    (,~ $ ] }.@,@# 1 2 1 ,:@, 0 $~ 0>.-&2)
@@ -73,8 +78,19 @@ us = build_vec.(exact, 0, bgn, nd, 1, Ns)
 # errs = norm.(uhs .- us) ./ norm.(us)
 errs = maximum.(broadcast.(abs, (uhs .- us)))
 
-println(errs[1])
-for i = 2:length(errs)
-    println("div: ", errs[i-1]/errs[i])
-    println(errs[i])
-end
+display(DataFrame(h=hs, error=errs))
+
+p = plot(hs, hs .* hs,
+    label=L"$O(h^2)$",
+    yscale=:log10,
+    xscale=:log10,
+    xlabel=L"log_2(h)",
+    legend=:bottomright,
+)
+plot!(p, hs, errs,
+    label="finite-difference errors",
+    markershape=:circle,
+)
+savefig(p, "out.pdf")
+
+end # module FiniteDifferences
