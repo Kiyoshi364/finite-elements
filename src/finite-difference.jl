@@ -49,7 +49,7 @@ function build_vec(f, hsqr, dim;
     return ret
 end
 
-function finite_difference(f, alpha, beta, h, N;
+function finite_differences(f, alpha, beta, h, N;
     ux_begin=0, ux_end=0,
     x_begin=0, x_end=1,
 )
@@ -83,7 +83,7 @@ min_max = 2:10
 
 Ns = (1 .<< min_max) .- 1
 hs = (x_end - x_begin) ./ (Ns .+ 1)
-uhs = finite_difference.(func, alpha, beta, hs, Ns,
+uhs = finite_differences.(func, alpha, beta, hs, Ns,
     ux_begin=exact(x_begin),
     ux_end=exact(x_end),
     x_begin=x_begin,
