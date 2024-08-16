@@ -1,3 +1,7 @@
+# begin utils
+deep(f, xs) = f.(xs)
+# end utils
+
 using LinearAlgebra
 
 function build_mat(alpha, beta, hsqr, dim)
@@ -36,6 +40,15 @@ function build_vec(f, alpha, a, b, hsqr, dim)
     return ret
 end
 
+function finite_difference(f, alpha, beta, r_begin, r_end, N)
+    h = (r_end - r_begin) / (N + 1)
+    hsqr = h * h
+    A = build_mat(alpha, beta, hsqr, N)
+    b = build_vec(f, alpha, r_begin, r_end, hsqr, N)
+    uh = A \ b
+    return uh
+end
+
 bgn, nd = 0, 1
 alpha = 1
 beta = 2
@@ -49,27 +62,18 @@ else
 end
 func(x) = (deriv_2(x) * alpha) + (beta * exact(x))
 
-last_err = nothing
-for i = 3:10
-    N = (1 << i) - 1
-    h = (nd - bgn) / (N + 1)
-    hsqr = h*h
-    A = build_mat(alpha, beta, hsqr, N)
-    # display(A)
-    b = build_vec(func, alpha, bgn, nd, hsqr, N)
-    # display(b)
-    uh = A \ b
-    # display(uh)
-    u = build_vec(exact, 0, bgn, nd, 1, N)
-    # display(u)
-    # err = norm(uh - u)/norm(u)
-    err = maximum(abs.(uh - u))
-    if last_err == nothing
-        nothing
-    else
-        print("div: ")
-        println(last_err/err)
-    end
-    global last_err = err
-    println(err)
+min_max = 3:10
+
+Ns = (1 .<< min_max) .- 1
+uhs = finite_difference.(func, alpha, beta, bgn, nd, Ns)
+
+us = build_vec.(exact, 0, bgn, nd, 1, Ns)
+
+# errs = norm.(uhs .- us) ./ norm.(us)
+errs = maximum.(deep.(abs, (uhs .- us)))
+
+println(errs[1])
+for i = 2:length(errs)
+    println("div: ", errs[i-1]/errs[i])
+    println(errs[i])
 end
