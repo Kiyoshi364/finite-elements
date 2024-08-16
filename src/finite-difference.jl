@@ -26,54 +26,74 @@ function build_mat(alpha, beta, hsqr, dim)
     return ret
 end
 
-function build_vec(f, alpha, a, b, hsqr, dim)
+function build_vec(f, hsqr, dim;
+    alpha=1,
+    ux_begin=0, ux_end=0,
+    x_begin=0, x_end=1,
+)
     @assert dim >= 2
 
     offset = cat(
-        [f(a) * alpha],
+        [ux_begin * alpha],
         fill(0, (dim-2,)),
-        [f(b) * alpha],
+        [ux_end * alpha],
     dims=1)
 
     inter = (1:dim) ./ (dim+1)
-    xs = (b - a) * inter .+ a
+    xs = (x_end - x_begin) * inter .+ x_begin
     fxs = f.(xs)
     fs = fxs * hsqr
-    sum = fs .+ offset
+    sum = fs + offset
 
     ret = sum
     return ret
 end
 
-function finite_difference(f, alpha, beta, r_begin, r_end, h, N)
-    @assert h == (r_end - r_begin) / (N + 1)
+function finite_difference(f, alpha, beta, h, N;
+    ux_begin=0, ux_end=0,
+    x_begin=0, x_end=1,
+)
+    @assert h == (x_end - x_begin) / (N + 1)
     hsqr = h * h
     A = build_mat(alpha, beta, hsqr, N)
-    b = build_vec(f, alpha, r_begin, r_end, hsqr, N)
+    b = build_vec(f, hsqr, N,
+        alpha=alpha,
+        ux_begin=ux_begin, ux_end=ux_end,
+        x_begin=x_begin, x_end=x_end,
+    )
     uh = A \ b
     return uh
 end
 
-bgn, nd = 0, 1
-alpha = 1
-beta = 2
+x_begin, x_end = 0, 1
+alpha, beta = 1, 1
 
 if true
     exact(x) = x * (x-1)
-    deriv_2(x) = -2
+    deriv_2(x) = 2
 else
     exact(x) = sin(pi * x)
-    deriv_2(x) = pi * pi * sin(pi * x)
+    deriv_2(x) = - pi * pi * sin(pi * x)
 end
-func(x) = (deriv_2(x) * alpha) + (beta * exact(x))
+func(x) = (deriv_2(x) * (- alpha)) + (beta * exact(x))
+@assert abs(exact(0.0) - 0.0) < 1e-10
+@assert abs(exact(1.0) - 0.0) < 1e-10
 
-min_max = 3:10
+min_max = 2:10
 
 Ns = (1 .<< min_max) .- 1
-hs = (nd - bgn) ./ (Ns .+ 1)
-uhs = finite_difference.(func, alpha, beta, bgn, nd, hs, Ns)
+hs = (x_end - x_begin) ./ (Ns .+ 1)
+uhs = finite_difference.(func, alpha, beta, hs, Ns,
+    ux_begin=exact(x_begin),
+    ux_end=exact(x_end),
+    x_begin=x_begin,
+    x_end=x_end,
+)
 
-us = build_vec.(exact, 0, bgn, nd, 1, Ns)
+us = build_vec.(exact, 1, Ns,
+    x_begin=x_begin,
+    x_end=x_end,
+)
 
 # errs = norm.(uhs .- us) ./ norm.(us)
 errs = maximum.(broadcast.(abs, (uhs .- us)))
@@ -85,7 +105,7 @@ p = plot(hs, hs .* hs,
     yscale=:log10,
     xscale=:log10,
     xlabel=L"log_2(h)",
-    legend=:bottomright,
+    legend=:topleft,
 )
 plot!(p, hs, errs,
     label="finite-difference errors",
