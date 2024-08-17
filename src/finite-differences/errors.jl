@@ -9,7 +9,7 @@ using Plots
 using LaTeXStrings
 using DataFrames
 
-ex = example(0x0, 0x0)
+exact, ex = example(0x0, 0x0)
 
 min_max = 2:10
 
@@ -18,7 +18,7 @@ hs = (ex.x_end - ex.x_begin) ./ (Ns .+ 1)
 uhs = finite_differences.(ex, hs, Ns)
 
 xss = Common.n_points_from_to.(Ns, from=ex.x_begin, to=ex.x_end)
-us = broadcast.(ex.exact, xss)
+us = broadcast.(exact, xss)
 
 errs = Common.calc_error.(uhs, us)
 

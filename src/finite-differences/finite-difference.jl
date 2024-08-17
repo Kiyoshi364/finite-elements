@@ -6,7 +6,6 @@ export Example, example
 using LinearAlgebra
 
 struct Example
-    exact
     f
     alpha :: Number
     beta :: Number
@@ -15,7 +14,7 @@ struct Example
     x_begin :: Number
     x_end :: Number
 
-    Example(exact, f;
+    Example(f;
         alpha    :: Number = 1,
         beta     :: Number = 1,
         ux_begin :: Number = 0,
@@ -23,7 +22,6 @@ struct Example
         x_begin  :: Number = 0,
         x_end    :: Number = 1
     ) = new(
-        exact,
         f,
         alpha,
         beta,
@@ -34,7 +32,6 @@ struct Example
     )
 
     Example(ex :: Example;
-        exact                             = nothing,
         f                                 = nothing,
         alpha    :: Union{Nothing,Number} = nothing,
         beta     :: Union{Nothing,Number} = nothing,
@@ -43,7 +40,6 @@ struct Example
         x_begin  :: Union{Nothing,Number} = nothing,
         x_end    :: Union{Nothing,Number} = nothing
     ) = Example(
-        (exact === nothing ? ex.exact : exact),
         (f     === nothing ? ex.f     : f    ),
         alpha   =(alpha    === nothing ? ex.alpha    : alpha   ),
         beta    =(beta     === nothing ? ex.beta     : beta    ),
@@ -181,7 +177,7 @@ function example_index(var_index :: UInt8) :: Example
         )
     end
 
-    Example(nothing, nothing,
+    Example(nothing,
         alpha=alpha,
         beta=beta,
         x_begin=x_begin,
@@ -189,10 +185,10 @@ function example_index(var_index :: UInt8) :: Example
     )
 end
 
-function example(f_index :: UInt8, var_index :: UInt8 = 0) :: Example
+function example(f_index :: UInt8, var_index :: UInt8 = 0) :: Tuple{Any, Example}
     ex = example_index(var_index)
     exact, f = function_index(f_index, ex.alpha, ex.beta)
-    Example(ex, exact=exact, f=f,
+    exact, Example(ex, f=f,
         ux_begin=exact(ex.x_begin),
         ux_end=exact(ex.x_end),
     )
