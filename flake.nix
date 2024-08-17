@@ -43,6 +43,13 @@
             ];
           };
 
+          pdf = myShell {
+            name = "zathura";
+            buildInputs = with pkgs; [
+              zathura
+            ];
+          };
+
           md = myShell {
             name = "markdown";
             buildInputs = with pkgs; [
