@@ -2,10 +2,6 @@ module FiniteDifferences
 
 export finite_differences
 
-include("../hutils.jl")
-
-using .Hutils: broadcast
-
 using LinearAlgebra
 
 function build_mat(alpha, beta, hsqr, dim)
