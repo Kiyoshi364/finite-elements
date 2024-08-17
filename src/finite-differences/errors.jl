@@ -26,13 +26,14 @@ us = broadcast.(ex.exact, xss)
 # errs = norm.(uhs .- us) ./ norm.(us)
 errs = maximum.(broadcast.(abs, (uhs .- us)))
 
-display(DataFrame(h=hs, error=errs))
+display(DataFrame(N=min_max, h=hs, error=errs))
 
 p = plot(hs, hs .* hs,
     label=L"$O(h^2)$",
     yscale=:log10,
     xscale=:log10,
     xlabel=L"log_2(h)",
+    ylabel=L"log_2",
     legend=:topleft,
 )
 plot!(p, hs, errs,
