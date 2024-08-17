@@ -326,10 +326,19 @@ $$ $$
     + \frac{\beta}{{h_{i+1}}^2} \; \left( -\frac{{x_{i+1}}^3 - {x_i}^3}{3} + \frac{{x_{i+1}}^3 + {x_{i+1}}^2x_i - x_{i+1}{x_i}^2 - {x_i}^3}{2} - {x_{i+1}}^2x_i + x_{i+1}{x_i}^2 \right)
 $$ $$
   \frac{-\alpha}{h_{i+1}}
-    + \frac{\beta}{{h_{i+1}}^2} \; \left( -2{x_{i+1}}^3 - 2{x_i}^3 + 3{x_{i+1}}^3 + 3{x_{i+1}}^2x_i - 3x_{i+1}{x_i}^2 - 3{x_i}^3 - 6{x_{i+1}}^2x_i + 6x_{i+1}{x_i}^2 \right)
-$$ TODO $$
+    + \frac{\beta}{6{h_{i+1}}^2} \; ( -2{x_{i+1}}^3 + 2{x_i}^3 + 3{x_{i+1}}^3 + 3{x_{i+1}}^2x_i - 3x_{i+1}{x_i}^2 - 3{x_i}^3 - 6{x_{i+1}}^2x_i + 6x_{i+1}{x_i}^2 )
+$$ $$
   \frac{-\alpha}{h_{i+1}}
-    + \frac{\beta}{{h_{i+1}}^2} \; \left( {x_{i+1}}^3 - 2{x_i}^3 + 3{x_{i+1}}^2x_i - 3x_{i+1}{x_i}^2 - 3{x_i}^3 - 6{x_{i+1}}^2x_i + 6x_{i+1}{x_i}^2 \right)
+    + \frac{\beta}{6{h_{i+1}}^2} \; ( {x_{i+1}}^3 - {x_i}^3 - 3{x_{i+1}}^2x_i + 3x_{i+1}{x_i}^2 )
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{6{h_{i+1}}^2} \; (x_{i+1} - x_i)^3
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{6{h_{i+1}}^2} \; {h_{i+1}}^3
+$$ $$
+  \frac{-\alpha}{h_{i+1}}
+    + \frac{\beta}{6} \; h_{i+1}
 $$
 
 Contas para $F_i$:
@@ -339,8 +348,28 @@ $$ $$
   \int_0^1{ f(x) \; \Phi_i(x) dx }
 $$ $$
   \int_{x_{i-1}}^{x_{i+1}}{ f(x) \; \Phi_i(x) dx }
-$$ TODO $$
-  asdf
+$$ $$
+  \int_{x_{i-1}}^{x_i}{ f(x) \; \Phi_i(x) dx }
+    + \int_{x_i}^{x_{i+1}}{ f(x) \; \Phi_i(x) dx }
+$$ $$
+  \int_{x_{i-1}}^{x_i}{ f(x) \; \frac{x - x_{i-1}}{h_i} dx }
+    + \int_{x_i}^{x_{i+1}}{ f(x) \; \frac{x_i - x}{h_{i+1}} dx }
+$$ $$
+  \frac{1}{h_i} \; \int_{x_{i-1}}^{x_i}{ f(x) \; (x - x_{i-1}) dx }
+    + \frac{1}{h_{i+1}} \int_{x_i}^{x_{i+1}}{ f(x) \; (x_i - x) dx }
+$$ $$
+  \frac{1}{h_i} \; \left[ \left( f^*(x) \; (x - x_{i-1}) \right|_{x_{i-1}}^{x_i} - \int_{x_{i-1}}^{x_i}{ f^*(x) dx } \right]
+    + \frac{1}{h_{i+1}} \left[ \left( f^*(x) \; (x_i - x) \right|_{x_i}^{x_{i+1}} + \int_{x_i}^{x_{i+1}}{ f^*(x) dx } \right]
+$$ $$
+  \frac{1}{h_i} \; \left[ (f^*(x_i) \; (x_i - x_{i-1}) - f^*(x_{i-1}) \; (x_{i-1} - x_{i-1})) - \left( f^{*2}(x) \right|_{x_{i-1}}^{x_i} \right]
+    + \frac{1}{h_{i+1}} \left[ (f^*(x_{i+1}) \; (x_i - x_{i+1}) - f^*(x_i) \; (x_i - x_i)) + \left( f^{*2}(x) \right|_{x_i}^{x_{i+1}} \right]
+$$ $$
+  \frac{1}{h_i} \; \left[ f^*(x_i) \; h_i - ( f^{*2}(x_{i-1}) - f^{*2}(x_i) ) \right]
+    + \frac{1}{h_{i+1}} \left[ - f^*(x_{i+1}) \; h_{i+1} + ( f^{*2}(x_i) - f^{*2}(x_{i+1}) ) \right]
+$$ $$
+  f^*(x_i) - f^*(x_{i+1})
+    + \frac{f^{*2}(x_i) - f^{*2}(x_{i-1})}{h_i}
+    + \frac{f^{*2}(x_i) - f^{*2}(x_{i+1})}{h_{i+1}}
 $$
 
 Então:
