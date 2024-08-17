@@ -1,6 +1,6 @@
 include("finite-difference.jl")
 
-using .FiniteDifferences: finite_differences
+using .FiniteDifferences: finite_differences, example
 
 using Plots
 using LaTeXStrings
@@ -12,35 +12,16 @@ function n_points_from_to(n; from=0, to=1)
     xs
 end
 
-x_begin, x_end = 0, 1
-alpha, beta = 1, 1
-
-if true
-    exact(x) = x * (x-1)
-    deriv_2(x) = 2
-else
-    exact(x) = sin(pi * x)
-    deriv_2(x) = - pi * pi * sin(pi * x)
-end
-func(x) = (deriv_2(x) * (- alpha)) + (beta * exact(x))
-@assert abs(exact(0.0) - 0.0) < 1e-10
-@assert abs(exact(1.0) - 0.0) < 1e-10
+ex = example(0x0, 0x0)
 
 min_max = 2:10
 
 Ns = (1 .<< min_max) .- 1
-hs = (x_end - x_begin) ./ (Ns .+ 1)
-uhs = finite_differences.(func, alpha, beta, hs, Ns,
-    ux_begin=exact(x_begin),
-    ux_end=exact(x_end),
-    x_begin=x_begin,
-    x_end=x_end,
-)
+hs = (ex.x_end - ex.x_begin) ./ (Ns .+ 1)
+uhs = finite_differences.(ex, hs, Ns)
 
-us = broadcast.(
-    exact,
-    n_points_from_to.(Ns, from=x_begin, to=x_end)
-)
+xss = n_points_from_to.(Ns, from=ex.x_begin, to=ex.x_end)
+us = broadcast.(ex.exact, xss)
 
 # errs = norm.(uhs .- us) ./ norm.(us)
 errs = maximum.(broadcast.(abs, (uhs .- us)))
