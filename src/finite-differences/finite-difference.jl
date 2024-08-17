@@ -170,9 +170,9 @@ function example_index(var_index :: UInt8) :: Example
         bsize += alloc
         (
             i == 0 ? 1.0 :
-            i == 1 ? 2.0 :
+            i == 1 ? 2.5 :
             i == 2 ? 0.5 :
-            i == 3 ? -1.0 :
+            i == 3 ? -1.5 :
             error("x_end index out of bounds")
         )
     end
