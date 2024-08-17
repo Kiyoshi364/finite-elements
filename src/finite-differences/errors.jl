@@ -9,7 +9,7 @@ using DataFrames
 function n_points_from_to(n; from=0, to=1)
     inter = (1:n) ./ (n+1)
     xs = (to - from) * inter .+ from
-    return xs
+    xs
 end
 
 x_begin, x_end = 0, 1

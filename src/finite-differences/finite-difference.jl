@@ -22,7 +22,7 @@ function build_mat(alpha, beta, hsqr, dim)
     flat = cat(templates..., dims=1)
     un_headed = flat[2:end-(dim-1)]
     ret = reshape(un_headed, (dim, dim))
-    return ret
+    ret
 end
 
 function build_vec(f, hsqr, dim;
@@ -45,7 +45,7 @@ function build_vec(f, hsqr, dim;
     sum = fs + offset
 
     ret = sum
-    return ret
+    ret
 end
 
 function finite_differences(f, alpha, beta, h, N;
@@ -61,7 +61,7 @@ function finite_differences(f, alpha, beta, h, N;
         x_begin=x_begin, x_end=x_end,
     )
     uh = A \ b
-    return uh
+    uh
 end
 
 end # module FiniteDifferences
