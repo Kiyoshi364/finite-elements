@@ -1,16 +1,13 @@
 include("finite-difference.jl")
+include("../common.jl")
+
+import .Common: calc_error, n_points_from_to
 
 using .FiniteDifferences: finite_differences, example
 
 using Plots
 using LaTeXStrings
 using DataFrames
-
-function n_points_from_to(n; from=0, to=1)
-    inter = (1:n) ./ (n+1)
-    xs = (to - from) * inter .+ from
-    xs
-end
 
 ex = example(0x0, 0x0)
 
@@ -20,11 +17,10 @@ Ns = (1 .<< min_max) .- 1
 hs = (ex.x_end - ex.x_begin) ./ (Ns .+ 1)
 uhs = finite_differences.(ex, hs, Ns)
 
-xss = n_points_from_to.(Ns, from=ex.x_begin, to=ex.x_end)
+xss = Common.n_points_from_to.(Ns, from=ex.x_begin, to=ex.x_end)
 us = broadcast.(ex.exact, xss)
 
-# errs = norm.(uhs .- us) ./ norm.(us)
-errs = maximum.(broadcast.(abs, (uhs .- us)))
+errs = Common.calc_error.(uhs, us)
 
 display(DataFrame(N=min_max, h=hs, error=errs))
 
