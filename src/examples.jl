@@ -49,7 +49,12 @@ struct Example
     Base.broadcastable(x :: Example) = Ref(x)
 end
 
-function function_index(f_index :: UInt8, alpha :: Number, beta :: Number)
+struct Function
+    exact
+    deriv_2
+end
+
+function function_index(f_index :: UInt8, alpha :: Number, beta :: Number) :: Function
     i = f_index
     exact, deriv_2 = (
       i == 0 ? (x -> x + ((exp(-x) - exp(x)) / (exp(1) - exp(-1))), (x -> (exp(-x) - exp(x)) / (exp(1) - exp(-1)))) :
@@ -57,8 +62,7 @@ function function_index(f_index :: UInt8, alpha :: Number, beta :: Number)
       i == 2 ? (x -> sin(pi * x), x -> - pi * pi * sin(pi * x)) :
       error("function_index out of bounds")
     )
-    f = x -> ((- alpha) * deriv_2(x)) + (beta * exact(x))
-    exact, f
+    Function(exact, deriv_2)
 end
 
 function example_index(var_index :: UInt8) :: Example
@@ -120,12 +124,12 @@ function example_index(var_index :: UInt8) :: Example
     )
 end
 
-function example(f_index :: UInt8, var_index :: UInt8 = 0) :: Tuple{Any, Example}
+function example(f_index :: UInt8, var_index :: UInt8 = 0) :: Tuple{Function, Example}
     ex = example_index(var_index)
-    exact, f = function_index(f_index, ex.alpha, ex.beta)
-    exact, Example(ex, f=f,
-        ux_begin=exact(ex.x_begin),
-        ux_end=exact(ex.x_end),
+    func = function_index(f_index, ex.alpha, ex.beta)
+    func, Example(ex,
+        ux_begin=func.exact(ex.x_begin),
+        ux_end=func.exact(ex.x_end),
     )
 end
 
