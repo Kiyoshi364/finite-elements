@@ -12,7 +12,7 @@ export Example, example
 using LinearAlgebra
 
 function build_mat(alpha, beta, hsqr, dim)
-    @assert dim >= 2
+    @assert dim >= 1
     @assert alpha > 0
     a = - alpha
     b = (2 * alpha) + (beta * hsqr)
