@@ -437,6 +437,8 @@ $$ $$
   \frac{h}{6} \; (6 \; x_i + h)
 $$ $$
   x_i + \frac{h^2}{6}
+$$ TODO $$
+  x_i * h
 $$
 
 * Seja $u(x) = x \; (x-1)$ e
