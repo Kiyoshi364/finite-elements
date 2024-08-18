@@ -365,11 +365,14 @@ $$ $$
     + \frac{1}{h_{i+1}} \left[ (f^*(x_{i+1}) \; (x_i - x_{i+1}) - f^*(x_i) \; (x_i - x_i)) + \left( f^{*2}(x) \right|_{x_i}^{x_{i+1}} \right]
 $$ $$
   \frac{1}{h_i} \; \left[ f^*(x_i) \; h_i - ( f^{*2}(x_{i-1}) - f^{*2}(x_i) ) \right]
-    + \frac{1}{h_{i+1}} \left[ - f^*(x_{i+1}) \; h_{i+1} + ( f^{*2}(x_i) - f^{*2}(x_{i+1}) ) \right]
+    + \frac{1}{h_{i+1}} \left[ - f^*(x_{i+1}) \; h_{i+1} + ( f^{*2}(x_{i+1}) - f^{*2}(x_i) ) \right]
+$$ $$
+  \frac{1}{h_i} \; \left[ f^*(x_i) \; h_i + ( f^{*2}(x_i) - f^{*2}(x_{i-1}) ) \right]
+    + \frac{1}{h_{i+1}} \left[ - f^*(x_{i+1}) \; h_{i+1} + ( f^{*2}(x_{i+1}) - f^{*2}(x_i) ) \right]
 $$ $$
   f^*(x_i) - f^*(x_{i+1})
     + \frac{f^{*2}(x_i) - f^{*2}(x_{i-1})}{h_i}
-    + \frac{f^{*2}(x_i) - f^{*2}(x_{i+1})}{h_{i+1}}
+    + \frac{f^{*2}(x_{i+1}) - f^{*2}(x_i)}{h_{i+1}}
 $$
 
 Então:
@@ -390,3 +393,58 @@ Passo a passo:
 1. Montar $\mathbb{K}$
 2. Montar $\mathbb{F}$
 3. Resolver $\mathbb{K} \; \mathbb{C} = \mathbb{F}$
+
+### Exemplos
+
+* Seja $u(x) = x + \frac{e^{-x} - e^x}{e^1 - e^{-1}}$ e
+  $f(x) = x$:
+
+$$
+  F_i
+$$ $$
+  \int_{x_{i-1}}^{x_i}{ x \; \frac{x - x_{i-1}}{h_i} dx }
+    + \int_{x_i}^{x_{i+1}}{ x \; \frac{x_i - x}{h_{i+1}} dx }
+$$ $$
+  \frac{1}{h_i} \; \int_{x_{i-1}}^{x_i}{ x^2 - x \; x_{i-1} dx }
+    + \frac{1}{h_{i+1}} \; \int_{x_i}^{x_{i+1}}{ x_i \; x - x^2 dx }
+$$ $$
+  \frac{1}{h_i} \; \left( \frac{x^3}{3} - \frac{x^2 \; x_{i-1}}{2} \right|_{x_{i-1}}^{x_i}
+    + \frac{1}{h_{i+1}} \; \left( \frac{x_i \; x^2}{2} - \frac{x^3}{3} \right|_{x_i}^{x_{i+1}}
+$$ $$
+  \frac{1}{6 \; h_i} \; \left( 2 \; x^3 - 3 \; x^2 \; x_{i-1} \right|_{x_{i-1}}^{x_i}
+    + \frac{1}{6 \; h_{i+1}} \; \left( 3 \; x_i \; x^2 - 2 \; x^3 \right|_{x_i}^{x_{i+1}}
+$$ $$
+  \frac{1}{6 \; h_i} \; ( 2 \; {x_i}^3 - 3 \; {x_i}^2 \; x_{i-1} - 2 \; {x_{i-1}}^3 + 3 \; {x_{i-1}}^3 )
+    + \frac{1}{6 \; h_{i+1}} \; ( 3 \; x_i \; {x_{i+1}}^2 - 2 \; {x_{i+1}}^3 - 3 \; {x_i}^3 + 2 \; {x_i}^3 )
+$$ $$
+  \frac{1}{6 \; h_i} \; ( 2 \; {x_i}^3 - 3 \; {x_i}^2 \; x_{i-1} + \; {x_{i-1}}^3 )
+    - \frac{1}{6 \; h_{i+1}} \; ( 2 \; {x_{i+1}}^3 - 3 \; x_i \; {x_{i+1}}^2 + {x_i}^3 )
+$$ $$
+  \frac{1}{6 \; h_i} \; (2 \; x_i + x_{i-1}) \; {h_i}^2
+    + \frac{1}{6 \; h_{i+1}} \; (2 \; x_{i+1} + x_i) \; {h_{i+1}}^2
+$$ $$
+  \frac{h_i}{6} \; (2 \; x_i + x_{i-1})
+    + \frac{h_{i+1}}{6} \; (2 \; x_{i+1} + x_i)
+$$
+
+Se $h = h_i = h_{i+1}$:
+$$
+  \frac{h}{6} \; (2 \; x_i + x_i - h)
+    + \frac{h}{6} \; (2 \; (x_i + h) + x_i)
+$$ $$
+  \frac{h}{6} \; (2 \; x_i + x_i - h + 2 \; (x_i + h) + x_i)
+$$ $$
+  \frac{h}{6} \; (6 \; x_i + h)
+$$ $$
+  x_i + \frac{h^2}{6}
+$$
+
+* Seja $u(x) = x \; (x-1)$ e
+  $f(x) = - 2 \; \alpha + \beta \; x \; (x-1)$:
+
+TODO
+
+* Seja $u(x) = sen (\pi \; x)$ e
+  $f(x) = \pi^2 \; \alpha \; sen(\pi \; x) + \beta \; sen(\pi \; x)$:
+
+TODO
