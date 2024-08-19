@@ -1,7 +1,7 @@
-include("finite-elements.jl")
+include("galerkin.jl")
 include("../common.jl")
 
-using .FiniteElements: finite_elements, example
+using .Galerkin: galerkin, example
 
 using Plots
 using LaTeXStrings
@@ -12,7 +12,7 @@ exact, ex = example(0x0, 0x0)
 i = 3
 N = (1 << i) - 1
 h = (ex.x_end - ex.x_begin) / (N + 1)
-c = finite_elements(ex, h, N)
+c = galerkin(ex, h, N)
 
 xs = Common.n_points_from_to(N, from=ex.x_begin, to=ex.x_end)
 u = broadcast.(exact, xs)

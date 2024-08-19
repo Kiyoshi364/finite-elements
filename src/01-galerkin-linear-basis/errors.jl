@@ -1,9 +1,9 @@
-include("finite-elements.jl")
+include("galerkin.jl")
 include("../common.jl")
 
 import .Common: calc_error, n_points_from_to
 
-using .FiniteElements: finite_elements, example
+using .Galerkin: galerkin, example
 
 using Plots
 using LaTeXStrings
@@ -15,7 +15,7 @@ min_max = 2:10
 
 Ns = (1 .<< min_max) .- 1
 hs = (ex.x_end - ex.x_begin) ./ (Ns .+ 1)
-cs = finite_elements.(ex, hs, Ns)
+cs = galerkin.(ex, hs, Ns)
 
 xss = Common.n_points_from_to.(Ns, from=ex.x_begin, to=ex.x_end)
 us = broadcast.(exact, xss)
@@ -33,7 +33,7 @@ p = plot(hs, hs .* hs,
     legend=:topleft,
 )
 plot!(p, hs, errs,
-    label="finite-difference errors",
+    label="galerkin errors",
     markershape=:circle,
 )
 savefig(p, "out.pdf")

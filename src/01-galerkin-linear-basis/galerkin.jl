@@ -1,10 +1,12 @@
-module FiniteElements
+module Galerkin
 
 include("../examples.jl")
 using .Examples: Example, example as common_example
 
 include("../common.jl")
 using .Common: build_tridiagonal, n_points_from_to
+
+export galerkin, example
 
 function build_mat(alpha, beta, h, dim)
     @assert dim >= 1
@@ -24,14 +26,14 @@ function build_vec(f, h, dim;
     f.(xs, h)
 end
 
-function finite_elements(ex :: Example, h, N)
-    finite_elements(ex.f, ex.alpha, ex.beta, h, N;
+function galerkin(ex :: Example, h, N)
+    galerkin(ex.f, ex.alpha, ex.beta, h, N;
         ux_begin=ex.ux_begin, ux_end=ex.ux_end,
         x_begin=ex.x_begin, x_end=ex.x_end,
     )
 end
 
-function finite_elements(f, alpha, beta, h, N;
+function galerkin(f, alpha, beta, h, N;
     ux_begin=0, ux_end=0,
     x_begin=0, x_end=1,
 )
@@ -58,4 +60,4 @@ function example(f_index :: UInt8, var_index :: UInt8 = 0) :: Tuple{Any, Example
     )
 end
 
-end # module FiniteElements
+end # module Galerkin
