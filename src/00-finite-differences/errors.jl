@@ -26,8 +26,8 @@ display(DataFrame(N=min_max, h=hs, error=errs))
 
 p = plot(hs, hs .* hs,
     label=L"$O(h^2)$",
-    yscale=:log10,
-    xscale=:log10,
+    yscale=:log2,
+    xscale=:log2,
     xlabel=L"log_2(h)",
     ylabel=L"log_2",
     legend=:topleft,
