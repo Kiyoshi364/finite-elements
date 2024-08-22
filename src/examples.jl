@@ -58,8 +58,9 @@ function function_index(f_index :: UInt8, alpha :: Number, beta :: Number) :: Fu
     i = f_index
     exact, deriv_2 = (
       i == 0 ? (x -> x + ((exp(-x) - exp(x)) / (exp(1) - exp(-1))), (x -> (exp(-x) - exp(x)) / (exp(1) - exp(-1)))) :
-      i == 1 ? ((x -> x * (x-1)), (x -> 2)) :
-      i == 2 ? (x -> sin(pi * x), x -> - pi * pi * sin(pi * x)) :
+      i == 1 ? (x -> (-4) * x * (x - 1), (x -> -8)) :
+      i == 2 ? ((x -> x * (x-1)), (x -> 2)) :
+      i == 3 ? (x -> sin(pi * x), x -> - pi * pi * sin(pi * x)) :
       error("function_index out of bounds")
     )
     Function(exact, deriv_2)

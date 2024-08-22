@@ -52,6 +52,7 @@ function example(f_index :: UInt8, var_index :: UInt8 = 0) :: Tuple{Any, Example
 
     f = (
       f_index == 0 ? ((x, h) -> x * h) :
+      f_index == 1 ? ((x, h) -> 8 * h) : # Note: only works for alpha=1 and beta=0
       error("function_index not supported")
     )
 
