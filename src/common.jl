@@ -1,12 +1,12 @@
 module Common
 
-using LinearAlgebra: Tridiagonal
+using LinearAlgebra: SymTridiagonal
 
 export build_tridiagonal
 function build_tridiagonal(main, side, dim)
     mains = fill(main, (dim,))
     sides = fill(side, (dim-1,))
-    Tridiagonal(sides, mains, sides)
+    SymTridiagonal(mains, sides)
 end
 
 export n_points_from_to
