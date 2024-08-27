@@ -451,3 +451,43 @@ TODO
   $f(x) = \pi^2 \; \alpha \; sen(\pi \; x) + \beta \; sen(\pi \; x)$:
 
 TODO
+
+---
+# Aula 5 -- 27-08-2024
+
+Cálculo do erro:
+$$
+  \|u - u_h\|^2
+$$ $$
+  \int_0^1{ (u(x) - u_h(x))^2 \; dx}
+$$ $$
+  \int_0^1{ \left(u(x) - \sum_{i=1}^N{ c_i \; \varphi_i(x) }\right)^2 \; dx}
+$$ $$
+  \sum_{i=1}^{N+1}{ \int_{(i-1)\;h}^{i\;h}{ \left(u(x) - \sum_{j=1}^N{ c_j \; \varphi_j(x) }\right)^2 \; dx} }
+$$ $$
+  \sum_{i=1}^{N+1}{ \int_{(i-1)\;h}^{i\;h}{ (u(x) - (c_{i-1} \; \varphi_{i-1}(x) + c_i \; \varphi_i(x)))^2 \; dx} }
+$$
+
+Trocando variável:
+$$ \begin{cases}
+  (\frac{2}{h} \; x - 1 \Leftrightarrow \xi)
+    \leftrightarrow
+    (x \Leftrightarrow \frac{h}{2} \; (\xi + 1)) \\
+  \frac{2}{h} \; dx \Leftrightarrow d\xi \\
+  c_0 = c_{N+1} = 0 \\
+  \phi_1(\xi) = \frac{1 - \xi}{2} \\
+  \phi_2(\xi) = \frac{1 + \xi}{2} \\
+  x(\xi, i) = h \; \left(\frac{\xi + 1}{2} + (i-1)\right) \\
+\end{cases} $$
+
+Temos:
+$$
+  \sum_{i=1}^{N+1}{ \frac{h}{2} \; \int_{-1}^1{ (u(x(\xi, i)) - (c_{i-1} \; \phi_1(\xi) + c_i \; \phi_2(\xi)))^2 \; d\xi} }
+$$ $$
+  \frac{h}{2} \; \sum_{i=1}^{N+1}{ \int_{-1}^1{ (u(x(\xi, i)) - c_{i-1} \; \phi_1(\xi) - c_i \; \phi_2(\xi))^2 \; d\xi} }
+$$
+
+Aplicando quadratura gaussiana:
+$$
+  \frac{h}{2} \; \sum_{i=1}^{N+1}{ \sum_{j=0}^{n_{pg}}{ W_j \; (u(x(P_j, i)) - c_{i-1} \; \phi_1(P_j) - c_i \; \phi_2(P_j))^2 } }
+$$
