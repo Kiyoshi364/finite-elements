@@ -491,3 +491,68 @@ Aplicando quadratura gaussiana:
 $$
   \frac{h}{2} \; \sum_{i=1}^{N+1}{ \sum_{j=0}^{n_{pg}}{ W_j \; (u(x(P_j, i)) - c_{i-1} \; \phi_1(P_j) - c_i \; \phi_2(P_j))^2 } }
 $$
+
+---
+# Aula 6 -- 29-08-2024
+
+* Lembretes
+$$ \begin{array}{lcl}
+  h = x^e_2 - x^e_1 \\
+  \varphi_1^e(x) = \frac{x^e_2 - x}{h} &\quad&
+  \varphi_2^e(x) = \frac{x - x^e_1}{h} \\
+  x(\xi, e) = \frac{h}{2} \; (\xi + 1) + x^e_1 &&
+  dx = \frac{h}{2} \; d\xi \\
+  \phi_1(\xi) = \frac{1 - \xi}{2} &&
+  \phi_2(\xi) = \frac{1 + \xi}{2} \\
+\end{array} $$
+
+* Matriz local $K^e$, para $a, b \in \{1, 2\}$
+
+$$
+  K^e_{a,b}
+  =
+  \alpha \; \int_{x^e_1}^{x^e_2}{ \frac{d \; \varphi^e_a}{dx}(x) \; \frac{d \; \varphi^e_b}{dx}(x) \; dx}
+  + \beta \; \int_{x^e_1}^{x^e_2}{ \varphi^e_a(x) \; \varphi^e_b(x) \; dx}
+$$
+
+Realizando troca de variável para $\xi \in [-1, 1]$:
+$$
+  \alpha \; \int_{-1}^1{ \frac{d \; \varphi^e_a}{dx}(x(\xi, e)) \; \frac{d \; \varphi^e_b}{dx}(x(\xi, e)) \; \frac{h}{2} \; d\xi}
+  + \beta \; \int_{-1}^1{ \varphi^e_a(x(\xi, e)) \; \varphi^e_b(x(\xi, e)) \; \frac{h}{2} \; d\xi}
+$$ $$
+  \alpha \; \frac{h}{2} \; \int_{-1}^1{ \frac{d \; \varphi^e_a}{dx}(x(\xi, e)) \; \frac{d \; \varphi^e_b}{dx}(x(\xi, e)) \; d\xi}
+  + \beta \; \frac{h}{2} \; \int_{-1}^1{ \varphi^e_a(x(\xi, e)) \; \varphi^e_b(x(\xi, e)) \; d\xi}
+$$ $$
+  \alpha \; \frac{h}{2} \; \int_{-1}^1{ \frac{d \; \varphi^e_a}{dx}(x(\xi, e)) \; \frac{d \; \varphi^e_b}{dx}(x(\xi, e)) \; d\xi}
+  + \beta \; \frac{h}{2} \; \int_{-1}^1{ \phi_a(\xi) \; \phi_b(\xi) \; d\xi}
+$$
+
+Para trocar variável de $\frac{d \; \varphi_a^e}{dx}(x(\xi, e))$ em função de $\phi_a(\xi)$:
+
+$$
+  \frac{d \; \varphi_a^e}{dx}(x(\xi, e)) \; \frac{x(\xi, e)}{dx} = \frac{d \; \phi_a}{d\xi}(\xi)
+$$ $$
+  \frac{d \; \varphi_a^e}{dx}(x(\xi, e)) \; \frac{h}{2} = \frac{d \; \phi_a}{d\xi}(\xi)
+$$ $$
+  \frac{d \; \varphi_a^e}{dx}(x(\xi, e)) = \frac{2}{h} \; \frac{d \; \phi_a}{d\xi}(\xi)
+$$
+
+Usando isso em $K^e_{a, b}$:
+$$
+  \alpha \; \frac{h}{2} \; \int_{-1}^1{ \frac{2}{h} \; \frac{d \; \phi_a}{d\xi}(\xi) \; \frac{2}{h} \; \frac{d \; \phi_b}{d\xi}(\xi) \; d\xi}
+  + \beta \; \frac{h}{2} \; \int_{-1}^1{ \phi_a(\xi) \; \phi_b(\xi) \; d\xi}
+$$ $$
+  \alpha \; \frac{2}{h} \; \int_{-1}^1{ \frac{d \; \phi_a}{d\xi}(\xi) \; \frac{d \; \phi_b}{d\xi}(\xi) \; d\xi}
+  + \beta \; \frac{h}{2} \; \int_{-1}^1{ \phi_a(\xi) \; \phi_b(\xi) \; d\xi}
+$$
+
+* Vetor local $F^e$, para $a, b \in \{1, 2\}$
+
+$$
+  F^e_a
+  = \int_{x^e_1}^{x^e_2}{ f(x) \; \varphi^e_a(x) \; dx}
+  = \int_{-1}^1{ f(x(\xi, e)) \; \varphi^e_a(x(\xi, e)) \; \frac{h}{2} \; d\xi}
+$$ $$
+  F^e_a =
+  \frac{h}{2} \; \int_{-1}^1{ f(x(\xi, e)) \; \phi_a(\xi) \; d\xi}
+$$
