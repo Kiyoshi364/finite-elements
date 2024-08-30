@@ -19,7 +19,8 @@ u = broadcast.(exact, xs)
 
 err = Common.calc_error(c, u)
 
-display(DataFrame(x=xs, solution=c, exact=u))
+display(DataFrame(x=xs, solution=c, exact=u, diff=(u-c)))
+println("\nError: ", err)
 
 plotN = 1 << 8
 many_xs = Common.n_points_from_to(plotN,

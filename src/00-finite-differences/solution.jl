@@ -11,7 +11,7 @@ using DataFrames
 
 exact, ex = example(0x0, 0x0)
 
-i = 4
+i = 3
 N = (1 << i) - 1
 h = (ex.x_end - ex.x_begin) / (N + 1)
 uh = finite_differences(ex, h, N)
@@ -21,7 +21,8 @@ u = broadcast.(exact, xs)
 
 err = Common.calc_error(uh, u)
 
-display(DataFrame(x=xs, solution=uh, exact=u))
+display(DataFrame(x=xs, solution=uh, exact=u, diff=(u-uh)))
+println("\nError: ", err)
 
 plotN = 1 << 8
 many_xs = Common.n_points_from_to(plotN,
