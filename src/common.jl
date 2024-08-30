@@ -56,6 +56,7 @@ function gauss_quadrature(func, n)
     sum(ws .* fxs)
 end
 
+export gauss_error
 function gauss_error(exact, coefs, h;
     gauss_n = 5,
     x_begin=0, x_end=1,

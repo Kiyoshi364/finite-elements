@@ -20,7 +20,9 @@ cs = galerkin.(ex, hs, Ns)
 xss = Common.n_points_from_to.(Ns, from=ex.x_begin, to=ex.x_end)
 us = broadcast.(exact, xss)
 
-errs = Common.calc_error.(cs, us)
+errs = Common.gauss_error.(exact, cs, hs,
+    x_begin=ex.x_begin, x_end=ex.x_end,
+)
 
 display(DataFrame(N=min_max, h=hs, error=errs))
 

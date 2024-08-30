@@ -17,7 +17,9 @@ c = galerkin(ex, h, N)
 xs = Common.n_points_from_to(N, from=ex.x_begin, to=ex.x_end)
 u = broadcast.(exact, xs)
 
-err = Common.calc_error(c, u)
+err = Common.gauss_error(exact, c, h,
+    x_begin=ex.x_begin, x_end=ex.x_end,
+)
 
 display(DataFrame(x=xs, solution=c, exact=u, diff=(u-c)))
 println("\nError: ", err)
