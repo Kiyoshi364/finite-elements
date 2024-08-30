@@ -1,14 +1,15 @@
 module FiniteElements
 
 include("../examples.jl")
-using .Examples: Example, example as common_example
+using .Examples: Example, example as common_example, bacarmo_example
 
 include("../common.jl")
 using .Common: gauss_quadrature_table
 
 using SparseArrays: spzeros
 
-export finite_elements, example
+export finite_elements
+export Example, example, bacarmo_example
 
 phi = [ (xi -> (1 - xi) / 2), (xi -> (1 + xi) / 2) ]
 

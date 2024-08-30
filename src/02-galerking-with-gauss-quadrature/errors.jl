@@ -3,13 +3,13 @@ include("../common.jl")
 
 import .Common: calc_error, n_points_from_to
 
-using .Galerkin: galerkin, example
+using .Galerkin: galerkin, bacarmo_example
 
 using Plots
 using LaTeXStrings
 using DataFrames
 
-exact, ex = example(0x0, 0x0)
+exact, ex = bacarmo_example(0x0)
 
 min_max = 2:10
 

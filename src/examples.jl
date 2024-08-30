@@ -1,6 +1,6 @@
 module Examples
 
-export Example, example
+export Example, example, bacarmo_example
 
 struct Example
     f
@@ -132,6 +132,40 @@ function example(f_index :: UInt8, var_index :: UInt8 = 0) :: Tuple{Function, Ex
         ux_begin=func.exact(ex.x_begin),
         ux_end=func.exact(ex.x_end),
     )
+end
+
+# Examples from
+# https://github.com/bacarmo/Problema-estacionario-unidimensional/blob/main/Eliptica_1D.ipynb
+# in a different order
+function bacarmo_example(index :: UInt8) :: Tuple{Any, Example}
+    mk_f(alp, bet, exact, deriv_2) = x -> ((- alp) * deriv_2(x)) + (bet * exact(x))
+    mk_ex(alp, bet, exact, deriv_2) = Example(mk_f(alp, bet, exact, deriv_2), alpha=alp, beta=bet)
+
+    index == 0 ? begin
+        alpha = 1.0
+        beta = 1.0
+        exact = x -> x + ((exp(-x) - exp(x)) / (exp(1) - exp(-1)))
+        deriv_2 = x -> (exp(-x) - exp(x)) / (exp(1) - exp(-1))
+        (exact, mk_ex(alpha, beta, exact, deriv_2))
+    end : index == 1 ? begin
+        alpha = 1.0
+        beta = 0.0
+        exact = x -> -4.0 * x * (x - 1.0)
+        deriv_2 = x -> -8.0
+        (exact, mk_ex(alpha, beta, exact, deriv_2))
+    end : index == 2 ? begin
+        alpha = 1.0
+        beta = 1.0
+        exact = x -> x * (x - 1.0)
+        deriv_2 = x -> 2.0
+        (exact, mk_ex(alpha, beta, exact, deriv_2))
+    end : index == 3 ? begin
+        alpha = 1.0
+        beta = 1.0
+        exact = x -> sin(pi * x)
+        deriv_2 = x -> - pi * pi * sin(pi * x)
+        (exact, mk_ex(alpha, beta, exact, deriv_2))
+    end : error("function_index out of bounds")
 end
 
 end # module Examples

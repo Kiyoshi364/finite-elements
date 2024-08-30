@@ -1,13 +1,13 @@
 include("finite-elements.jl")
 include("../common.jl")
 
-using .FiniteElements: finite_elements, example
+using .FiniteElements: finite_elements, bacarmo_example
 
 using Plots
 using LaTeXStrings
 using DataFrames
 
-exact, ex = example(0x0, 0x0)
+exact, ex = bacarmo_example(0x0)
 
 i = 3
 N = (1 << i) - 1

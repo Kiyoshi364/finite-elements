@@ -6,7 +6,8 @@ using .Examples: Example, example as common_example
 include("../common.jl")
 using .Common: build_tridiagonal, n_points_from_to
 
-export galerkin, example
+export galerkin
+export Example, example
 
 function build_mat(alpha, beta, h, dim)
     @assert dim >= 1

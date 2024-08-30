@@ -1,12 +1,13 @@
 module Galerkin
 
 include("../examples.jl")
-using .Examples: Example, example as common_example
+using .Examples: Example, example as common_example, bacarmo_example
 
 include("../common.jl")
 using .Common: build_tridiagonal, gauss_quadrature_table
 
-export galerkin, example
+export galerkin
+export Example, example, bacarmo_example
 
 function build_mat(alpha, beta, h, dim)
     @assert dim >= 1

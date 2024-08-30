@@ -1,13 +1,13 @@
 module FiniteDifferences
 
 include("../examples.jl")
-using .Examples: Example, example as common_example
+using .Examples: Example, example as common_example, bacarmo_example
 
 include("../common.jl")
 using .Common: build_tridiagonal, n_points_from_to
 
 export finite_differences
-export Example, example
+export Example, example, bacarmo_example
 
 using LinearAlgebra
 

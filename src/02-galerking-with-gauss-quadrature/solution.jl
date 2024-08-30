@@ -1,13 +1,13 @@
 include("galerkin.jl")
 include("../common.jl")
 
-using .Galerkin: galerkin, example
+using .Galerkin: galerkin, bacarmo_example
 
 using Plots
 using LaTeXStrings
 using DataFrames
 
-exact, ex = example(0x0, 0x0)
+exact, ex = bacarmo_example(0x0)
 
 i = 3
 N = (1 << i) - 1

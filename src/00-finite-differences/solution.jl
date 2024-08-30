@@ -3,13 +3,13 @@ include("../common.jl")
 
 import .Common: n_points_from_to
 
-using .FiniteDifferences: finite_differences, example
+using .FiniteDifferences: finite_differences, bacarmo_example
 
 using Plots
 using LaTeXStrings
 using DataFrames
 
-exact, ex = example(0x0, 0x0)
+exact, ex = bacarmo_example(0x0)
 
 i = 3
 N = (1 << i) - 1
