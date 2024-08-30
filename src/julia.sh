@@ -2,4 +2,4 @@
 
 set -xe
 
-julia --project=.. $*
+time julia --project=.. $*
