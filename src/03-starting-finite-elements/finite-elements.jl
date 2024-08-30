@@ -6,6 +6,8 @@ using .Examples: Example, example as common_example
 include("../common.jl")
 using .Common: gauss_quadrature_table
 
+using SparseArrays: spzeros
+
 export finite_elements, example
 
 phi = [ (xi -> (1 - xi) / 2), (xi -> (1 + xi) / 2) ]
@@ -54,8 +56,7 @@ function build_mat(alpha, beta, h, dim;
         gauss_n=gauss_n,
     )
 
-    # TODO: use something like sparse matrix
-    K = fill(0.0, (dim, dim))
+    K = spzeros((dim, dim))
     K[1,1] += K_e[2,2]
     K[end,end] += K_e[1,1]
     for e in 2:dim
