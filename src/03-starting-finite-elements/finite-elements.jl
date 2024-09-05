@@ -87,7 +87,6 @@ function build_small_vec(f, h, e;
     h/2 * F
 end
 
-# TODO: use build_small_vec
 function build_vec(f, h, dim;
     gauss_n = 5,
     ux_begin=0, ux_end=0,
