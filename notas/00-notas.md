@@ -227,7 +227,7 @@ $$
   \Phi_i(x) := \begin{cases}
     0 &\quad\text{, if } 0 \le x < x_{i-1} \\
     \frac{x - x_{i-1}}{x_i - x_{i-1}} &\quad\text{, if } x_{i-1} \le x < x_i \\
-    -\frac{x - x_i}{x_{i+1} - x_i} &\quad\text{, if } x_i \le x < x_{i+1} \\
+    1 - \frac{x - x_i}{x_{i+1} - x_i} &\quad\text{, if } x_i \le x < x_{i+1} \\
     0 &\quad\text{, if } x \le x_{i+1} \le 1 \\
   \end{cases}
 $$
@@ -236,7 +236,7 @@ $$
   \Phi_i(x) := \begin{cases}
     0 &\quad\text{, if } 0 \le x < x_{i-1} \\
     \frac{x - x_{i-1}}{h_i} &\quad\text{, if } x_{i-1} \le x < x_i \\
-    \frac{x_i - x}{h_{i+1}} &\quad\text{, if } x_i \le x < x_{i+1} \\
+    \frac{x_{i+1} - x}{h_{i+1}} &\quad\text{, if } x_i \le x < x_{i+1} \\
     0 &\quad\text{, if } x \le x_{i+1} \le 1 \\
   \end{cases}
 $$

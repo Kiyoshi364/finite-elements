@@ -2,4 +2,7 @@
 
 set -xe
 
-marker --preview notas.md
+filenum=${1:-00}
+file="notas/${filenum}-notas.md"
+
+marker --preview "${file}" &
