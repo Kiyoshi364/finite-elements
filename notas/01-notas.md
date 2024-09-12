@@ -269,3 +269,7 @@ $$ $$
   + \frac{\beta}{6} \; h_{i+1}
   + \frac{\gamma}{2}
 $$
+
+* Local-Global:
+
+TODO
