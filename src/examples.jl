@@ -1,11 +1,13 @@
 module Examples
 
-export Example, example, bacarmo_example
+export Example, example
+export bacarmo_example, bacarmo_example_gamma
 
 struct Example
     f
     alpha :: Number
     beta :: Number
+    gamma :: Number
     ux_begin :: Number
     ux_end :: Number
     x_begin :: Number
@@ -14,6 +16,7 @@ struct Example
     Example(f;
         alpha    :: Number = 1,
         beta     :: Number = 1,
+        gamma    :: Number = 0,
         ux_begin :: Number = 0,
         ux_end   :: Number = 0,
         x_begin  :: Number = 0,
@@ -22,6 +25,7 @@ struct Example
         f,
         alpha,
         beta,
+        gamma,
         ux_begin,
         ux_end,
         x_begin,
@@ -32,6 +36,7 @@ struct Example
         f                                 = nothing,
         alpha    :: Union{Nothing,Number} = nothing,
         beta     :: Union{Nothing,Number} = nothing,
+        gamma    :: Union{Nothing,Number} = nothing,
         ux_begin :: Union{Nothing,Number} = nothing,
         ux_end   :: Union{Nothing,Number} = nothing,
         x_begin  :: Union{Nothing,Number} = nothing,
@@ -40,6 +45,7 @@ struct Example
         (f     === nothing ? ex.f     : f    ),
         alpha   =(alpha    === nothing ? ex.alpha    : alpha   ),
         beta    =(beta     === nothing ? ex.beta     : beta    ),
+        gamma   =(gamma    === nothing ? ex.gamma    : gamma   ),
         ux_begin=(ux_begin === nothing ? ex.ux_begin : ux_begin),
         ux_end  =(ux_end   === nothing ? ex.ux_end   : ux_end  ),
         x_begin =(x_begin  === nothing ? ex.x_begin  : x_begin ),
@@ -165,6 +171,48 @@ function bacarmo_example(index :: UInt8) :: Tuple{Any, Example}
         exact = x -> sin(pi * x)
         deriv_2 = x -> - pi * pi * sin(pi * x)
         (exact, mk_ex(alpha, beta, exact, deriv_2))
+    end : error("function_index out of bounds")
+end
+
+# Examples from
+# https://github.com/bacarmo/Problema-estacionario-unidimensional/blob/main/Eliptica_1D_caso2.ipynb
+# in a different order
+function bacarmo_example_gamma(index :: UInt8) :: Tuple{Any, Example}
+    mk_f(alp, bet, gamm, exact, deriv_1, deriv_2) = x -> ((- alp) * deriv_2(x)) + (bet * exact(x)) + (gamm * deriv_1(x))
+    mk_ex(alp, bet, gamm, exact, deriv_1, deriv_2) = Example(mk_f(alp, bet, gamm, exact, deriv_1, deriv_2), alpha=alp, beta=bet, gamma=gamm)
+
+    index == 0 ? begin
+        alpha = 1.0
+        beta = 1.0
+        gamma = 1.0
+        exact = x -> x + ((exp(-x) - exp(x)) / (exp(1) - exp(-1)))
+        deriv_1 = x -> 1 + ((- exp(-x)) - exp(x)) / (exp(1) - exp(-1))
+        deriv_2 = x -> (exp(-x) - exp(x)) / (exp(1) - exp(-1))
+        (exact, mk_ex(alpha, beta, gamma, exact, deriv_1, deriv_2))
+    end : index == 1 ? begin
+        alpha = 1.0
+        beta = 0.0
+        gamma = 1.0
+        exact = x -> -4.0 * x * (x - 1.0)
+        deriv_1 = x -> (-8.0 * x) + 4.0
+        deriv_2 = x -> -8.0
+        (exact, mk_ex(alpha, beta, gamma, exact, deriv_1, deriv_2))
+    end : index == 2 ? begin
+        alpha = 1.0
+        beta = 1.0
+        gamma = 2.0
+        exact = x -> x * (x - 1.0)
+        deriv_1 = x -> (2.0 * x) - 1.0
+        deriv_2 = x -> 2.0
+        (exact, mk_ex(alpha, beta, gamma, exact, deriv_1, deriv_2))
+    end : index == 3 ? begin
+        alpha = 1.0
+        beta = 1.0
+        gamma = 1.0
+        exact = x -> sin(pi * x)
+        deriv_1 = x -> pi * cos(pi * x)
+        deriv_2 = x -> - pi * pi * sin(pi * x)
+        (exact, mk_ex(alpha, beta, gamma, exact, deriv_1, deriv_2))
     end : error("function_index out of bounds")
 end
 
