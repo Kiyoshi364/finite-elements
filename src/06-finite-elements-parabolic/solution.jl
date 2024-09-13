@@ -1,41 +1,68 @@
 include("finite-elements.jl")
 include("../common.jl")
 
-using .FiniteElements: finite_elements, bacarmo_example
+using .FiniteElements: fe_setup, fe_step
+using .FiniteElements: bacarmo_example
 
 using Plots
 using LaTeXStrings
 using DataFrames
 
-exact, ex = bacarmo_example(0x0)
+exact, ex = bacarmo_example(0x1)
 
-i = 3
+i = 2
 N_e = (1 << i)
+N_t = N_e
 h = 1.0 / N_e
-tau = h
-c = finite_elements(ex, tau, h, N_e)
+tau = 1.0 / N_t
+A, B, c0, EQoLG = fe_setup(ex, tau, h, N_e)
 
-# TODO
+ts = 0:tau:ex.T
+
 xs = Common.n_points_from_to(N_e-1)
-u = broadcast.(x -> exact(x, ex.T), xs)
-
-err = Common.gauss_error(x -> exact(x, ex.T), c, h)
-
-display(DataFrame(x=xs, solution=c, exact=u, diff=(u-c)))
-println("\nError: ", err)
 
 plotN = 1 << 8
 many_xs = Common.n_points_from_to(plotN,
     i_start=0, i_end=plotN
 )
-p = plot(many_xs, exact.(many_xs, ex.T),
-    label=L"$exact(x)$",
-    xlabel=L"x",
-    legend=:topleft,
-)
-plot!(p, cat(0.0, xs, 1.0, dims=1),
-    cat(exact(0.0, ex.T), c, exact(1.0, ex.T), dims=1),
-    label=L"$solution(x)$",
-    markershape=:circle,
-)
-savefig(p, "out.pdf")
+
+ylims=(0,0.11)
+
+errs = fill(0.0, (N_t,))
+anim = @animate for i in 0:N_t
+    if i > 0
+        # TODO include 0 in figures
+        continue
+    end
+
+    t0 = ts[i]
+    t1 = ts[i+1]
+    c = fe_step(ex, A, B, c0, t0, tau, h, N_e, EQoLG)
+    u = broadcast.(x -> exact(x, t1), xs)
+
+    println("\nTime($i): $t0")
+    display(DataFrame(x=xs, solution=c, exact=u, diff=(u-c)))
+
+    errs[i] = Common.gauss_error(x -> exact(x, t1), c, h)
+    println("\nError: ", errs[i])
+
+    p = plot(
+        legend=:topleft,
+        xlabel=L"x",
+        ylim=ylims,
+    )
+    plot!(p, many_xs, exact.(many_xs, t1),
+        label="exact(x, $t1)",
+    )
+    plot!(p, cat(0.0, xs, 1.0, dims=1),
+        cat(exact(0.0, t1), c, exact(1.0, t1), dims=1),
+        label="solution(x, $t1)",
+        markershape=:circle,
+    )
+    savefig(p, "out-$i.pdf")
+
+    global c0 = c
+end
+c = c0
+
+gif(anim, "out.gif", fps=1)

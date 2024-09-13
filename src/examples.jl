@@ -268,10 +268,11 @@ end
 # https://github.com/bacarmo/Problema-estacionario-unidimensional/blob/main/Parabolica_1D_caso1.ipynb
 # in a different order
 function bacarmo_example(index :: UInt8) :: Tuple{Any, Example}
-    mk_f(alp, bet, gamm, exact, dtime, deriv_1, deriv_2) = (x, t) -> ((- alp) * deriv_2(x, t)) + (bet * exact(x, t)) + (gamm * deriv_1(x, t) + dtime(x, t))
+    mk_f(alp, bet, gamm, exact, dtime, deriv_1, deriv_2) =
+        (x, t) -> ((- alp) * deriv_2(x, t)) + (bet * exact(x, t)) + (gamm * deriv_1(x, t) + dtime(x, t))
     mk_ex(_T, alp, bet, gamm, exact, dtime, deriv_1, deriv_2) = begin
         f = mk_f(alp, bet, 0.0, exact, dtime, deriv_1, deriv_2)
-        u0 = x -> f(x, 0.0)
+        u0 = x -> exact(x, 0.0)
         Example(f, u0, alpha=alp, beta=bet, gamma=gamm, T=_T)
     end
 
@@ -281,22 +282,22 @@ function bacarmo_example(index :: UInt8) :: Tuple{Any, Example}
         beta = 1.0
         gamma = 0.0
         lamb = alpha * pi * pi + beta
-        exact = (x, t) -> sin(pi * x) * (exp(lamb * t) / (pi * pi))
-        dtime = (x, t) -> sin(pi * x) * lamb * (exp(lamb * t) / (pi * pi))
-        deriv_1 = (x, t) -> pi * cos(pi * x) * (exp(lamb * t) / (pi * pi))
-        deriv_2 = (x, t) -> - pi * pi * sin(pi * x) * (exp(lamb * t) / (pi * pi))
-        (exact, mk_ex(alpha, beta, gamma, T, exact, dtime, deriv_1, deriv_2))
+        exact = (x, t) -> sin(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        dtime = (x, t) -> (-lamb) * sin(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        deriv_1 = (x, t) -> pi * cos(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        deriv_2 = (x, t) -> - pi * pi * sin(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        (exact, mk_ex(T, alpha, beta, gamma, exact, dtime, deriv_1, deriv_2))
     end : index == 1 ? begin
         T = 1.0
         alpha = 1.0
         beta = 1.0
         gamma = 0.0
         lamb = 1.0
-        exact = (x, t) -> sin(pi * x) * (exp(lamb * t) / (pi * pi))
-        dtime = (x, t) -> sin(pi * x) * lamb * (exp(lamb * t) / (pi * pi))
-        deriv_1 = (x, t) -> pi * cos(pi * x) * (exp(lamb * t) / (pi * pi))
-        deriv_2 = (x, t) -> - pi * pi * sin(pi * x) * (exp(lamb * t) / (pi * pi))
-        (exact, mk_ex(alpha, beta, gamma, T, exact, dtime, deriv_1, deriv_2))
+        exact = (x, t) -> sin(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        dtime = (x, t) -> (-lamb) * sin(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        deriv_1 = (x, t) -> pi * cos(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        deriv_2 = (x, t) -> - pi * pi * sin(pi * x) * (exp((-lamb) * t) / (pi * pi))
+        (exact, mk_ex(T, alpha, beta, gamma, exact, dtime, deriv_1, deriv_2))
     end : error("function_index out of bounds")
 end
 
