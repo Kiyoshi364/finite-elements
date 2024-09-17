@@ -269,7 +269,7 @@ end
 # in a different order
 function bacarmo_example(index :: UInt8) :: Tuple{Any, Example}
     mk_f(alp, bet, gamm, exact, dtime, deriv_1, deriv_2) =
-        (x, t) -> ((- alp) * deriv_2(x, t)) + (bet * exact(x, t)) + (gamm * deriv_1(x, t) + dtime(x, t))
+        (x, t) -> ((- alp) * deriv_2(x, t)) + (bet * exact(x, t)) + (gamm * deriv_1(x, t)) + dtime(x, t)
     mk_ex(_T, alp, bet, gamm, exact, dtime, deriv_1, deriv_2) = begin
         f = mk_f(alp, bet, 0.0, exact, dtime, deriv_1, deriv_2)
         u0 = x -> exact(x, 0.0)
