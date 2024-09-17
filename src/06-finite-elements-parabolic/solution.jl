@@ -30,21 +30,22 @@ ylims=(0,0.11)
 
 errs = fill(0.0, (N_t,))
 anim = @animate for i in 0:N_t
-    if i > 0
-        # TODO include 0 in figures
-        continue
-    end
-
-    t0 = ts[i]
     t1 = ts[i+1]
-    c = fe_step(ex, A, B, c0, t0, tau, h, N_e, EQoLG)
-    u = broadcast.(x -> exact(x, t1), xs)
 
-    println("\nTime($i): $t0")
-    display(DataFrame(x=xs, solution=c, exact=u, diff=(u-c)))
+    c = ((i <= 0) ? begin
+        c0
+    end : begin
+        t0 = ts[i]
+        c = fe_step(ex, A, B, c0, t0, tau, h, N_e, EQoLG)
+        u = broadcast.(x -> exact(x, t1), xs)
 
-    errs[i] = Common.gauss_error(x -> exact(x, t1), c, h)
-    println("\nError: ", errs[i])
+        println("\nTime($i): $t0")
+        display(DataFrame(x=xs, solution=c, exact=u, diff=(u-c)))
+
+        errs[i] = Common.gauss_error(x -> exact(x, t1), c, h)
+        println("\nError: ", errs[i])
+        c
+    end)
 
     p = plot(
         legend=:topleft,
@@ -63,6 +64,5 @@ anim = @animate for i in 0:N_t
 
     global c0 = c
 end
-c = c0
 
-gif(anim, "out.gif", fps=1)
+gif(anim, "out.gif", fps=1, show_msg=false)
