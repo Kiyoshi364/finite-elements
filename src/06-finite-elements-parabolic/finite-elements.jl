@@ -6,6 +6,7 @@ using .TimeExamples: Example, bacarmo_example
 include("../common.jl")
 using .Common: gauss_quadrature_table, n_points_from_to
 
+using LinearAlgebra: lu
 using SparseArrays: spzeros
 
 export finite_elements
@@ -159,7 +160,7 @@ function fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG)
     A0 = M + K_half_tau
     B0 = M - K_half_tau
 
-    A = A0
+    A = lu(A0)
     B = B0
 
     A, B
