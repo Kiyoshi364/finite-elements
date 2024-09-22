@@ -1,2 +1,8 @@
 *.pdf
 *.gif
+
+# Latex
+**/folder-build/*.aux
+**/folder-build/*.log
+**/folder-build/*.out
+**/folder-build/*.txt
