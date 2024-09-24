@@ -60,15 +60,15 @@ function build_small_mat(alpha, beta, gamma, h;
     K_alpha + K_beta + K_gamma
 end
 
-function build_mat(alpha, beta, gamma, h, N_e, EQoLG;
+function build_mat(alpha, beta, gamma, h, EQoLG, m;
     gauss_n = 2
 )
     K_e = build_small_mat(alpha, beta, gamma, h,
         gauss_n=gauss_n,
     )
 
-    K = spzeros((N_e, N_e))
-    for e in 1:N_e
+    K = spzeros((m+1, m+1))
+    for e in 1:m+1
         _1 = EQoLG[1, e]
         _2 = EQoLG[2, e]
         K[_1,_1] += K_e[1,1]
@@ -96,11 +96,11 @@ function build_small_vec(f, h, e;
     h/2 * F
 end
 
-function build_vec(f, h, N_e, EQoLG;
+function build_vec(f, h, EQoLG, m;
     gauss_n = 5,
 )
-    F = fill(0.0, (N_e,))
-    for e in 1:N_e
+    F = fill(0.0, (m+1,))
+    for e in 1:m+1
         F_e = build_small_vec(f, h, e,
             gauss_n=gauss_n,
         )
@@ -118,7 +118,7 @@ function finite_elements(ex :: Example, tau, h, N_e)
 end
 
 function finite_elements(f, u0, T, tau, alpha, beta, gamma, h, N_e)
-    A, B, c0, EQoLG = fe_setup(f, u0, tau, alpha, beta, gamma, h, N_e)
+    A, B, c0, EQoLG, m = fe_setup(f, u0, tau, alpha, beta, gamma, h, N_e)
 
     ts = 0:tau:T
 
@@ -142,18 +142,19 @@ function fe_setup(f, u0, alpha, beta, gamma, tau, h, N_e)
         dims=1
     )
     EQoLG = EQ[LG]
+    m = N_e-1
 
-    A, B = fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG)
+    A, B = fe_setup_AB(alpha, beta, gamma, tau, h, EQoLG, m)
 
-    c0 = fe_setup_c0(u0, h, N_e, EQ)
+    c0 = fe_setup_c0(u0, h, EQ, m)
 
-    A, B, c0, EQoLG
+    A, B, c0, EQoLG, m
 end
 
-function fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG)
+function fe_setup_AB(alpha, beta, gamma, tau, h, EQoLG, m)
 
-    M = build_mat(0.0, 1.0, 0.0, h, N_e, EQoLG)
-    K = build_mat(alpha, beta, gamma, h, N_e, EQoLG)
+    M = build_mat(0.0, 1.0, 0.0, h, EQoLG, m)
+    K = build_mat(alpha, beta, gamma, h, EQoLG, m)
 
     K_half_tau = (tau / 2) * K
 
@@ -166,13 +167,13 @@ function fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG)
     A, B
 end
 
-function fe_setup_c0(u0, h, N_e, EQ)
-    xs = n_points_from_to(N_e-1,
-        i_start=0, i_end=N_e
+function fe_setup_c0(u0, h, EQ, m)
+    xs = n_points_from_to(m,
+        i_start=0, i_end=(m+1)
     )
 
-    eq_xs = fill(0.0, (N_e,))
-    for i in 1:(N_e+1)
+    eq_xs = fill(0.0, (m+1,))
+    for i in 1:(m+2)
         _i = EQ[i]
         eq_xs[_i] += xs[i]
     end
@@ -182,16 +183,15 @@ function fe_setup_c0(u0, h, N_e, EQ)
     u0eq_xs
 end
 
-function fe_step(ex :: Example, A, B, c0, t0, tau, h, N_e, EQoLG)
-    fe_step(ex.f, A, B, c0, t0, tau, h, N_e, EQoLG)
+function fe_step(ex :: Example, A, B, c0, t0, tau, h, EQoLG, m)
+    fe_step(ex.f, A, B, c0, t0, tau, h, EQoLG, m)
 end
 
-function fe_step(f, A, B, c0, t0, tau, h, N_e, EQoLG)
-    @assert h == 1 / N_e
+function fe_step(f, A, B, c0, t0, tau, h, EQoLG, m)
 
     t0_half = t0 + (tau / 2)
 
-    F = build_vec(x -> f(x, t0_half), h, N_e, EQoLG)
+    F = build_vec(x -> f(x, t0_half), h, EQoLG, m)
 
     c = A \ ((B * c0) + (tau * F))
     c

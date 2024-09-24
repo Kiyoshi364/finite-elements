@@ -19,12 +19,12 @@ N_ts = N_es
 hs = 1 ./ N_es
 taus = hs
 
-ABcEs = fe_setup.(ex, taus, hs, N_es)
+ABcEms = fe_setup.(ex, taus, hs, N_es)
 
 tss = (tau -> 0:tau:ex.T).(taus)
 
-errss = ((ABcE, args...) ->
-((A, B, c_init, EQoLG, h, tau, ts, N_e, N_t) -> begin
+errss = ((ABcEm, args...) ->
+((A, B, c_init, EQoLG, m, h, tau, ts, N_t) -> begin
     c0 = c_init
     errs = fill(0.0, (N_t + 1,))
 
@@ -33,13 +33,13 @@ errss = ((ABcE, args...) ->
     for i in 1:N_t
         t0 = ts[i]
         t1 = ts[i+1]
-        c = fe_step(ex, A, B, c0, t0, tau, h, N_e, EQoLG)
+        c = fe_step(ex, A, B, c0, t0, tau, h, EQoLG, m)
         c0 = c
 
         errs[i+1] = Common.gauss_error(x -> exact(x, t1), c, h)
     end
     maximum(errs)
-end)(ABcE..., args...)).(ABcEs, hs, taus, tss, N_es, N_ts)
+end)(ABcEm..., args...)).(ABcEms, hs, taus, tss, N_ts)
 
 display(DataFrame(N=min_max, h=hs, error=errss))
 

@@ -15,7 +15,7 @@ N_e = (1 << i)
 N_t = N_e
 h = 1.0 / N_e
 tau = 1.0 / N_t
-A, B, c0, EQoLG = fe_setup(ex, tau, h, N_e)
+A, B, c0, EQoLG, m = fe_setup(ex, tau, h, N_e)
 
 ts = 0:tau:ex.T
 
@@ -36,7 +36,7 @@ anim = @animate for i in 0:N_t
         c0
     end : begin
         t0 = ts[i]
-        c = fe_step(ex, A, B, c0, t0, tau, h, N_e, EQoLG)
+        c = fe_step(ex, A, B, c0, t0, tau, h, EQoLG, m)
         u = broadcast.(x -> exact(x, t1), xs)
 
         println("\nTime($i): $t0")
