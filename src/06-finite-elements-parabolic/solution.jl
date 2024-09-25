@@ -12,14 +12,14 @@ exact, ex = bacarmo_example(0x1)
 
 i = 2
 N_e = (1 << i)
-N_t = N_e
 h = 1.0 / N_e
-tau = 1.0 / N_t
-A, B, c0, EQoLG, m = fe_setup(ex, tau, h, N_e)
-
-ts = 0:tau:ex.T
-
 xs = Common.n_points_from_to(N_e-1)
+
+tau = h
+ts = 0:tau:ex.T
+N_t = Int(floor(ex.T / tau))
+
+A, B, c0, EQoLG, m = fe_setup(ex, tau, h, N_e)
 
 plotN = 1 << 8
 many_xs = Common.n_points_from_to(plotN,
@@ -28,7 +28,7 @@ many_xs = Common.n_points_from_to(plotN,
 
 ylims=(0,0.11)
 
-errs = fill(0.0, (N_t,))
+errs = fill(0.0, (N_t+1,))
 anim = @animate for i in 0:N_t
     t1 = ts[i+1]
 
@@ -36,16 +36,13 @@ anim = @animate for i in 0:N_t
         c0
     end : begin
         t0 = ts[i]
-        c = fe_step(ex, A, B, c0, t0, tau, h, EQoLG, m)
-        u = broadcast.(x -> exact(x, t1), xs)
+        c = fe_step(ex, A, B, c0, t0, tau, h, N_e, EQoLG, m)
 
-        println("\nTime($i): $t0")
-        display(DataFrame(x=xs, solution=c, exact=u, diff=(u-c)))
-
-        errs[i] = Common.gauss_error(x -> exact(x, t1), c, h)
-        println("\nError: ", errs[i])
         c
     end)
+
+    errs[i+1] = Common.gauss_error(x -> exact(x, t1), c, h)
+    println("\nError($t1): ", errs[i+1])
 
     p = plot(
         legend=:topleft,

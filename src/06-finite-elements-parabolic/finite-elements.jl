@@ -60,7 +60,7 @@ function build_small_mat(alpha, beta, gamma, h;
     K_alpha + K_beta + K_gamma
 end
 
-function build_mat(alpha, beta, gamma, h, EQoLG, m;
+function build_mat(alpha, beta, gamma, h, N_e, EQoLG, m;
     gauss_n = 2
 )
     K_e = build_small_mat(alpha, beta, gamma, h,
@@ -68,7 +68,7 @@ function build_mat(alpha, beta, gamma, h, EQoLG, m;
     )
 
     K = spzeros((m+1, m+1))
-    for e in 1:m+1
+    for e in 1:N_e
         _1 = EQoLG[1, e]
         _2 = EQoLG[2, e]
         K[_1,_1] += K_e[1,1]
@@ -96,11 +96,11 @@ function build_small_vec(f, h, e;
     h/2 * F
 end
 
-function build_vec(f, h, EQoLG, m;
+function build_vec(f, h, N_e, EQoLG, m;
     gauss_n = 5,
 )
     F = fill(0.0, (m+1,))
-    for e in 1:m+1
+    for e in 1:N_e
         F_e = build_small_vec(f, h, e,
             gauss_n=gauss_n,
         )
@@ -135,26 +135,28 @@ end
 
 function fe_setup(f, u0, alpha, beta, gamma, tau, h, N_e)
     LG = transpose(cat(1:N_e, 2:N_e+1, dims=2))
+
+    m = N_e-1
     EQ = cat(
-        N_e,
-        1:N_e-1,
-        N_e,
+        m+1,
+        1:m,
+        m+1,
         dims=1
     )
-    EQoLG = EQ[LG]
-    m = N_e-1
 
-    A, B = fe_setup_AB(alpha, beta, gamma, tau, h, EQoLG, m)
+    EQoLG = EQ[LG]
+
+    A, B = fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
 
     c0 = fe_setup_c0(u0, h, EQ, m)
 
     A, B, c0, EQoLG, m
 end
 
-function fe_setup_AB(alpha, beta, gamma, tau, h, EQoLG, m)
+function fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
 
-    M = build_mat(0.0, 1.0, 0.0, h, EQoLG, m)
-    K = build_mat(alpha, beta, gamma, h, EQoLG, m)
+    M = build_mat(0.0, 1.0, 0.0, h, N_e, EQoLG, m)
+    K = build_mat(alpha, beta, gamma, h, N_e, EQoLG, m)
 
     K_half_tau = (tau / 2) * K
 
@@ -183,15 +185,15 @@ function fe_setup_c0(u0, h, EQ, m)
     u0eq_xs
 end
 
-function fe_step(ex :: Example, A, B, c0, t0, tau, h, EQoLG, m)
-    fe_step(ex.f, A, B, c0, t0, tau, h, EQoLG, m)
+function fe_step(ex :: Example, A, B, c0, t0, tau, h, N_e, EQoLG, m)
+    fe_step(ex.f, A, B, c0, t0, tau, h, N_e, EQoLG, m)
 end
 
-function fe_step(f, A, B, c0, t0, tau, h, EQoLG, m)
+function fe_step(f, A, B, c0, t0, tau, h, N_e, EQoLG, m)
 
     t0_half = t0 + (tau / 2)
 
-    F = build_vec(x -> f(x, t0_half), h, EQoLG, m)
+    F = build_vec(x -> f(x, t0_half), h, N_e, EQoLG, m)
 
     c = A \ ((B * c0) + (tau * F))
     c
