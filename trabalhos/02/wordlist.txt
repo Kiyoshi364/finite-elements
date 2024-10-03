@@ -1,0 +1,17 @@
+finite-elements
+finite-elements-gamma
+src
+example
+
+commit
+365e28bbdca537e48f6eb6afc77e6756017df39a
+
+pdf
+scripts
+
+Galerkin
+Matriz-Vetor
+
+Kiyoshi
+Hashimoto
+Vouzella
