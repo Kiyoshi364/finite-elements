@@ -20,7 +20,7 @@
 \newcommand{\linkfileraw}[2]{\href{run:../../#1}{\texttt{#2}}}
 \newcommand{\linkfile}[2][src/05-finite-elements-gamma/]{\linkfileraw{#1#2}{#2}}
 
-\newcommand{\typ}{\::\:}
+\newcommand{\typ}{:\,}
 
 \newcommand{\vphi}{\varphi}
 
@@ -84,30 +84,37 @@ Dados
 o objetivo é descobrir \(u \typ [0, 1] \times [0, T] \to \mathbb{R}\)
 que satisfaça o sistema:
 \[ \begin{cases}
-        u'(x, t) - \alpha \; u_{xx}(x) + \beta \; u(x) + \gamma \; u_{x}(x) + g(u(x, t))= f(x, t)
-            &\quad\text{, } x \in \,]0, 1[ \text{ , } t \in \,]0, T]
-        \\
-        u(0, t) = u(1, t) = 0
-            &\quad\text{, } t \in [0, T]
-        \\
-        u(x, 0) = u_0(x)
-            &\quad\text{, } x \in \,]0, 1[
+    u'(x, t) - \alpha \; u_{xx}(x) + \beta \; u(x) + \gamma \; u_{x}(x) + g(u(x, t))= f(x, t)
+        &\quad\text{, } x \in \,]0, 1[ \text{ , } t \in \,]0, T]
+    \\
+    u(0, t) = u(1, t) = 0
+        &\quad\text{, } t \in [0, T]
+    \\
+    u(x, 0) = u_0(x)
+        &\quad\text{, } x \in \,]0, 1[
 \end{cases} \]
+
+É conveniente definir
+para cada \(u \typ [0, 1] \times [0, T] \to \mathbb{R}\)
+para cada \(t \in \,]0, T]\),
+uma \(u(t) \typ [0, 1] \to \mathbb{R}\)
+tal que
+\(
+    u(t)(x) = u(x, t)
+\).
 
 \section{Transição entre Forte e Fraca}
 
 Sejam o espaço das soluções:
 \[
     H = \{
-        u \text{ é suficientemente suave } : u(0, t) = u(1, t) = 0
-        \quad\text{, } \forall t \in [0, T]
+        u \text{ é suficientemente suave } : u(0) = u(1) = 0
     \}
 \]
 e o espaço das funções de teste (funções peso)
 \[
     V = \{
-        v \text{ é suficientemente suave } : v(0, t) = v(1, t) = 0
-        \quad\text{, } \forall t \in [0, T]
+        v \text{ é suficientemente suave } : v(0) = v(1) = 0
     \}
 \]
 
@@ -118,33 +125,54 @@ simplificamos (enfraquecemos)
 o termo de \(\alpha\)
 do problema inicial:
 \[ \begin{array}{l}
-    - \alpha \; \int_0^1{ u_{xx}(x, t) \; v(x, t) \; dx }
-    \\
-    - \alpha \; \left[ \left( v(x, t) \; u_x(x, t) \right|_0^1 - \int_0^1{ u_x(x, t) \; v_x(x, t) \; dx } \right]
-    \\
-    - \alpha \; \left[ - \int_0^1{ u_x(x, t) \; v_x(x, t) \; dx } \right]
-    \\
+    - \alpha \; \int_0^1{ u_{xx}(x, t) \; v(x) \; dx }
+    \\[1ex]
+    - \alpha \; \left[ \left( v(x) \; u_x(x, t) \right|_0^1 - \int_0^1{ u_x(x, t) \; v_x(x) \; dx } \right]
+    \\[1ex]
+    - \alpha \; \left[ - \int_0^1{ u_x(x, t) \; v_x(x) \; dx } \right]
+    \\[1ex]
     \alpha \; \int_0^1{ u_x(x, t) \; v_x(x, t) \; dx }
 \end{array} \]
 
 Juntando tudo:
 \[ \begin{cases}
-    \int_0^1{ u'(x, t) \; v(x, t) \; dx}
-    + \alpha \; \int_0^1{ u_x(x, t) \; v_x(x, t) \; dx}
+    \int_0^1{ u'(x, t) \; v(x) \; dx}
+    + \alpha \; \int_0^1{ u_x(x, t) \; v_x(x) \; dx}
     \\\qquad
-    + \beta \; \int_0^1{ u(x, t) \; v(x, t) \; dx}
-    + \gamma \; \int_0^1{ u_x(x, t) \; v(x, t) \; dx}
+    + \beta \; \int_0^1{ u(x, t) \; v(x) \; dx}
+    + \gamma \; \int_0^1{ u_x(x, t) \; v(x) \; dx}
     \\\qquad
-    + \int_0^1{ g(u(x, t)) \; v(x, t) \; dx}
-    = \int_0^1{ f(x, t) \; v(x, t) \; dx}
+    + \int_0^1{ g(u(x, t)) \; v(x) \; dx}
+    = \int_0^1{ f(x, t) \; v(x) \; dx}
         &\quad\text{, } x \in \,]0, 1[ \text{ , } t \in \,]0, T]
     \\
-    u_t(0) = u_t(1) = 0
+    u(0, t) = u(1, t) = 0
         &\quad\text{, } t \in [0, T]
     \\
-    v_t(0) = v_t(1) = 0
+    v(0) = v(1) = 0
         &\quad\text{, } t \in [0, T]
 \end{cases} \]
+
+Usando uma notação extra:
+\begin{itemize}
+\item \(
+    \kappa(u, v) =
+    \alpha \; \int_0^1{ u_x(x) \; v_x(x) \; dx }
+    + \beta \; \int_0^1{ u(x) \; v(x) \; dx }
+    + \gamma \; \int_0^1{ u_x(x) \; v(x) \; dx}
+\)
+\item \(
+    (u, v) =
+    \int_0^1{ u(x) \; v(x) \; dx }
+\)
+\end{itemize}
+conseguimos ``simplificar'' a primeira equação para:
+\[
+    (u'(t), v)
+    + \kappa(u(t), v)
+    + (g \circ u(t), v)
+    = (f(t), v)
+\]
 
 \section{Formulação Fraca}
 
@@ -156,62 +184,33 @@ Dados
 \(\alpha > 0\),
 \(\beta \ge 0\),
 \(\gamma \ge 0\),
-o objetivo é descobrir \(u \in H\)
-que \(\forall x \in [0, 1],\; u(x, 0) = u_0(x)\)
-e para qualquer \(v \in V\),
-satisfaça a equação:
-\[ \begin{array}{l}
-    \int_0^1{ u'(x, t) \; v(x, t) \; dx}
-    \\\qquad
-    + \alpha \; \int_0^1{ u_x(x) \; v_x(x) \; dx }
-    + \beta \; \int_0^1{ u(x) \; v(x) \; dx }
-    + \gamma \; \int_0^1{ u_x(x) \; v(x) \; dx}
-    \\\qquad
-    + \int_0^1{ g(u(x, t)) \; v(x, t) \; dx}
-    = \int_0^1{ f(x) \; v(x) \; dx }
-\end{array} \]
-
-Usando uma notação extra:
-\begin{itemize}
-\item \[
-    \kappa(u, v) =
-    \alpha \; \int_0^1{ u_x(x, t) \; v_x(x, t) \; dx }
-    + \beta \; \int_0^1{ u(x, t) \; v(x, t) \; dx }
-    + \gamma \; \int_0^1{ u_x(x, t) \; v(x, t) \; dx}
-\]
-\item \[
-    (u, v) =
-    \int_0^1{ u(x, t) \; v(x, t) \; dx }
-\]
-\end{itemize}
-conseguimos ``simplificar'' a equação:
-\[
-    (u', v)
-    + \kappa(u, v)
-    + (g \circ u, v)
-    = (f, v)
-\]
+o objetivo é descobrir
+uma \(u \typ [0, 1] \times [0, T] \to \mathbb{R}\)
+que satisfaça o sistema:
+\[ \begin{cases}
+    (u'(t), v)
+    + \kappa(u(t), v)
+    + (g \circ u(t), v)
+    = (f(t), v)
+        &\quad\text{, } t \in \,]0, T] \text{ , } v \in V
+    \\
+    u(x, 0) = u_0(x)
+        &\quad\text{, } x \in \,]0, 1[
+    \\
+    u(t) \in H
+        &\quad\text{, } t \in [0, T]
+\end{cases} \]
 
 \section{Problema Aproximado via o Método de Galerkin}
 
-Seja o espaço das soluções
-\[
-    H_m = \{
-        u \text{ é suficientemente suave } : u(0, t) = u(1, t) = 0
-        \quad\text{, } \forall t \in [0, T]
-    \}
-\]
-e o espaço das funções de teste (funções peso)
+Seja o espaço das funções de teste (funções peso)
 \[
     V_m = \{
-        v \text{ é suficientemente suave } : v(0, t) = v(1, t) = 0
-        \quad\text{, } \forall t \in [0, T]
+        v \text{ é suficientemente suave } : v(0) = v(1) = 0
     \}
 \]
 ambos tendo dimensão finita \(m\)
 e base \(\{ \vphi_1, \vphi_2, \dots, \vphi_m\}\).
-
-\emph{Nota}: Nesse caso \(H_m = V_m\).
 
 Dados
 \(f \typ [0, 1] \times [0, T] \to \mathbb{R}\),
@@ -221,27 +220,31 @@ Dados
 \(\alpha > 0\),
 \(\beta \ge 0\),
 \(\gamma \ge 0\),
-o objetivo é descobrir \(u^h \in H^h_m\)
-que para qualquer \(v^h \in V^h_m\),
+o objetivo é descobrir \(u^h \in V_m\)
+que para qualquer \(v^h \in V_m\),
 satisfaça o sistema:
 \[ \begin{cases}
-    (u^h{}', v)
-    + \kappa(u^h, v^h)
-    + (g \circ u^h, v^h)
-    = (f, v^h)
+    (u^h{}'(t), v^h)
+    + \kappa(u^h(t), v^h)
+    + (g \circ u^h(t), v^h)
+    = (f(t), v^h)
+        &\quad\text{, } t \in \,]0, T] \text{ , } v \in V
     \\
     u^h(x, 0) = u_0(x)
+        &\quad\text{, } x \in \,]0, 1[
+    \\
+    u(t) \in H
+        &\quad\text{, } t \in [0, T]
 \end{cases} \]
 
-\section{Transição entre Problema Aproximado e Forma Matriz-Vetor (TODO)}
+\section{Transição entre Problema Aproximado e Forma Matriz-Vetor (com um tempo fixo)}
 
 Como estamos trabalhando em um espaço discreto,
-podemos descrever \(u^h\)
+podemos descrever \(u^h(t)\)
 como uma ``soma pesada'' dos elementos da base:
 \[
-    u^h = \sum_{j=1}^m{ c_j \; \vphi_j }
+    u^h(t) = \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }
 \]
-
 
 Como os \(\vphi_1, \dots, \vphi_m\)
 são uma base do espaço \(V_m\),
@@ -253,46 +256,85 @@ criamos um sistema de \(m\) linhas.
 Cada linha do sistema tem a seguinte forma,
 com \(i = 1, \dots, m\):
 \[
-    \kappa(\sum_{j=1}^m{ c_j \; \vphi_j }, \vphi_i) = (f, \vphi_i)
+    (\sum_{j=1}^m{ c^{(t)}_j \; \vphi_j' }, \vphi_i)
+    + \kappa(\sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    = (f, \vphi_i)
 \] \[
-    \sum_{j=1}^m{ \kappa(c_j \; \vphi_j, \vphi_i) } = (f, \vphi_i)
+    \sum_{j=1}^m{ (c^{(t)}_j \; \vphi_j', \vphi_i) }
+    + \sum_{j=1}^m{ \kappa(c^{(t)}_j \; \vphi_j, \vphi_i) }
+    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    = (f, \vphi_i)
 \] \[
-    \sum_{j=1}^m{ c_j \; \kappa(\vphi_j, \vphi_i) } = (f, \vphi_i)
-\]
-
-Abrindo o \(\sum\), temos uma linha da forma:
-\[
-    c_1 \; \kappa(\vphi_1, \vphi_i)
-    + c_2 \; \kappa(\vphi_2, \vphi_i)
-    + \cdots
-    + c_m \; \kappa(\vphi_m, \vphi_i)
+    \sum_{j=1}^m{ c^{(t)}_j \; (\vphi_j', \vphi_i) }
+    + \sum_{j=1}^m{ c^{(t)}_j \; \kappa(\vphi_j, \vphi_i) }
+    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
     = (f, \vphi_i)
 \]
 
-\section{Forma Matriz-Vetor (TODO)}
+Abrindo o \(\sum\), temos a linha \(i\):
+\[ \begin{array}{l}
+    c^{(t)}_1 \; \left[
+        (\vphi_1', \vphi_i)
+        + \kappa(\vphi_1, \vphi_i)
+    \right]
+    \\\qquad
+    + c^{(t)}_2 \; \left[
+        (\vphi_2', \vphi_i)
+        + \kappa(\vphi_2, \vphi_i)
+    \right]
+    \\\qquad
+    \quad\vdots
+    \\\qquad
+    + c^{(t)}_m \; \left[
+        (\vphi_m', \vphi_i)
+        + \kappa(\vphi_m, \vphi_i)
+    \right]
+    \\\qquad
+    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    \\\qquad
+    = (f, \vphi_i)
+\end{array} \]
+
+\section{Forma Matriz-Vetor (com um tempo fixo)}
 
 Dados
-\(f \typ [0, 1] \to \mathbb{R}\),
+\(f \typ [0, 1] \times [0, T] \to \mathbb{R}\),
+\(u_0 \typ [0, 1] \to \mathbb{R}\),
+\(g \typ \mathbb{R} \to \mathbb{R}\),
+\(T \ge 1\),
 \(\alpha > 0\),
 \(\beta \ge 0\),
 \(\gamma \ge 0\),
-o objetivo é descobrir os coeficientes \(c_j\)
-de \(c\)
+o objetivo é descobrir,
+para um \(t \in [1, T]\) específico,
+os coeficientes \(c^{(t)}_j\)
+de \(c^{(t)}\)
 satisfaçam a equação matricial:
 \[
-    \mathbb{K} \; c = \mathbb{F}
+    \mathbb{K} \; c^{(t)} + \mathbb{G}^{(t)} = \mathbb{F}^{(t)}
 \]
 onde:
 \begin{itemize}
-\item \[
+\item \(
     \mathbb{K}_{i, j} = \kappa(\vphi_j, \vphi_i)
-\]
-\item \[
-    \mathbb{F}_i = (f, \vphi_i)
-\]
+\)
+\item \(
+    \mathbb{G}^{(t)}_{i} = (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+\)
+\item \(
+    \mathbb{F}^{(t)}_i = (f(t), \vphi_i)
+\)
 \end{itemize}
 
-\newpage % TODO remove \newpage
+\section{Transição entre Forma Matriz-Vetor (com um tempo fixo) e Forma Matriz-Vetor}
+
+Agora usamos uma aproximação para
+dados os coeficientes de tempos anteriores,
+calcular os coeficientes do próximo tempo.
+
+(TODO)
+
 \section{Resultados (TODO)}
 
 % \includegraphics[width=0.5\textwidth]{images/solucao_aprox}
