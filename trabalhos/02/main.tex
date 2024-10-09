@@ -220,7 +220,7 @@ Dados
 \(\alpha > 0\),
 \(\beta \ge 0\),
 \(\gamma \ge 0\),
-o objetivo é descobrir \(u^h \in V_m\)
+o objetivo é descobrir \(u^h \typ [0, 1] \times [0, T] \to \mathbb{R}\)
 que para qualquer \(v^h \in V_m\),
 satisfaça o sistema:
 \[ \begin{cases}
@@ -233,7 +233,7 @@ satisfaça o sistema:
     u^h(x, 0) = u_0(x)
         &\quad\text{, } x \in \,]0, 1[
     \\
-    u(t) \in H
+    u^h(t) \in V_m
         &\quad\text{, } t \in [0, T]
 \end{cases} \]
 
@@ -243,7 +243,7 @@ Como estamos trabalhando em um espaço discreto,
 podemos descrever \(u^h(t)\)
 como uma ``soma pesada'' dos elementos da base:
 \[
-    u^h(t) = \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }
+    u^h(t) = \sum_{j=1}^m{ c_j(t) \; \vphi_j }
 \]
 
 Como os \(\vphi_1, \dots, \vphi_m\)
@@ -256,45 +256,21 @@ criamos um sistema de \(m\) linhas.
 Cada linha do sistema tem a seguinte forma,
 com \(i = 1, \dots, m\):
 \[
-    (\sum_{j=1}^m{ c^{(t)}_j \; \vphi_j' }, \vphi_i)
-    + \kappa(\sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
-    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    (\sum_{j=1}^m{ {c_j}'(t) \; \vphi_j }, \vphi_i)
+    + \kappa(\sum_{j=1}^m{ {c_j}(t) \; \vphi_j }, \vphi_i)
+    + (g \circ \sum_{j=1}^m{ {c_j}(t) \; \vphi_j }, \vphi_i)
     = (f, \vphi_i)
 \] \[
-    \sum_{j=1}^m{ (c^{(t)}_j \; \vphi_j', \vphi_i) }
-    + \sum_{j=1}^m{ \kappa(c^{(t)}_j \; \vphi_j, \vphi_i) }
-    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    \sum_{j=1}^m{ {c_j}'(t) \; \vphi_j, \vphi_i) }
+    + \sum_{j=1}^m{ \kappa({c_j}(t) \; \vphi_j, \vphi_i) }
+    + (g \circ \sum_{j=1}^m{ {c_j}(t) \; \vphi_j }, \vphi_i)
     = (f, \vphi_i)
 \] \[
-    \sum_{j=1}^m{ c^{(t)}_j \; (\vphi_j', \vphi_i) }
-    + \sum_{j=1}^m{ c^{(t)}_j \; \kappa(\vphi_j, \vphi_i) }
-    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    \sum_{j=1}^m{ {c_j}'(t) \; (\vphi_j, \vphi_i) }
+    + \sum_{j=1}^m{ {c_j}(t) \; \kappa(\vphi_j, \vphi_i) }
+    + (g \circ \sum_{j=1}^m{ {c_j}(t) \; \vphi_j }, \vphi_i)
     = (f, \vphi_i)
 \]
-
-Abrindo o \(\sum\), temos a linha \(i\):
-\[ \begin{array}{l}
-    c^{(t)}_1 \; \left[
-        (\vphi_1', \vphi_i)
-        + \kappa(\vphi_1, \vphi_i)
-    \right]
-    \\\qquad
-    + c^{(t)}_2 \; \left[
-        (\vphi_2', \vphi_i)
-        + \kappa(\vphi_2, \vphi_i)
-    \right]
-    \\\qquad
-    \quad\vdots
-    \\\qquad
-    + c^{(t)}_m \; \left[
-        (\vphi_m', \vphi_i)
-        + \kappa(\vphi_m, \vphi_i)
-    \right]
-    \\\qquad
-    + (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
-    \\\qquad
-    = (f, \vphi_i)
-\end{array} \]
 
 \section{Forma Matriz-Vetor (com um tempo fixo)}
 
@@ -308,33 +284,49 @@ Dados
 \(\gamma \ge 0\),
 o objetivo é descobrir,
 para um \(t \in [1, T]\) específico,
-os coeficientes \(c^{(t)}_j\)
-de \(c^{(t)}\)
+os coeficientes \(c_j(t)\)
+de \(c(t)\)
 satisfaçam a equação matricial:
 \[
-    \mathbb{K} \; c^{(t)} + \mathbb{G}^{(t)} = \mathbb{F}^{(t)}
+    \mathbb{M} \; c'(t) + \mathbb{K} \; c(t) + \mathbb{G}(c(t)) = \mathbb{F}(t)
 \]
 onde:
 \begin{itemize}
 \item \(
+    \mathbb{M}_{i, j} = (\vphi_j, \vphi_i)
+\)
+\item \(
     \mathbb{K}_{i, j} = \kappa(\vphi_j, \vphi_i)
 \)
 \item \(
-    \mathbb{G}^{(t)}_{i} = (g \circ \sum_{j=1}^m{ c^{(t)}_j \; \vphi_j }, \vphi_i)
+    \mathbb{G}_{i}(c(t)) = (g \circ \sum_{j=1}^m{ c_j(t) \; \vphi_j }, \vphi_i)
 \)
 \item \(
-    \mathbb{F}^{(t)}_i = (f(t), \vphi_i)
+    \mathbb{F}_i(t) = (f(t), \vphi_i)
 \)
 \end{itemize}
 
-\section{Transição entre Forma Matriz-Vetor (com um tempo fixo) e Forma Matriz-Vetor}
+\section{Resolvendo o problema de valor inicial por Crank-Nicolson linearizado}
 
 Agora usamos uma aproximação para
 dados os coeficientes de tempos anteriores,
 calcular os coeficientes do próximo tempo.
+Para isso,
+vamos discretizar o tempo
+em \(N\) intervalos de tamanho \(\tau\) cada,
+sendo \(t_0 = 0\) e
+\(\forall i \in \{ 1, \dots, N \}, t_i = t_0 + \tau \; i\),
+com \(t_N \le T\).
+
+Para cada intervalo \(i\),
+vamos avaliar a equação em cada
+tempo médio desse intervalo
+denotado como
+\(t_{i - \frac12} = \frac{t_{i-1} + t_i}{2}\).
 
 (TODO)
 
+\newpage
 \section{Resultados (TODO)}
 
 % \includegraphics[width=0.5\textwidth]{images/solucao_aprox}
