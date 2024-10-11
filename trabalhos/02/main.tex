@@ -324,6 +324,179 @@ tempo médio desse intervalo
 denotado como
 \(t_{i - \frac12} = \frac{t_{i-1} + t_i}{2}\).
 
+\[
+    \mathbb{M} \; c'(t_{i-\frac12})
+    + \mathbb{K} \; c(t_{i-\frac12})
+    + \mathbb{G}(c(t_{i-\frac12}))
+    = \mathbb{F}(t_{i-\frac12})
+\]
+
+Agora aproximamos \(c'(t_{i-\frac12})\) e \(c(t_{i-\frac12})\)
+usando expansão de Taylor:
+
+\[
+    \mathcal{T}_{f,x_0}(x)
+    = \sum_{k=0}^{\infty} \frac{(x - x_0)^k}{k!} \; f^{(k)}(x_0)
+\]
+
+Usando
+\(
+    c(t_{i+1}) + c(t_i)
+    =
+    \mathcal{T}_{c,t_{i-\frac12}}(t_i)
+    + \mathcal{T}_{c,t_{i-\frac12}}(t_{i+1})
+\):
+\[ \begin{array}{l} \displaystyle
+    \sum_{k=0}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    + \sum_{k=0}^{\infty} \frac{(t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \sum_{k=0}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k + (t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \left[1 + 1\right] \; c(t_{i-\frac12})
+    + \left[ (t_{i+1} - t_{i-\frac12}) + (t_i - t_{i-\frac12}) \right] \; c'(t_{i-\frac12})
+    \\\qquad \displaystyle
+    + \sum_{k=2}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k + (t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    2 \; c(t_{i-\frac12})
+    + \left[ \frac{\tau}{2} + \frac{-\tau}{2} \right] \; c'(t_{i-\frac12})
+    + \sum_{k=2}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k + (t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    2 \; c(t_{i-\frac12})
+    + \mathcal{O}(n^2)
+\end{array} \]
+então \(
+    c(t_{i+1}) + c(t_i)
+    \approx
+    2 \; c'(t_{i-\frac12})
+\) e \(
+    c(t_{i-\frac12})
+    \approx
+    \frac{c(t_{i+1}) + c(t_i)}{2}
+\).
+
+Usando
+\(
+    c(t_{i+1}) - c(t_i)
+    =
+    \mathcal{T}_{c,t_{i-\frac12}}(t_{i+1})
+    - \mathcal{T}_{c,t_{i-\frac12}}(t_i)
+\):
+\[ \begin{array}{l} \displaystyle
+    \sum_{k=0}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    - \sum_{k=0}^{\infty} \frac{(t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \sum_{k=0}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k - (t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \left[1 - 1\right] \; c(t_{i-\frac12})
+    + \left[ (t_{i+1} - t_{i-\frac12}) - (t_i - t_{i-\frac12}) \right] \; c'(t_{i-\frac12})
+    \\\qquad \displaystyle
+    + \sum_{k=2}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k - (t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \left[ \frac{\tau}{2} - \frac{-\tau}{2} \right] \; c'(t_{i-\frac12})
+    + \sum_{k=2}^{\infty} \frac{(t_{i+1} - t_{i-\frac12})^k - (t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \tau \; c'(t_{i-\frac12})
+    + \mathcal{O}(n^2)
+\end{array} \]
+então \(
+    c(t_{i+1}) - c(t_i)
+    \approx
+    \tau \; c'(t_{i-\frac12})
+\) e \(
+    c'(t_{i-\frac12})
+    \approx
+    \frac{c(t_{i+1}) - c(t_i)}{\tau}
+\).
+
+Mas ainda precisamos de outra aproximação
+para \(c(t_{i-\frac12})\)
+que não use \(c(t_{i+1})\).
+Vamos usar ela no termo não-linear.
+
+Usando
+\(
+    3 \; c(t_i) - c(t_{i-1})
+    =
+    3 \; \mathcal{T}_{c,t_{i-\frac12}}(t_i)
+    - \mathcal{T}_{c,t_{i-\frac12}}(t_{i-1})
+\):
+\[ \begin{array}{l} \displaystyle
+    3 \; \sum_{k=0}^{\infty} \frac{(t_i - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    - \sum_{k=0}^{\infty} \frac{(t_{i-1} - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \sum_{k=0}^{\infty} \frac{3 \; (t_i - t_{i-\frac12})^k - (t_{i-1} - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    \left[3 - 1\right] \; c(t_{i-\frac12})
+    \\\qquad \displaystyle
+    + \sum_{k=1}^{\infty} \frac{3 \; (t_i - t_{i-\frac12})^k - (t_{i-1} - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    2 \; c(t_{i-\frac12})
+    + \sum_{k=1}^{\infty} \frac{3 \; (t_i - t_{i-\frac12})^k - (t_{i-1} - t_{i-\frac12})^k}{k!} \; c^{(k)}(t_{i-\frac12})
+    \\ \displaystyle
+    2 \; c(t_{i-\frac12})
+    + \mathcal{O}(n)
+\end{array} \]
+então \(
+    3 \; c(t_i) - c(t_{i-1})
+    \approx
+    2 \; c(t_{i-\frac12})
+\) e \(
+    c(t_{i-\frac12})
+    \approx
+    \frac{3 \; c(t_i) - c(t_{i-1})}{2}
+\).
+
+Resumindo, nossas aproxmações são:
+\begin{itemize}
+\item \(
+    c(t_{i-\frac12})
+    =
+    \frac{c(t_{i+1}) + c(t_i)}{2}
+    + \mathcal{O}(n^2)
+\)
+\item \(
+    c'(t_{i-\frac12})
+    =
+    \frac{c(t_{i+1}) - c(t_i)}{\tau}
+    + \mathcal{O}(n^2)
+\)
+\item \(
+    c(t_{i-\frac12})
+    =
+    \frac{3 \; c(t_i) - c(t_{i-1})}{2}
+    + \mathcal{O}(n)
+\)
+\end{itemize}
+
+Aplicando as aproximações na equação matricial
+no tempo \(t_{i-\frac12}\)
+temos:
+\[ \begin{array}{l} \displaystyle
+    \mathbb{M} \; c'(t_{i-\frac12})
+    + \mathbb{K} \; c(t_{i-\frac12})
+    + \mathbb{G}(c(t_{i-\frac12}))
+    = \mathbb{F}\left( t_{i-\frac12} \right)
+    \\[3ex] \displaystyle
+    \mathbb{M} \; \left[ \frac{c(t_{i+1}) - c(t_i)}{\tau} \right]
+    + \mathbb{K} \; \left[ \frac{c(t_{i+1}) - c(t_i)}{2} \right]
+    + \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
+    = \mathbb{F}\left( t_{i-\frac12} \right)
+    \\[3ex] \displaystyle
+    \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_{i+1})
+    - \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_i)
+    + \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
+    = \mathbb{F}\left( t_{i-\frac12} \right)
+    \\[3ex] \displaystyle
+    \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_{i+1})
+    = \mathbb{F}\left( t_{i-\frac12} \right)
+    - \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
+    + \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_i)
+\end{array} \]
+
+Com isso conseguimos aproximar o
+\(c(t_{i+1})\) usando os 2 pontos anteriores:
+\(c(t_i)\) e \(c(t_{i-1})\).
+
 (TODO)
 
 \newpage
