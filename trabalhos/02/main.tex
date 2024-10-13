@@ -484,15 +484,15 @@ temos:
     + \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
     = \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
-    \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_{i+1})
-    - \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; c(t_i)
-    + \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
-    = \mathbb{F}\left( t_{i+\frac12} \right)
+    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; c(t_{i+1})
+    - \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; c(t_i)
+    + \tau \; \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
+    = \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
-    \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_{i+1})
-    = \mathbb{F}\left( t_{i+\frac12} \right)
-    - \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
-    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; c(t_i)
+    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; c(t_{i+1})
+    = \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
+    - \tau \; \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
+    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; c(t_i)
 \end{array} \]
 
 Com isso conseguimos aproximar o
@@ -516,10 +516,10 @@ com \(i \in \{ 0, 1, \dots, \lfloor \frac{T}{\tau} \rfloor \}\),
 os coeficientes de \(C(t_i)\)
 satisfaçam o sistema de equações matriciais:
 \[ \begin{cases}
-    \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; C(t_{i+1})
-    = \mathbb{F}\left( t_{i+\frac12} \right)
-    - \mathbb{G}\left( \frac{3 \; C(t_i) - C(t_{i-1})}{2} \right)
-    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; C(t_i)
+    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; C(t_{i+1})
+    = \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
+    - \tau \; \mathbb{G}\left( \frac{3 \; C(t_i) - C(t_{i-1})}{2} \right)
+    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C(t_i)
         &\text{, } i \in \{ 1, \dots, \lfloor \frac{N}{\tau} \rfloor \}
     \\
     C(t_0) = \; ???
@@ -549,15 +549,15 @@ Para aproximar o \(C(t_1)\),
 vamos usar um método do tipo preditor/corretor:
 
 \[ \begin{cases}
-    \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; \tilde{C}(t_1)
-    = \mathbb{F}\left( t_{\frac12} \right)
-    - \mathbb{G}\left( C(t_0) \right)
-    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; C(t_0)
+    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; \tilde{C}(t_1)
+    = \tau \; \mathbb{F}\left( t_{\frac12} \right)
+    - \tau \; \mathbb{G}\left( C(t_0) \right)
+    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C(t_0)
     \\
-    \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; C(t_1)
-    = \mathbb{F}\left( t_{\frac12} \right)
-    - \mathbb{G}\left( \frac{\tilde{C}(t_1) + C(t_0)}{2} \right)
-    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; C(t_0)
+    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; C(t_1)
+    = \tau \; \mathbb{F}\left( t_{\frac12} \right)
+    - \tau \; \mathbb{G}\left( \frac{\tilde{C}(t_1) + C(t_0)}{2} \right)
+    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C(t_0)
 \end{cases} \]
 
 \section{Local/Global para o termo não-linear}
