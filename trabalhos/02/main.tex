@@ -480,19 +480,19 @@ temos:
     = \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
     \mathbb{M} \; \left[ \frac{c(t_{i+1}) - c(t_i)}{\tau} \right]
-    + \mathbb{K} \; \left[ \frac{c(t_{i+1}) - c(t_i)}{2} \right]
+    + \mathbb{K} \; \left[ \frac{c(t_{i+1}) + c(t_i)}{2} \right]
     + \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
     = \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
     \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_{i+1})
-    - \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_i)
+    - \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; c(t_i)
     + \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
     = \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
     \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_{i+1})
     = \mathbb{F}\left( t_{i+\frac12} \right)
     - \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
-    + \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; c(t_i)
+    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; c(t_i)
 \end{array} \]
 
 Com isso conseguimos aproximar o
@@ -519,7 +519,7 @@ satisfaçam o sistema de equações matriciais:
     \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; C(t_{i+1})
     = \mathbb{F}\left( t_{i+\frac12} \right)
     - \mathbb{G}\left( \frac{3 \; C(t_i) - C(t_{i-1})}{2} \right)
-    + \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; C(t_i)
+    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; C(t_i)
         &\text{, } i \in \{ 1, \dots, \lfloor \frac{N}{\tau} \rfloor \}
     \\
     C(t_0) = \; ???
@@ -552,12 +552,12 @@ vamos usar um método do tipo preditor/corretor:
     \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; \tilde{C}(t_1)
     = \mathbb{F}\left( t_{\frac12} \right)
     - \mathbb{G}\left( C(t_0) \right)
-    + \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; C(t_0)
+    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; C(t_0)
     \\
     \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; C(t_1)
     = \mathbb{F}\left( t_{\frac12} \right)
     - \mathbb{G}\left( \frac{\tilde{C}(t_1) + C(t_0)}{2} \right)
-    + \left[ \frac1\tau \mathbb{M} + \frac12 \mathbb{K} \right] \; C(t_0)
+    + \left[ \frac1\tau \mathbb{M} - \frac12 \mathbb{K} \right] \; C(t_0)
 \end{cases} \]
 
 \section{Local/Global para o termo não-linear}
