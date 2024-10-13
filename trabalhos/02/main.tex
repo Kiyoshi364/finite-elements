@@ -637,6 +637,48 @@ para ter uma componente extra valendo \(0\).
 \section{Local/Global para aproximações de \texorpdfstring{\(u_0\)}{u0}}
 \label{sec:U0}
 
+\subsection{Interpolante de \texorpdfstring{\(u_0\)}{u0}}
+
+Propriedade:
+\[
+    \sum_{j=1}^m{ C_j(t_0) \; \vphi_j(x_i) } = u_0(x_i)
+\]
+
+Resultado:
+\[
+    C_i(t_0) = u_0(x_i)
+\]
+
+(TODO)
+
+\subsection{Projeção \texorpdfstring{\(L^2\)}{L2} de \texorpdfstring{\(u_0\)}{u0}}
+
+Propriedade:
+\[
+    \forall v^h \in V_m, \quad
+    (\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, v^h) = 0
+\]
+
+(TODO)
+
+\subsection{Projeção \texorpdfstring{\(H^1_0\)}{H10} de \texorpdfstring{\(u_0\)}{u0}}
+
+Propriedade:
+\[
+    \forall v^h \in V_m, \quad
+    (\sum_{j=1}^m{ C_j(t_0) \; \frac{d}{dx}\vphi_j } - u_0, \frac{d}{dx}v^h) = 0
+\]
+
+(TODO)
+
+\subsection{\texorpdfstring{\(\kappa\)}{Kappa} como projeção de \texorpdfstring{\(u_0\)}{u0}}
+
+Propriedade:
+\[
+    \forall v^h \in V_m, \quad
+    \kappa(\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, v^h) = 0
+\]
+
 (TODO)
 
 \newpage
