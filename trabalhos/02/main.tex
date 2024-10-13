@@ -562,7 +562,77 @@ vamos usar um método do tipo preditor/corretor:
 
 \section{Local/Global para o termo não-linear}
 
-(TODO)
+Calculando \(\mathbb{G}_{i}(C(t))\):
+
+\[ \begin{array}{l} \displaystyle
+    \mathbb{G}_{i}(C(t))
+    \\ \displaystyle
+    \left( g \circ \sum_{j=1}^m{ C_j(t) \; \vphi_j }, \vphi_i \right)
+    \\ \displaystyle
+    \int_0^1{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \vphi_j(x) }\right) \; \vphi_i(x)
+    \;dx}
+    \\ \displaystyle
+    \int_{x^{i-1}_1}^{x^{i-1}_2}{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \vphi_j(x) }\right) \; \vphi_i(x)
+    \;dx}
+    + \int_{x^i_1}^{x^i_2}{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \vphi_j(x) }\right) \; \vphi_i(x)
+    \;dx}
+    \\ \displaystyle
+    \int_{x^{i-1}_1}^{x^{i-1}_2}{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \vphi_j(x) }\right) \; \vphi^i_1(x)
+    \;dx}
+    + \int_{x^i_1}^{x^i_2}{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \vphi_j(x) }\right) \; \vphi^i_2(x)
+    \;dx}
+\end{array} \]
+
+Criamos um vetor \(\mathbb{G}^e\),
+que guarda na componente \(\mathbb{G}^e_a\),
+com \(a \in \{ 1, 2 \}\),
+a contribuição da função \(\vphi^e_a\)
+calculada sobre o elemento \(e\).
+
+\[ \begin{array}{l} \displaystyle
+    \int_{x^e_1}^{x^e_2}{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \vphi_j(x) }\right) \; \vphi^e_a(x)
+    \;dx}
+    \\ \displaystyle
+    \int_{-1}^1{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \phi^{j,e}(\xi) }\right) \; \phi_a(\xi)
+        \; \frac{h}{2}
+    \;d\xi}
+    \\ \displaystyle
+    \frac{h}{2} \; \int_{-1}^1{
+        g\left(\sum_{j=1}^m{ C_j(t) \; \phi^{j,e}(\xi) }\right) \; \phi_a(\xi)
+    \;d\xi}
+\end{array} \]
+onde:
+\[
+    \phi^{j,e}(\xi) = \begin{cases}
+        \phi_1(\xi) = \frac{1 - \xi}{2}
+            &\quad\text{, } j = e
+        \\
+        \phi_2(\xi) = \frac{1 + \xi}{2}
+            &\quad\text{, } j + 1 = e
+        \\
+        0
+            &\quad\text{, } j < e \lor e + 1 < j
+    \end{cases}
+\]
+
+Assim, conseguimos simplificar para:
+\[
+    \mathbb{G}^e_a(C(t)) =
+    \frac{h}{2} \; \int_{-1}^1{
+        g(C_e(t_i) \; \phi_1(\xi) + C_{e+1}(t_i) \; \phi_2(\xi)) \; \phi_a(\xi)
+    \;d\xi}
+\]
+
+\emph{Nota}: \(C_{e+1}(t_i)\) pode não existir,
+então precisamos estender \(C\)
+para ter uma componente extra valendo \(0\).
 
 \section{Local/Global para aproximações de \texorpdfstring{\(u_0\)}{u0}}
 \label{sec:U0}
