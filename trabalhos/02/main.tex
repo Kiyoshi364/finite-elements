@@ -616,8 +616,6 @@ Resultado:
     C_i(t_0) = u_0(x_i)
 \]
 
-(TODO)
-
 \subsection{Projeção \texorpdfstring{\(L^2\)}{L2} de \texorpdfstring{\(u_0\)}{u0}}
 
 Propriedade:
@@ -626,7 +624,29 @@ Propriedade:
     (\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, v^h) = 0
 \]
 
-(TODO)
+Substituindo \(v^h\) pelas funções da base \(\vphi_i\):
+\[ \begin{array}{l} \displaystyle
+    (\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, \vphi_i) = 0
+    \\ \displaystyle
+    (\sum_{j=1}^m{ C_j(t_0) \; \vphi_j }, \vphi_i) - (u_0, \vphi_i) = 0
+    \\ \displaystyle
+    \sum_{j=1}^m{ C_j(t_0) \; (\vphi_j, \vphi_i) } = (u_0, \vphi_i)
+\end{array} \]
+
+Então:
+\[
+  \mathbb{M} \; C(t_0) = U^0
+\]
+com
+\[
+    \mathbb{M}_{i,j} = (\varphi_j, \varphi_i)
+    \qquad\text{ e }\qquad
+    U^0_i = (u_0, \varphi_i)
+\]
+
+Já sabemos calcular o \(\mathbb{M}\)
+e podemos usar a mesma forma de calcular o \(\mathbb{F}\)
+para calcular o \(U^0\).
 
 \subsection{Projeção \texorpdfstring{\(H^1_0\)}{H10} de \texorpdfstring{\(u_0\)}{u0}}
 
@@ -636,7 +656,50 @@ Propriedade:
     (\sum_{j=1}^m{ C_j(t_0) \; \frac{d}{dx}\vphi_j } - \frac{d}{dx}u_0, \frac{d}{dx}v^h) = 0
 \]
 
-(TODO)
+Substituindo \(v^h\) pelas funções da base \(\vphi_i\):
+\[ \begin{array}{l} \displaystyle
+    (\sum_{j=1}^m{ C_j(t_0) \; \frac{d}{dx}\vphi_j } - \frac{d}{dx}u_0, \frac{d}{dx}\vphi_i) = 0
+    \\ \displaystyle
+    (\sum_{j=1}^m{ C_j(t_0) \; \frac{d}{dx}\vphi_j }, \frac{d}{dx}\vphi_i) - (\frac{d}{dx}u_0, \frac{d}{dx}\vphi_i) = 0
+    \\ \displaystyle
+    \sum_{j=1}^m{ C_j(t_0) \; (\frac{d}{dx}\vphi_j, \frac{d}{dx}\vphi_i) } = (\frac{d}{dx}u_0, \frac{d}{dx}\vphi_i)
+\end{array} \]
+
+Então:
+\[
+  \mathbb{A} \; C(t_0) = \mathbb{U}
+\]
+com
+\[
+    \mathbb{A}_{i,j} = (\frac{d}{dx}\varphi_j, \frac{d}{dx}\varphi_i)
+    \qquad\text{ e }\qquad
+    \mathbb{U}_i = (\frac{d}{dx}u_0, \frac{d}{dx}\varphi_i)
+\]
+
+Para calcular o \(\mathbb{A}\),
+podemos usar o construtor de \(\mathbb{K}\)
+usando \(\alpha = 1\) e as outras constantes iguais a \(0\).
+
+Criamos um vetor \(\mathbb{U}^{e}\)
+que guarda na componente \(\mathbb{U}^e_a\),
+com \(a \in \{ 1, 2 \}\),
+a contribuição da função \(\vphi^e_a\)
+calculada sobre o elemento \(e\).
+
+\[ \begin{array}{l} \displaystyle
+    \int_{x^e_1}^{x^e_2}{
+        \frac{d}{dx}u_0(x) \; \frac{d}{dx}\varphi^e_a(x)
+    \;dx}
+    \\[2ex] \displaystyle
+    \int_{-1}^1{
+        \frac{d}{dx}u_0(x^e(\xi)) \; \frac{2}{h} \; \frac{d}{d\xi}\phi_a(\xi)
+        \; \frac{h}{2}
+    \;d\xi}
+    \\[2ex] \displaystyle
+    \int_{-1}^1{
+        \frac{d}{dx}u_0(x^e(\xi)) \; \frac{d}{d\xi}\phi_a(\xi)
+    \;d\xi}
+\end{array} \]
 
 \subsection{\texorpdfstring{\(\kappa\)}{Kappa} como projeção de \texorpdfstring{\(u_0\)}{u0}}
 
@@ -646,7 +709,59 @@ Propriedade:
     \kappa(\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, v^h) = 0
 \]
 
-(TODO)
+Substituindo \(v^h\) pelas funções da base \(\vphi_i\):
+\[ \begin{array}{l} \displaystyle
+    \kappa(\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, \vphi_i) = 0
+    \\ \displaystyle
+    \kappa(\sum_{j=1}^m{ C_j(t_0) \; \vphi_j }, \vphi_i) - \kappa(u_0, \vphi_i) = 0
+    \\ \displaystyle
+    \sum_{j=1}^m{ C_j(t_0) \; \kappa(\vphi_j, \vphi_i) } = \kappa(u_0, \vphi_i)
+\end{array} \]
+
+Então:
+\[
+  \mathbb{K} \; C(t_0) = kU^0
+\]
+com
+\[
+    \mathbb{K}_{i,j} = \kappa(\varphi_j, \varphi_i)
+    \qquad\text{ e }\qquad
+    kU^0_i = \kappa(u_0, \varphi_i)
+\]
+
+Já sabemos calcular \(\mathbb{K}\),
+e podemos reaproveitar construtores anteriores
+para formar \(kU^0\):
+\begin{itemize}
+\item A parcela do \(\alpha\)
+    \[
+        \alpha \; \int_{x^e_1}^{x^e_2}{
+            \frac{d}{dx}u_0(x) \; \frac{d}{dx}\varphi^e_a(x)
+        \;dx}
+    \]
+    é \(\alpha \; \mathbb{U}\).
+
+\item A parcela do \(\beta\)
+    \[
+        \beta \; \int_{x^e_1}^{x^e_2}{
+            u_0(x) \; \varphi^e_a(x)
+        \;dx}
+    \]
+    é \(\mathbb{F}\),
+    usando \(u_0\) no lugar de \(f\)
+    e multiplicando por \(\beta\) depois.
+
+\item A parcela do \(\gamma\)
+    \[
+        \gamma \; \int_{x^e_1}^{x^e_2}{
+            \frac{d}{dx}u_0(x) \; \varphi^e_a(x)
+        \;dx}
+        \\[2ex] \displaystyle
+    \]
+    é \(\mathbb{F}\),
+    usando \(\frac{d}{dx}u_0\) no lugar de \(f\)
+    e multiplicando por \(\gamma\) depois.
+\end{itemize}
 
 \newpage
 \section{Resultados}
