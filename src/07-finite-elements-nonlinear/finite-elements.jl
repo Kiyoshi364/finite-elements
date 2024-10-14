@@ -10,7 +10,8 @@ using LinearAlgebra: lu
 using SparseArrays: spzeros
 
 export finite_elements
-export fe_setup, fe_setup_AB, fe_setup_c0, fe_step
+export fe_setup, fe_setup_AB, fe_setup_c0, fe_setup_c1, fe_step
+export fe_setup_c0_lerp, fe_setup_c0_projL2, fe_setup_c0_projH01, fe_setup_c0_projkappa
 export Example, example, bacarmo_example
 
 phi = [ (xi -> (1 - xi) / 2), (xi -> (1 + xi) / 2) ]
@@ -150,6 +151,40 @@ function build_vec(f, h, N_e, EQoLG, m;
     F[begin:end-1]
 end
 
+function build_small_vec_deriv(u0, h, e;
+    gauss_n = 5,
+)
+    x2xi = (xi, e) -> (h * ((1 + xi) / 2 + (e - 1)))
+
+    ws, ps = gauss_quadrature_table[gauss_n]
+    U = fill(0.0, (2,))
+    for i in 1:2
+        for g_i in 1:gauss_n
+            p = ps[g_i]
+            U[i] += ws[g_i] * (u0(x2xi(p, e))*phi_deriv[i](p))
+        end
+    end
+
+    U
+end
+
+function build_vec_deriv(f, h, N_e, EQoLG, m;
+    gauss_n = 5,
+)
+    F = fill(0.0, (m+1,))
+    for e in 1:N_e
+        F_e = build_small_vec_deriv(f, h, e,
+            gauss_n=gauss_n,
+        )
+        _1 = EQoLG[1, e]
+        _2 = EQoLG[2, e]
+        F[_1] += F_e[1]
+        F[_2] += F_e[2]
+    end
+
+    F[begin:end-1]
+end
+
 function finite_elements(ex :: Example, tau, h, N_e)
     finite_elements(ex.f, ex.u0, ex.T, tau, ex.alpha, ex.beta, ex.gamma, h, N_e)
 end
@@ -166,11 +201,20 @@ function finite_elements(f, u0, T, tau, alpha, beta, gamma, h, N_e)
     c0
 end
 
-function fe_setup(ex :: Example, tau, h, N_e)
-    fe_setup(ex.f, ex.u0, ex.g, ex.alpha, ex.beta, ex.gamma, tau, h, N_e)
+const default_case = 4
+
+function fe_setup(ex :: Example, tau, h, N_e;
+    case=default_case
+)
+    fe_setup(ex.f, ex.u0, ex.u0_deriv, ex.g,
+        ex.alpha, ex.beta, ex.gamma, tau, h, N_e,
+        case=case
+    )
 end
 
-function fe_setup(f, u0, g, alpha, beta, gamma, tau, h, N_e)
+function fe_setup(f, u0, u0_deriv, g, alpha, beta, gamma, tau, h, N_e;
+    case=default_case
+)
     LG = transpose(cat(1:N_e, 2:N_e+1, dims=2))
 
     m = N_e-1
@@ -183,9 +227,11 @@ function fe_setup(f, u0, g, alpha, beta, gamma, tau, h, N_e)
 
     EQoLG = EQ[LG]
 
-    A, B = fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
+    A, B, K, M = fe_setup_ABKM(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
 
-    c0 = fe_setup_c0(u0, h, EQ, m)
+    c0 = fe_setup_c0(u0, u0_deriv, K, M, alpha, beta, gamma, h, N_e, EQ, EQoLG, m,
+        case=case
+    )
 
     c1 = fe_setup_c1(A, B, f, g, c0, tau, h, N_e, EQoLG, m)
 
@@ -193,6 +239,12 @@ function fe_setup(f, u0, g, alpha, beta, gamma, tau, h, N_e)
 end
 
 function fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
+    A, B, K, M = fe_setup_ABKM(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
+
+    A, B
+end
+
+function fe_setup_ABKM(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
 
     M = build_mat(0.0, 1.0, 0.0, h, N_e, EQoLG, m)
     K = build_mat(alpha, beta, gamma, h, N_e, EQoLG, m)
@@ -205,10 +257,36 @@ function fe_setup_AB(alpha, beta, gamma, tau, h, N_e, EQoLG, m)
     A = lu(A0)
     B = B0
 
-    A, B
+    A, B, K, M
 end
 
-function fe_setup_c0(u0, h, EQ, m)
+function fe_setup_c0(u0, du0, K, M, alpha, beta, gamma, h, N_e, EQ, EQoLG, m;
+    case=default_case
+)
+    cases = [
+        ( (u0, du0, K, M, alpha, beta, gamma, h, N_e, EQ, EQoLG, m) ->
+            fe_setup_c0_lerp(u0, h, EQ, m)
+        ),
+        ( (u0, du0, K, M, alpha, beta, gamma, h, N_e, EQ, EQoLG, m) ->
+            fe_setup_c0_projL2(u0, M, h, N_e, EQoLG, m)
+        ),
+        ( (u0, du0, K, M, alpha, beta, gamma, h, N_e, EQ, EQoLG, m) ->
+            fe_setup_c0_projH01(du0, h, N_e, EQoLG, m)
+        ),
+        ( (u0, du0, K, M, alpha, beta, gamma, h, N_e, EQ, EQoLG, m) ->
+            fe_setup_c0_projkappa(u0, du0, K, alpha, beta, gamma, h, N_e, EQoLG, m)
+        ),
+    ]
+    cases[case](
+        u0, du0,
+        K, M,
+        alpha, beta, gamma,
+        h, N_e,
+        EQ, EQoLG, m
+    )
+end
+
+function fe_setup_c0_lerp(u0, h, EQ, m)
     xs = n_points_from_to(m,
         i_start=0, i_end=(m+1)
     )
@@ -222,6 +300,28 @@ function fe_setup_c0(u0, h, EQ, m)
 
     u0eq_xs = u0.(eq_xs)
     u0eq_xs
+end
+
+function fe_setup_c0_projL2(u0, M, h, N_e, EQoLG, m)
+    U0 = build_vec(u0, h, N_e, EQoLG, m)
+    c0 = M \ U0
+    c0
+end
+
+function fe_setup_c0_projH01(du0, h, N_e, EQoLG, m)
+    A = build_mat(1.0, 0.0, 0.0, h, N_e, EQoLG, m)
+    U = build_vec_deriv(du0, h, N_e, EQoLG, m)
+    c0 = A \ U
+    c0
+end
+
+function fe_setup_c0_projkappa(u0, du0, K, alpha, beta, gamma, h, N_e, EQoLG, m)
+    alpha_U = alpha * build_vec_deriv(du0, h, N_e, EQoLG, m)
+    beta_F = beta * build_vec(u0, h, N_e, EQoLG, m)
+    gamma_F = gamma * build_vec(du0, h, N_e, EQoLG, m)
+    kU = alpha_U + beta_F + gamma_F
+    c0 = K \ kU
+    c0
 end
 
 function fe_setup_c1(A, B, f, g, c0, tau, h, N_e, EQoLG, m)
