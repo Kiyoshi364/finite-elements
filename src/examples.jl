@@ -221,7 +221,7 @@ end # module Examples
 module TimeExamples
 
 export Example
-export bacarmo_example, bacarmo_example_gamma
+export bacarmo_example
 
 struct Example
     f
@@ -311,13 +311,14 @@ export example
 struct Example
     f
     u0
+    u0_deriv
     g
     T :: Number
     alpha :: Number
     beta :: Number
     gamma :: Number
 
-    Example(f, u0;
+    Example(f, u0, u0_deriv;
         g                  = s -> 0,
         T        :: Number = 1,
         alpha    :: Number = 1,
@@ -326,6 +327,7 @@ struct Example
     ) = new(
         f,
         u0,
+        u0_deriv,
         g,
         T,
         alpha,
@@ -336,15 +338,17 @@ struct Example
     Example(ex :: Example;
         f                                 = nothing,
         u0                                = nothing,
+        u0_deriv                          = nothing,
         g                                 = nothing,
         T        :: Union{Nothing,Number} = nothing,
         alpha    :: Union{Nothing,Number} = nothing,
         beta     :: Union{Nothing,Number} = nothing,
         gamma    :: Union{Nothing,Number} = nothing,
     ) = Example(
-        (f     === nothing ? ex.f     : f    ),
-        (u0    === nothing ? ex.u0    : u0   ),
-        (g     === nothing ? ex.g     : g    ),
+        (f         === nothing ? ex.f          : f    ),
+        (u0        === nothing ? ex.u0         : u0   ),
+        (u0_deriv  === nothing ? ex.u0_deriv   : g    ),
+        (g         === nothing ? ex.g          : g    ),
         T       =(T        === nothing ? ex.T        : T       ),
         alpha   =(alpha    === nothing ? ex.alpha    : alpha   ),
         beta    =(beta     === nothing ? ex.beta     : beta    ),
@@ -356,11 +360,12 @@ end
 
 function example(index :: UInt8) :: Tuple{Any, Example}
     mk_f(_g, alp, bet, gamm, exact, dtime, deriv_1, deriv_2) =
-        (x, t) -> ((- alp) * deriv_2(x, t)) + (bet * exact(x, t)) + (gamm * deriv_1(x, t)) + dtime(x, t) + g(exact(x, t))
-    mk_ex(_T, alp, bet, gamm, _g, exact, dtime, deriv_1, deriv_2) = begin
-        f = mk_f(_g, alp, bet, 0.0, exact, dtime, deriv_1, deriv_2)
+        (x, t) -> ((- alp) * deriv_2(x, t)) + (bet * exact(x, t)) + (gamm * deriv_1(x, t)) + dtime(x, t) + _g(exact(x, t))
+    mk_ex(_T, _g, alp, bet, gamm, exact, dtime, deriv_1, deriv_2) = begin
+        f = mk_f(_g, alp, bet, gamm, exact, dtime, deriv_1, deriv_2)
         u0 = x -> exact(x, 0.0)
-        Example(f, u0, g=_g, alpha=alp, beta=bet, gamma=gamm, T=_T)
+        u0_deriv = x -> deriv_1(x, 0.0)
+        Example(f, u0, u0_deriv, g=_g, alpha=alp, beta=bet, gamma=gamm, T=_T)
     end
 
     index == 0 ? begin
@@ -373,7 +378,7 @@ function example(index :: UInt8) :: Tuple{Any, Example}
         dtime = (x, t) -> (-1) * sin(pi * x) * exp(- t) / (pi * pi)
         deriv_1 = (x, t) -> cos(pi * x) * exp(- t) / pi
         deriv_2 = (x, t) -> - sin(pi * x) * exp(- t)
-        (exact, mk_ex(T, alpha, beta, gamma, g, exact, dtime, deriv_1, deriv_2))
+        (exact, mk_ex(T, g, alpha, beta, gamma, exact, dtime, deriv_1, deriv_2))
     end : index == 1 ? begin
         T = 1.0
         alpha = 1.0
@@ -384,16 +389,18 @@ function example(index :: UInt8) :: Tuple{Any, Example}
         dtime = (x, t) -> (-1) * sin(pi * x) * exp(- t) / (pi * pi)
         deriv_1 = (x, t) -> cos(pi * x) * exp(- t) / pi
         deriv_2 = (x, t) -> - sin(pi * x) * exp(- t)
-        (exact, mk_ex(T, alpha, beta, gamma, g, exact, dtime, deriv_1, deriv_2))
+        (exact, mk_ex(T, g, alpha, beta, gamma, exact, dtime, deriv_1, deriv_2))
     end : index == 2 ? begin
-        T = 1.0
         T = 1.0
         alpha = 1.0
         beta = 1.0
         gamma = 0.0
         g = s -> s*s*s - 2*s
         f = (x, t) -> 0
-        ((x, t) -> 0, Example(f, u0, g=g,
+        # exact = ???
+        u0 = x -> sin(pi * x) / (pi * pi)
+        u0_deriv = x -> cos(pi * x) / pi
+        ((x, t) -> 0.0, Example(f, u0, u0_deriv, g=g,
             alpha=alpha, beta=beta, gamma=gamma, T=T))
     end : error("function_index out of bounds")
 end
