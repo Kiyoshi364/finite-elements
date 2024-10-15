@@ -8,9 +8,9 @@ using Plots
 using LaTeXStrings
 using DataFrames
 
-exact, ex = example(0x1)
+fake_exact, ex = example(0x2)
 
-i = 2
+i = 4
 N_e = (1 << i)
 h = 1.0 / N_e
 xs = Common.n_points_from_to(N_e-1)
@@ -20,11 +20,6 @@ ts = 0:tau:ex.T
 N_t = Int(floor(ex.T / tau))
 
 A, B, c0, c1, EQoLG, m = fe_setup(ex, tau, h, N_e)
-
-plotN = 1 << 8
-many_xs = Common.n_points_from_to(plotN,
-    i_start=0, i_end=plotN
-)
 
 ylims=(0,0.11)
 
@@ -44,21 +39,18 @@ anim = @animate for i in 0:N_t
         c
     end)
 
-    errs[i+1] = Common.gauss_error(x -> exact(x, t1), c, h)
-    println("\n[$i/$N_t] Error($t1): ", errs[i+1])
+    println("[$i/$N_t]")
 
     p = plot(
         legend=:topleft,
         xlabel=L"x",
         ylim=ylims,
     )
-    plot!(p, many_xs, exact.(many_xs, t1),
-        label="exact(x, $t1)",
-    )
     plot!(p, cat(0.0, xs, 1.0, dims=1),
-        cat(exact(0.0, t1), c, exact(1.0, t1), dims=1),
+        cat(fake_exact(0.0, t1), c, fake_exact(1.0, t1), dims=1),
         label="solution(x, $t1)",
         markershape=:circle,
+        color=2,
     )
     savefig(p, "out-$i.pdf")
 
