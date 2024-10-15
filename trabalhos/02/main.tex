@@ -513,18 +513,18 @@ Dados
 o objetivo é descobrir,
 para todos os \(t_i\)
 com \(i \in \{ 0, 1, \dots, \lfloor \frac{T}{\tau} \rfloor \}\),
-os coeficientes de \(C(t_i)\)
+os coeficientes de \(C^i = C(t_i)\)
 satisfaçam o sistema de equações matriciais:
 \[ \begin{cases}
-    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; C(t_{i+1})
+    \left[ \mathbb{M} {+} \frac\tau2 \mathbb{K} \right] \; C^{i+1}
     = \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
-    - \tau \; \mathbb{G}\left( \frac{3 \; C(t_i) - C(t_{i-1})}{2} \right)
-    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C(t_i)
-        &\text{, } i \in \{ 1, \dots, \lfloor \frac{N}{\tau} \rfloor \}
+    - \tau \; \mathbb{G}\left( \frac{3 \; C^i - C^{i-1}}{2} \right)
+    + \left[ \mathbb{M} {-} \frac\tau2 \mathbb{K} \right] \; C^i
+        &\text{, } i \in \{ 1, \dots, \lfloor \frac{T}{\tau} \rfloor \}
     \\
-    C(t_0) = \; ???
+    C^0 = \; ???
     \\
-    C(t_1) = \; ???
+    C^1 = \; ???
 \end{cases} \]
 onde:
 \begin{itemize}
@@ -542,22 +542,22 @@ onde:
 \)
 \end{itemize}
 
-Para aproximar o \(C(t_0)\),
+Para aproximar o \(C^0\),
 vamos usar uma das 4 aproximações da Seção~\ref{sec:U0}.
 
-Para aproximar o \(C(t_1)\),
+Para aproximar o \(C^1\),
 vamos usar um método do tipo preditor/corretor:
 
 \[ \begin{cases}
-    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; \tilde{C}(t_1)
+    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; \tilde{C}^1
     = \tau \; \mathbb{F}\left( t_{\frac12} \right)
-    - \tau \; \mathbb{G}\left( C(t_0) \right)
-    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C(t_0)
+    - \tau \; \mathbb{G}\left( C^0 \right)
+    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C^0
     \\
-    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; C(t_1)
+    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; C^1
     = \tau \; \mathbb{F}\left( t_{\frac12} \right)
-    - \tau \; \mathbb{G}\left( \frac{\tilde{C}(t_1) + C(t_0)}{2} \right)
-    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C(t_0)
+    - \tau \; \mathbb{G}\left( \frac{\tilde{C}^1 + C^0}{2} \right)
+    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C^0
 \end{cases} \]
 
 \section{Local/Global para o termo não-linear}
@@ -608,12 +608,12 @@ O vetor estendido é chamado de \(\bar{C}\).
 
 Propriedade:
 \[
-    \sum_{j=1}^m{ C_j(t_0) \; \vphi_j(x_i) } = u_0(x_i)
+    \sum_{j=1}^m{ C^0_j \; \vphi_j(x_i) } = u_0(x_i)
 \]
 
 Resultado:
 \[
-    C_i(t_0) = u_0(x_i)
+    C^0_i = u_0(x_i)
 \]
 
 \subsection{Projeção \texorpdfstring{\(L^2\)}{L2} de \texorpdfstring{\(u_0\)}{u0}}
@@ -621,21 +621,21 @@ Resultado:
 Propriedade:
 \[
     \forall v^h \in V_m, \quad
-    (\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, v^h) = 0
+    (\sum_{j=1}^m{ C^0_j \; \vphi_j } - u_0, v^h) = 0
 \]
 
 Substituindo \(v^h\) pelas funções da base \(\vphi_i\):
 \[ \begin{array}{l} \displaystyle
-    (\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, \vphi_i) = 0
+    (\sum_{j=1}^m{ C^0_j \; \vphi_j } - u_0, \vphi_i) = 0
     \\ \displaystyle
-    (\sum_{j=1}^m{ C_j(t_0) \; \vphi_j }, \vphi_i) - (u_0, \vphi_i) = 0
+    (\sum_{j=1}^m{ C^0_j \; \vphi_j }, \vphi_i) - (u_0, \vphi_i) = 0
     \\ \displaystyle
-    \sum_{j=1}^m{ C_j(t_0) \; (\vphi_j, \vphi_i) } = (u_0, \vphi_i)
+    \sum_{j=1}^m{ C^0_j \; (\vphi_j, \vphi_i) } = (u_0, \vphi_i)
 \end{array} \]
 
 Então:
 \[
-  \mathbb{M} \; C(t_0) = U^0
+  \mathbb{M} \; C^0 = U^0
 \]
 com
 \[
@@ -653,21 +653,21 @@ para calcular o \(U^0\).
 Propriedade:
 \[
     \forall v^h \in V_m, \quad
-    (\sum_{j=1}^m{ C_j(t_0) \; \frac{d}{dx}\vphi_j } - \frac{d}{dx}u_0, \frac{d}{dx}v^h) = 0
+    (\sum_{j=1}^m{ C^0_j \; \frac{d}{dx}\vphi_j } - \frac{d}{dx}u_0, \frac{d}{dx}v^h) = 0
 \]
 
 Substituindo \(v^h\) pelas funções da base \(\vphi_i\):
 \[ \begin{array}{l} \displaystyle
-    (\sum_{j=1}^m{ C_j(t_0) \; \frac{d}{dx}\vphi_j } - \frac{d}{dx}u_0, \frac{d}{dx}\vphi_i) = 0
+    (\sum_{j=1}^m{ C^0_j \; \frac{d}{dx}\vphi_j } - \frac{d}{dx}u_0, \frac{d}{dx}\vphi_i) = 0
     \\ \displaystyle
-    (\sum_{j=1}^m{ C_j(t_0) \; \frac{d}{dx}\vphi_j }, \frac{d}{dx}\vphi_i) - (\frac{d}{dx}u_0, \frac{d}{dx}\vphi_i) = 0
+    (\sum_{j=1}^m{ C^0_j \; \frac{d}{dx}\vphi_j }, \frac{d}{dx}\vphi_i) - (\frac{d}{dx}u_0, \frac{d}{dx}\vphi_i) = 0
     \\ \displaystyle
-    \sum_{j=1}^m{ C_j(t_0) \; (\frac{d}{dx}\vphi_j, \frac{d}{dx}\vphi_i) } = (\frac{d}{dx}u_0, \frac{d}{dx}\vphi_i)
+    \sum_{j=1}^m{ C^0_j \; (\frac{d}{dx}\vphi_j, \frac{d}{dx}\vphi_i) } = (\frac{d}{dx}u_0, \frac{d}{dx}\vphi_i)
 \end{array} \]
 
 Então:
 \[
-  \mathbb{A} \; C(t_0) = \mathbb{U}
+  \mathbb{A} \; C^0 = \mathbb{U}
 \]
 com
 \[
@@ -706,21 +706,21 @@ calculada sobre o elemento \(e\).
 Propriedade:
 \[
     \forall v^h \in V_m, \quad
-    \kappa(\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, v^h) = 0
+    \kappa(\sum_{j=1}^m{ C^0_j \; \vphi_j } - u_0, v^h) = 0
 \]
 
 Substituindo \(v^h\) pelas funções da base \(\vphi_i\):
 \[ \begin{array}{l} \displaystyle
-    \kappa(\sum_{j=1}^m{ C_j(t_0) \; \vphi_j } - u_0, \vphi_i) = 0
+    \kappa(\sum_{j=1}^m{ C^0_j \; \vphi_j } - u_0, \vphi_i) = 0
     \\ \displaystyle
-    \kappa(\sum_{j=1}^m{ C_j(t_0) \; \vphi_j }, \vphi_i) - \kappa(u_0, \vphi_i) = 0
+    \kappa(\sum_{j=1}^m{ C^0_j \; \vphi_j }, \vphi_i) - \kappa(u_0, \vphi_i) = 0
     \\ \displaystyle
-    \sum_{j=1}^m{ C_j(t_0) \; \kappa(\vphi_j, \vphi_i) } = \kappa(u_0, \vphi_i)
+    \sum_{j=1}^m{ C^0_j \; \kappa(\vphi_j, \vphi_i) } = \kappa(u_0, \vphi_i)
 \end{array} \]
 
 Então:
 \[
-  \mathbb{K} \; C(t_0) = kU^0
+  \mathbb{K} \; C^0 = kU^0
 \]
 com
 \[
