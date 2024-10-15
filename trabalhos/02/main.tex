@@ -26,28 +26,29 @@
 
 \title{Trabalho 02 --- Elementos Finitos}
 \author{Daniel Kiyoshi Hashimoto Vouzella de Andrade -- 124259224}
-\date{?? de Outubro de 2024}
+\date{22 de Outubro de 2024}
 
 \begin{document}
 \maketitle
 
 \setcounter{section}{-1}
-\section{Implementação (TODO)}
+\section{Implementação}
 
 A implementação (e esse pdf) está em
 \href{https://github.com/Kiyoshi364/finite-elements}{github.com/Kiyoshi364/finite-elements}.
 O pdf está sendo feio em cima do commit
-\texttt{365e28bbdca537e48f6eb6afc77e6756017df39a},
+\texttt{c95842fd9d4df5e11f612a187c0aebbcd7e18f33},
 então o commit de entrega deve ser o seguinte a esse.
 
 A implementação está na pasta
-\linkfileraw{/src/05-finite-elements-gamma/}{/src/05-finite-elements-gamma/},
+\linkfileraw{/src/07-finite-elements-nonlinear/}{/src/07-finite-elements-nonlinear/},
 (os outros arquivos serão indicados
 relativamente a essa pasta).
 O arquivo \linkfile{finite-elements.jl}
 é ``a biblioteca'',
 enquanto
-\linkfile{solution.jl} e \linkfile{errors.jl}
+\linkfile{solution.jl}, \linkfile{errors.jl}
+e \linkfile{result.jl}
 são os ``scripts'' que rodam os experimentos pedidos
 e geram as imagens incluídas no final do pdf\footnote{
 Para que os scripts gerem uma imagem,
@@ -56,15 +57,10 @@ em cada script para ter uma extensão de imagem
 (ou não ter extensão nenhuma).
 Por padrão eles geram um pdf.
 }.
-Para que os exemplos que os scripts rodam
-sejam o mesmo do pedido
-(\(u(x) = \sin(\pi \; x)\)),
-escolha o exemplo \(0x3\)
-no início dos scripts.
 O exemplo está definido
 no arquivo
 \linkfile{../examples.jl}
-na função \texttt{bacarmo\_example\_gamma}.
+na função \texttt{example}.
 Outro arquivo usado pela biblioteca é
 \linkfile{../common.jl}
 que possui algumas funções e códigos auxiliares,
@@ -554,7 +550,6 @@ onde:
 \end{itemize}
 \end{enumerate}
 
-
 \section{Local/Global para o termo não-linear}
 
 Criamos um vetor \(\mathbb{G}^e\),
@@ -761,18 +756,44 @@ para formar \(kU^0\):
 \newpage
 \section{Resultados}
 
-\paragraph{Solução Aproximada para Exemplo 1}
-% \includegraphics[width=0.5\textwidth]{images/solucao_aprox}
+\subsection{Solução Aproximada e Convergência para Exemplo 1}
 
-(TODO)
+\includegraphics[width=0.45\textwidth]{images/solucao_aprox-0}
+\includegraphics[width=0.45\textwidth]{images/solucao_aprox-1}
 
-\paragraph{Convergência do Erro para Exemplo 1}
-% \includegraphics[width=0.5\textwidth]{images/convergencia_erro}
+\includegraphics[width=0.45\textwidth]{images/solucao_aprox-2}
+\includegraphics[width=0.45\textwidth]{images/solucao_aprox-3}
 
-(TODO)
+\includegraphics[width=0.45\textwidth]{images/solucao_aprox-4}
+\includegraphics[width=0.45\textwidth]{images/convergencia_erro}
 
-\paragraph{Solução Aproximada para Exemplo 2}
+\newpage
+\subsection{Solução Aproximada para Exemplo 2}
 
-(TODO)
+\includegraphics[width=0.45\textwidth]{images/result-00}
+\includegraphics[width=0.45\textwidth]{images/result-01}
+
+\includegraphics[width=0.45\textwidth]{images/result-02}
+\includegraphics[width=0.45\textwidth]{images/result-03}
+
+\includegraphics[width=0.45\textwidth]{images/result-04}
+\includegraphics[width=0.45\textwidth]{images/result-05}
+
+\includegraphics[width=0.45\textwidth]{images/result-06}
+\includegraphics[width=0.45\textwidth]{images/result-07}
+
+\includegraphics[width=0.45\textwidth]{images/result-08}
+\includegraphics[width=0.45\textwidth]{images/result-09}
+
+\includegraphics[width=0.45\textwidth]{images/result-10}
+\includegraphics[width=0.45\textwidth]{images/result-11}
+
+\includegraphics[width=0.45\textwidth]{images/result-12}
+\includegraphics[width=0.45\textwidth]{images/result-13}
+
+\includegraphics[width=0.45\textwidth]{images/result-14}
+\includegraphics[width=0.45\textwidth]{images/result-15}
+
+\includegraphics[width=0.45\textwidth]{images/result-16}
 
 \end{document}
