@@ -477,20 +477,20 @@ temos:
     \mathbb{M} \; c'(t_{i+\frac12})
     + \mathbb{K} \; c(t_{i+\frac12})
     + \mathbb{G}(c(t_{i+\frac12}))
-    = \mathbb{F}\left( t_{i+\frac12} \right)
+    \approx \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
     \mathbb{M} \; \left[ \frac{c(t_{i+1}) - c(t_i)}{\tau} \right]
     + \mathbb{K} \; \left[ \frac{c(t_{i+1}) + c(t_i)}{2} \right]
     + \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
-    = \mathbb{F}\left( t_{i+\frac12} \right)
+    \approx \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
     \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; c(t_{i+1})
     - \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; c(t_i)
     + \tau \; \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
-    = \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
+    \approx \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
     \\[3ex] \displaystyle
     \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; c(t_{i+1})
-    = \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
+    \approx \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
     - \tau \; \mathbb{G}\left( \frac{3 \; c(t_i) - c(t_{i-1})}{2} \right)
     + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; c(t_i)
 \end{array} \]
@@ -514,18 +514,29 @@ o objetivo é descobrir,
 para todos os \(t_i\)
 com \(i \in \{ 0, 1, \dots, \lfloor \frac{T}{\tau} \rfloor \}\),
 os coeficientes de \(C^i = C(t_i)\)
-satisfaçam o sistema de equações matriciais:
+satisfaçam as três restrições:
+\begin{enumerate}
+\item \(C^0\) é uma das 4 aproximações da Seção~\ref{sec:U0};
+\item \(C^1\) é calculada a partir
+    desse método do tipo preditor/corretor:
 \[ \begin{cases}
-    \left[ \mathbb{M} {+} \frac\tau2 \mathbb{K} \right] \; C^{i+1}
-    = \tau \; \mathbb{F}\left( t_{i+\frac12} \right)
-    - \tau \; \mathbb{G}\left( \frac{3 \; C^i - C^{i-1}}{2} \right)
-    + \left[ \mathbb{M} {-} \frac\tau2 \mathbb{K} \right] \; C^i
-        &\text{, } i \in \{ 1, \dots, \lfloor \frac{T}{\tau} \rfloor \}
-    \\
-    C^0 = \; ???
-    \\
-    C^1 = \; ???
+    \mathbb{M} \; \left[ \frac{\tilde{C}^1 - C^0}{\tau} \right]
+    + \mathbb{K} \; \left[ \frac{\tilde{C}^1 + C^0}{2} \right]
+    + \mathbb{G}\left( C^0 \right)
+    = \mathbb{F}\left( t_{\frac12} \right)
+    \\[1ex]
+    \mathbb{M} \; \left[ \frac{C^1 - C^0}{\tau} \right]
+    + \mathbb{K} \; \left[ \frac{C^1 + C^0}{2} \right]
+    + \mathbb{G}\left( \frac{\tilde{C}^1 + C^0}{2} \right)
+    = \mathbb{F}\left( t_{\frac12} \right)
 \end{cases} \]
+\item \(C^{i+1}\), para \(i \ge 1\), respeita a seguinte equação:
+\[
+    \mathbb{M} \; \left[ \frac{C^{i+1} - C^i}{\tau} \right]
+    + \mathbb{K} \; \left[ \frac{C^{i+1} + C^i}{2} \right]
+    + \mathbb{G}\left( \frac{3 \; C^i - C^{i-1}}{2} \right)
+    = \mathbb{F}\left( t_{i+\frac12} \right)
+\]
 onde:
 \begin{itemize}
 \item \(
@@ -541,24 +552,8 @@ onde:
     \mathbb{F}_i(t) = (f(t), \vphi_i)
 \)
 \end{itemize}
+\end{enumerate}
 
-Para aproximar o \(C^0\),
-vamos usar uma das 4 aproximações da Seção~\ref{sec:U0}.
-
-Para aproximar o \(C^1\),
-vamos usar um método do tipo preditor/corretor:
-
-\[ \begin{cases}
-    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; \tilde{C}^1
-    = \tau \; \mathbb{F}\left( t_{\frac12} \right)
-    - \tau \; \mathbb{G}\left( C^0 \right)
-    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C^0
-    \\
-    \left[ \mathbb{M} + \frac\tau2 \mathbb{K} \right] \; C^1
-    = \tau \; \mathbb{F}\left( t_{\frac12} \right)
-    - \tau \; \mathbb{G}\left( \frac{\tilde{C}^1 + C^0}{2} \right)
-    + \left[ \mathbb{M} - \frac\tau2 \mathbb{K} \right] \; C^0
-\end{cases} \]
 
 \section{Local/Global para o termo não-linear}
 
