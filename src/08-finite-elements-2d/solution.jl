@@ -3,10 +3,6 @@ include("finite-elements.jl")
 using .FiniteElements: finite_elements_setup, gauss_error_2d
 using .FiniteElements: example
 
-using Plots
-using LaTeXStrings
-using DataFrames
-
 exact, ex = example(0x0)
 
 i = 2
@@ -25,4 +21,5 @@ display([
     , x1 in hi[1]:hi[1]:1-hi[1]
 ])
 
-display(gauss_error_2d(exact, c, hi, Ni, EQoLG))
+err = gauss_error_2d(exact, c, hi, Ni, EQoLG)
+println("\nError: ", err)
