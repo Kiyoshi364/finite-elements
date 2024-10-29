@@ -4,9 +4,8 @@ include("../examples2d.jl")
 using .Examples2d: Example, example
 
 include("../common.jl")
-using .Common: gauss_quadrature_table, n_points_from_to
+using .Common: gauss_quadrature_table
 
-using LinearAlgebra: lu
 using SparseArrays: spzeros
 
 export finite_elements_setup
