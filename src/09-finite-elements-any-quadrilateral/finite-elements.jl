@@ -11,6 +11,7 @@ using LinearAlgebra: dot
 using SparseArrays: spzeros
 
 export finite_elements_setup
+export generate_space
 export gauss_error_2d
 export phi, phi_deriv, instantiate_solution
 export Example, example
@@ -285,6 +286,17 @@ function finite_elements_setup(f, alpha, beta, hi, Ni)
     local F = build_vec_2d(f, hi, Ni, N_e, EQoLG, m)
 
     K, F, EQoLG, m
+end
+
+function generate_space(hi, Ni;
+    noise=false
+)
+    X = repeat(0.0:(hi[1]):1.0, Ni[2]+1)
+    Y = cat(
+        ((x->repeat(x:x, Ni[1]+1)).(0.0:(hi[2]):1.0))...,
+        dims=1
+    )
+    X, Y
 end
 
 function gauss_error_2d(exact, coefs, X, Y, Ni, LG, EQoLG;
