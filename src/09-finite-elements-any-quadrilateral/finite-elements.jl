@@ -136,17 +136,17 @@ end
 function build_small_vec_2d(f, x2xis,
     dx2xis, ws, ps, gauss_n
 )
-    dim = 4
+    local dim = 4
 
-    F = fill(0.0, (dim,))
+    local F = fill(0.0, (dim,))
     for i in 1:dim
         for g_i in 1:gauss_n
-            p1 = ps[g_i]
+            local p1 = ps[g_i]
             for g_j in 1:gauss_n
-                p2 = ps[g_j]
-                _x = x2xis[g_i][g_j]
-                _J = dx2xis[g_i][g_j]
-                J = (_J[1] * _J[4]) - (_J[2] * _J[3])
+                local p2 = ps[g_j]
+                local _x = x2xis[g_i][g_j]
+                local _J = dx2xis[g_i][g_j]
+                local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
                 F[i] += J * ws[g_i] * ws[g_j] * (
                     f(_x)*phi[i]([p1, p2])
                 )
@@ -160,19 +160,19 @@ end
 function build_vec_2d(f, X, Y, N_e, LG, EQoLG, m;
     gauss_n = 5,
 )
-    sdim = 2
-    dim = 4
-    ws, ps = gauss_quadrature_table[gauss_n]
+    local sdim = 2
+    local dim = 4
+    local ws, ps = gauss_quadrature_table[gauss_n]
 
-    app = (f, xs...) -> f(xs...)
+    local app = (f, xs...) -> f(xs...)
 
-    F = fill(0.0, (m+1,))
+    local F = fill(0.0, (m+1,))
     for e in 1:N_e
-        LGe = LG[:, e]
-        Xe = X[LGe]
-        Ye = Y[LGe]
+        local LGe = LG[:, e]
+        local Xe = X[LGe]
+        local Ye = Y[LGe]
 
-        x2xis = [
+        local x2xis = [
             [
                 dot.([Xe, Ye], (app.(phi, ([pi, pj],)),))
                 for pj in ps
@@ -180,7 +180,7 @@ function build_vec_2d(f, X, Y, N_e, LG, EQoLG, m;
             for pi in ps
         ]
 
-        dx2xis = [
+        local dx2xis = [
             [
                 [
                     dot([Xe, Ye][a], app.(phi_deriv[b], ([pi, pj],)))
@@ -192,13 +192,13 @@ function build_vec_2d(f, X, Y, N_e, LG, EQoLG, m;
             for pi in ps
         ]
 
-        F_e = build_small_vec_2d(f, x2xis,
+        local F_e = build_small_vec_2d(f, x2xis,
             dx2xis, ws, ps, gauss_n
         )
-        _1 = EQoLG[1, e]
-        _2 = EQoLG[2, e]
-        _3 = EQoLG[3, e]
-        _4 = EQoLG[4, e]
+        local _1 = EQoLG[1, e]
+        local _2 = EQoLG[2, e]
+        local _3 = EQoLG[3, e]
+        local _4 = EQoLG[4, e]
         F[_1] += F_e[1]
         F[_2] += F_e[2]
         F[_3] += F_e[3]
@@ -209,33 +209,33 @@ function build_vec_2d(f, X, Y, N_e, LG, EQoLG, m;
 end
 
 function build_LG(Ni)
-    Nx, Ny = Ni
-    i = x -> x
-    front4 = i.(0:(Ny-1)) .* (Nx + 1) .+ 1
-    _0to3 = i.(0:(Nx-1))
+    local Nx, Ny = Ni
+    local i = x -> x
+    local front4 = i.(0:(Ny-1)) .* (Nx + 1) .+ 1
+    local _0to3 = i.(0:(Nx-1))
 
-    topline = cat(
+    local topline = cat(
         broadcast(.+, front4, (_0to3,))...,
     dims=1)
 
-    LG = transpose([ 0 ;; 1 ;; Nx+2 ;; Nx+1 ] .+ topline)
+    local LG = transpose([ 0 ;; 1 ;; Nx+2 ;; Nx+1 ] .+ topline)
 
     LG
 end
 
 function build_EQ(Ni)
-    Nx, Ny = Ni[1], Ni[2]
-    i = x -> x
-    m = (Nx-1) * (Ny-1)
+    local Nx, Ny = Ni[1], Ni[2]
+    local i = x -> x
+    local m = (Nx-1) * (Ny-1)
 
-    small_mat = broadcast(
+    local small_mat = broadcast(
         .+,
         i.(0:(Ny-2)) .* (Nx-1),
         (i.(1:(Nx-1)),)
     )
-    small_mat_ext = cat.(small_mat, m+1, m+1, dims=1)
+    local small_mat_ext = cat.(small_mat, m+1, m+1, dims=1)
 
-    EQ = cat(
+    local EQ = cat(
         fill(m+1, (Nx+2)),
         small_mat_ext...,
         fill(m+1, Nx), dims=1
@@ -249,16 +249,16 @@ function finite_elements_setup(ex :: Example, hi, Ni)
 end
 
 function finite_elements_setup(f, alpha, beta, hi, Ni)
-    N_e = foldl(*, Ni)
+    local N_e = foldl(*, Ni)
 
-    LG = build_LG(Ni)
+    local LG = build_LG(Ni)
 
-    m, EQ = build_EQ(Ni)
+    local m, EQ = build_EQ(Ni)
 
-    EQoLG = EQ[LG]
+    local EQoLG = EQ[LG]
 
-    K = build_mat_2d(alpha, beta, hi, N_e, EQoLG, m)
-    F = build_vec_2d(f, hi, Ni, N_e, EQoLG, m)
+    local K = build_mat_2d(alpha, beta, hi, N_e, EQoLG, m)
+    local F = build_vec_2d(f, hi, Ni, N_e, EQoLG, m)
 
     K, F, EQoLG, m
 end
@@ -266,27 +266,27 @@ end
 function gauss_error_2d(exact, coefs, hi, Ni, EQoLG;
     gauss_n = 5,
 )
-    N_e = foldl(*, Ni)
+    local N_e = foldl(*, Ni)
 
-    ws, ps = gauss_quadrature_table[gauss_n]
+    local ws, ps = gauss_quadrature_table[gauss_n]
 
-    coefs_ext = cat(coefs, 0.0, dims=1)
+    local coefs_ext = cat(coefs, 0.0, dims=1)
 
-    acc = 0.0
+    local acc = 0.0
 
     for e in 1:N_e
-        pe = [
+        local pe = [
             (mod(e-1, Ni[1]) * hi[1]),
             (div(e-1, Ni[1]) * hi[2]),
         ]
 
-        x2xi = hipe_x2xi(hi, pe)
+        local x2xi = hipe_x2xi(hi, pe)
 
         for g_i = 1:gauss_n
-            p1 = ps[g_i]
+            local p1 = ps[g_i]
             for g_j in 1:gauss_n
-                p2 = ps[g_j]
-                diff = exact(x2xi(p1, p2))
+                local p2 = ps[g_j]
+                local diff = exact(x2xi(p1, p2))
                 for i in 1:4
                     diff -= coefs_ext[EQoLG[i, e]] * phi[i](p1, p2)
                 end

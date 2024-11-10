@@ -15,7 +15,7 @@ function run_tests(name, func, max_i :: UInt8;
 )
     println("Running tests: $name")
     for i in 0x0:max_i
-        bench = (bench_strategy == :all) ? (
+        local bench = (bench_strategy == :all) ? (
             true
         ) : (bench_strategy == :none) ? (
             false
@@ -24,7 +24,7 @@ function run_tests(name, func, max_i :: UInt8;
         ) : (bench_strategy == :last) ? (
             i == max_i
         ) : error("Invalid bench_strategy")
-        func(i, bench=true)
+        func(i, bench=bench)
     end
 end
 
