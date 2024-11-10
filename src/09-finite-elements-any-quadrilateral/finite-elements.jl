@@ -17,7 +17,7 @@ export Example, example
 
 # For tests
 export build_LG, build_EQ
-export dx2xis_f
+export x2xis_f, dx2xis_f
 export build_small_vec_2d, build_vec_2d
 export build_small_mat_2d, build_mat_2d
 
@@ -44,6 +44,15 @@ const phi_deriv = [
 
 const sdim = 2
 const app = (f, xs...) -> f(xs...)
+
+const x2xis_f = (ps, Xe, Ye) -> [
+    [
+        dot.([Xe, Ye], (app.(phi, ([pi, pj],)),))
+        for pj in ps
+    ]
+    for pi in ps
+]
+
 const dx2xis_f = (ps, Xe, Ye) -> [
     [
         [
@@ -54,11 +63,6 @@ const dx2xis_f = (ps, Xe, Ye) -> [
         for pj in ps
     ]
     for pi in ps
-]
-
-const hipe_x2xi = (hi, pe) -> (xi1, xi2) -> [
-    (hi[1] * ((1 + xi1) / 2) + pe[1]),
-    (hi[2] * ((1 + xi2) / 2) + pe[2]),
 ]
 
 function build_small_mat_2d(alpha, beta,
@@ -209,14 +213,7 @@ function build_vec_2d(f, X, Y, N_e, LG, EQoLG, m;
         local Xe = X[LGe]
         local Ye = Y[LGe]
 
-        local x2xis = [
-            [
-                dot.([Xe, Ye], (app.(phi, ([pi, pj],)),))
-                for pj in ps
-            ]
-            for pi in ps
-        ]
-
+        local x2xis = x2xis_f(ps, Xe, Ye)
         local dx2xis = dx2xis_f(ps, Xe, Ye)
 
         local F_e = build_small_vec_2d(f, x2xis,
@@ -290,7 +287,7 @@ function finite_elements_setup(f, alpha, beta, hi, Ni)
     K, F, EQoLG, m
 end
 
-function gauss_error_2d(exact, coefs, hi, Ni, EQoLG;
+function gauss_error_2d(exact, coefs, X, Y, Ni, LG, EQoLG;
     gauss_n = 5,
 )
     local N_e = foldl(*, Ni)
@@ -302,26 +299,28 @@ function gauss_error_2d(exact, coefs, hi, Ni, EQoLG;
     local acc = 0.0
 
     for e in 1:N_e
-        local pe = [
-            (mod(e-1, Ni[1]) * hi[1]),
-            (div(e-1, Ni[1]) * hi[2]),
-        ]
+        local LGe = LG[:, e]
+        local Xe = X[LGe]
+        local Ye = Y[LGe]
 
-        local x2xi = hipe_x2xi(hi, pe)
+        local x2xis = x2xis_f(ps, Xe, Ye)
+        local dx2xis = dx2xis_f(ps, Xe, Ye)
 
         for g_i = 1:gauss_n
             local p1 = ps[g_i]
             for g_j in 1:gauss_n
                 local p2 = ps[g_j]
-                local diff = exact(x2xi(p1, p2))
+                local _x = x2xis[g_i][g_j]
+                local _J = dx2xis[g_i][g_j]
+                local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
+                local diff = exact(x2xis[g_i][g_j])
                 for i in 1:4
-                    diff -= coefs_ext[EQoLG[i, e]] * phi[i](p1, p2)
+                    diff -= coefs_ext[EQoLG[i, e]] * phi[i]([p1, p2])
                 end
-                acc += ws[g_i] * ws[g_j] * diff * diff
+                acc += J * ws[g_i] * ws[g_j] * diff * diff
             end
         end
     end
-    acc *= foldl(*, hi) / 4.0
 
     sqrt(acc)
 end
