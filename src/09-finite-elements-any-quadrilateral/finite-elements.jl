@@ -269,11 +269,11 @@ function build_EQ(Ni)
     (m, EQ)
 end
 
-function finite_elements_setup(ex :: Example, hi, Ni)
-    finite_elements_setup(ex.f, ex.alpha, ex.beta, hi, Ni)
+function finite_elements_setup(ex :: Example, X, Y, Ni)
+    finite_elements_setup(ex.f, ex.alpha, ex.beta, X, Y, Ni)
 end
 
-function finite_elements_setup(f, alpha, beta, hi, Ni)
+function finite_elements_setup(f, alpha, beta, X, Y, Ni)
     local N_e = foldl(*, Ni)
 
     local LG = build_LG(Ni)
@@ -282,10 +282,10 @@ function finite_elements_setup(f, alpha, beta, hi, Ni)
 
     local EQoLG = EQ[LG]
 
-    local K = build_mat_2d(alpha, beta, hi, N_e, EQoLG, m)
-    local F = build_vec_2d(f, hi, Ni, N_e, EQoLG, m)
+    local K = build_mat_2d(alpha, beta, X, Y, N_e, LG, EQoLG, m)
+    local F = build_vec_2d(f, X, Y, N_e, LG, EQoLG, m)
 
-    K, F, EQoLG, m
+    K, F, LG, EQoLG, m
 end
 
 function generate_space(hi, Ni;
@@ -296,6 +296,18 @@ function generate_space(hi, Ni;
         ((x->repeat(x:x, Ni[1]+1)).(0.0:(hi[2]):1.0))...,
         dims=1
     )
+
+    if noise
+        scale = hi ./ 4
+        for i in 2:Ni[2]
+            for j in 2:Ni[1]
+                idx = (i-1) * (Ni[1]+1) + (j-1) + 1
+                X[idx] += scale[1] * 2*(rand(Float64) - 0.5)
+                Y[idx] += scale[2] * 2*(rand(Float64) - 0.5)
+            end
+        end
+    end
+
     X, Y
 end
 
