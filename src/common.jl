@@ -60,6 +60,7 @@ export gauss_error
 function gauss_error(exact, coefs, h;
     gauss_n = 5,
     x_begin=0, x_end=1,
+    ux_begin=0, ux_end=0,
 )
     N = length(coefs)
 
@@ -70,7 +71,7 @@ function gauss_error(exact, coefs, h;
 
     ws, ps = gauss_quadrature_table[gauss_n]
 
-    magic_coefs = cat(0.0, coefs, 0.0, dims=1)
+    magic_coefs = cat(ux_begin, coefs, ux_end, dims=1)
 
     acc = 0.0
 

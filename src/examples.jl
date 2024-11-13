@@ -2,6 +2,7 @@ module Examples
 
 export Example, example
 export bacarmo_example, bacarmo_example_gamma
+export example_begin_end
 
 struct Example
     f
@@ -172,6 +173,29 @@ function bacarmo_example(index :: UInt8) :: Tuple{Any, Example}
         deriv_2 = x -> - pi * pi * sin(pi * x)
         (exact, mk_ex(alpha, beta, exact, deriv_2))
     end : error("function_index out of bounds")
+end
+
+function example_begin_end(index :: UInt8) :: Tuple{Any, Example}
+    mk_f(alp, bet, exact, deriv_2) = x -> ((- alp) * deriv_2(x)) + (bet * exact(x))
+    mk_ex(alp, bet, exact, deriv_2) = begin
+        Example(mk_f(alp, bet, exact, deriv_2),
+            alpha=alp, beta=bet,
+            ux_begin=exact(0.0), ux_end=exact(1.0))
+    end
+
+    index == 0 ? begin
+        alpha = 1.0
+        beta = 1.0
+        exact = x -> x
+        deriv_2 = x -> 0
+        (exact, mk_ex(alpha, beta, exact, deriv_2))
+    end : index == 1 ? begin
+        alpha = 1.0
+        beta = 0.0
+        exact = x -> x + (((exp(1)+1)*exp(-x) - (exp(-1)+1)*exp(x)) / (exp(1) - exp(-1)))
+        deriv_2 = x -> ((exp(1)+1)*exp(-x) - (exp(-1)+1)*exp(x)) / (exp(1) - exp(-1))
+        (exact, mk_ex(alpha, beta, exact, deriv_2))
+    end : error("index out of bounds")
 end
 
 # Examples from
