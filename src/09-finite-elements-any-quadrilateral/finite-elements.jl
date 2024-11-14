@@ -18,7 +18,7 @@ export Example, example
 
 # For tests
 export build_LG, build_EQ
-export x2xis_f, dx2xis_f
+export phis_f, x2xis_f, dx2xis_f
 export build_small_vec_2d, build_vec_2d
 export build_small_mat_2d, build_mat_2d
 
@@ -45,6 +45,12 @@ const phi_deriv = [
 
 const sdim = 2
 const app = (f, xs...) -> f(xs...)
+
+const phis_f = (ps :: AbstractVector{Float64}) ->
+    map.(phi, ([
+        [p1, p2]
+        for p1 in ps, p2 in ps
+    ],))
 
 const x2xis_f = (ps, Xe, Ye) -> [
     [
@@ -142,7 +148,8 @@ end
 function build_mat_2d(alpha :: Float64, beta :: Float64,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     N_e :: Int64, LG :: AbstractMatrix{Int64},
-    EQoLG :: Matrix{Int64}, m :: Int64;
+    EQoLG :: Matrix{Int64}, m :: Int64
+;
     gauss_n :: Int64 = 5
 ) :: Matrix{Float64}
     local sdim = 2
@@ -186,21 +193,20 @@ end
 
 function build_small_vec_2d(f, x2xis :: Vector{Vector{Vector{Float64}}},
     dx2xis :: Vector{Vector{Vector{Float64}}},
-    ws :: Vector{Float64}, ps :: Vector{Float64}, gauss_n :: Int64
+    phis :: Vector{Matrix{Float64}},
+    ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Vector{Float64}
     local dim = 4
 
     local F = fill(0.0, (dim,))
     for i in 1:dim
         for g_i in 1:gauss_n
-            local p1 = ps[g_i]
             for g_j in 1:gauss_n
-                local p2 = ps[g_j]
                 local _x = x2xis[g_i][g_j]
                 local _J = dx2xis[g_i][g_j]
                 local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
                 F[i] += J * ws[g_i] * ws[g_j] * (
-                    f(_x)*phi[i]([p1, p2])
+                    f(_x)*phis[i][g_i,g_j]
                 )
             end
         end
@@ -212,10 +218,10 @@ end
 function build_vec_2d(f,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     N_e :: Int64, LG :: AbstractMatrix{Int64},
-    EQoLG :: Matrix{Int64}, m :: Int64;
-    gauss_n ::Int64 = 5,
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Vector{Matrix{Float64}},
+    ws :: Vector{Float64}, ps :: Vector{Float64}, gauss_n :: Int64
 ) :: Vector{Float64}
-    local ws, ps = gauss_quadrature_table[gauss_n]
 
     local F = fill(0.0, (m+1,))
     for e in 1:N_e
@@ -227,7 +233,7 @@ function build_vec_2d(f,
         local dx2xis = dx2xis_f(ps, Xe, Ye)
 
         local F_e = build_small_vec_2d(f, x2xis,
-            dx2xis, ws, ps, gauss_n
+            dx2xis, phis, ws, gauss_n
         )
         local _1 = EQoLG[1, e]
         local _2 = EQoLG[2, e]
@@ -281,14 +287,20 @@ end
 function finite_elements_setup(ex :: Example,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     Ni :: AbstractVector{Int64}
+;
+    gauss_n :: Int64 = 5
 )
-    finite_elements_setup(ex.f, ex.alpha, ex.beta, X, Y, Ni)
+    finite_elements_setup(ex.f, ex.alpha, ex.beta, X, Y, Ni,
+        gauss_n=gauss_n
+    )
 end
 
 function finite_elements_setup(f,
     alpha :: Float64, beta :: Float64,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     Ni :: AbstractVector{Int64}
+;
+    gauss_n :: Int64 = 5
 )
     local N_e = foldl(*, Ni)
 
@@ -298,14 +310,22 @@ function finite_elements_setup(f,
 
     local EQoLG = EQ[LG]
 
+    local ws, ps = gauss_quadrature_table[gauss_n]
+
+    local phis = phis_f(ps)
+
     local K = build_mat_2d(alpha, beta, X, Y, N_e, LG, EQoLG, m)
-    local F = build_vec_2d(f, X, Y, N_e, LG, EQoLG, m)
+    local F = build_vec_2d(f, X, Y, N_e, LG, EQoLG, m,
+        phis,
+        ws, gauss_n
+    )
 
     K, F, LG, EQoLG, m
 end
 
 function generate_space(
-    hi :: AbstractVector{Float64}, Ni :: AbstractVector{Int64};
+    hi :: AbstractVector{Float64}, Ni :: AbstractVector{Int64}
+;
     noise :: Bool = false
 ) :: Tuple{AbstractVector{Float64}, AbstractVector{Float64}}
     X = repeat(0.0:(hi[1]):1.0, Ni[2]+1)
@@ -332,7 +352,8 @@ function gauss_error_2d(exact,
     coefs,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     Ni :: AbstractVector{Int64}, LG :: AbstractMatrix{Int64},
-    EQoLG :: Matrix{Int64};
+    EQoLG :: Matrix{Int64}
+;
     gauss_n :: Int64 = 5,
 )
     local N_e = foldl(*, Ni)

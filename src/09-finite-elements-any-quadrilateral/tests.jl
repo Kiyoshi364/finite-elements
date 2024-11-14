@@ -4,7 +4,7 @@ using .FiniteElements: gauss_quadrature_table
 using .FiniteElements: generate_space
 
 using .FiniteElements: build_LG, build_EQ
-using .FiniteElements: x2xis_f, dx2xis_f
+using .FiniteElements: phis_f, x2xis_f, dx2xis_f
 using .FiniteElements: build_small_vec_2d, build_vec_2d
 using .FiniteElements: build_small_mat_2d, build_mat_2d
 
@@ -54,6 +54,8 @@ function test_small_vec_2d(i :: UInt8;
     local gauss_n = 5
     local ws, ps = gauss_quadrature_table[gauss_n]
 
+    local phis = phis_f(ps)
+
     local hi = [0.25, 0.25]
     local Xe, Ye = (i <= 1) ? (
         [ 0.0, hi[1], hi[1], 0.0 ],
@@ -85,10 +87,13 @@ function test_small_vec_2d(i :: UInt8;
 
     local ans = (bench) ? (@btime build_small_vec_2d(
         $f, $x2xis,
-        $dx2xis, $ws, $ps, $gauss_n
+        $dx2xis,
+        $phis, $ws, $gauss_n
     )) : (build_small_vec_2d(
         f, x2xis,
-        dx2xis, ws, ps, gauss_n
+        dx2xis,
+        phis,
+        ws, gauss_n
     ))
 
     test_check(i, expected, ans)
@@ -113,6 +118,11 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
     local LG = build_LG(Ni)
     local m, EQ = build_EQ(Ni)
     local EQoLG = EQ[LG]
+
+    local gauss_n = 5
+    local ws, ps = gauss_quadrature_table[gauss_n]
+
+    local phis = phis_f(ps)
 
     local X, Y = (i <= 1) ? (
         generate_space(hi, Ni)
@@ -152,10 +162,12 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
 
     local ans = (bench) ? (@btime build_vec_2d(
         $f, $X, $Y, $N_e, $LG, $EQoLG, $m,
-        gauss_n=$gauss_n
+        $phis,
+        $ws, $ps, $gauss_n,
     )) : (build_vec_2d(
         f, X, Y, N_e, LG, EQoLG, m,
-        gauss_n=gauss_n
+        phis,
+        ws, ps, gauss_n
     ))
 
     test_check(i, expected, ans,
