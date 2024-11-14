@@ -23,23 +23,23 @@ export build_small_vec_2d, build_vec_2d
 export build_small_mat_2d, build_mat_2d
 
 const phi = [
-    (xi -> (1 - xi[1])*(1 - xi[2]) / 4),
-    (xi -> (1 + xi[1])*(1 - xi[2]) / 4),
-    (xi -> (1 + xi[1])*(1 + xi[2]) / 4),
-    (xi -> (1 - xi[1])*(1 + xi[2]) / 4),
+    (xi :: Vector{Float64} -> ((1 - xi[1])*(1 - xi[2]) / 4) :: Float64),
+    (xi :: Vector{Float64} -> ((1 + xi[1])*(1 - xi[2]) / 4) :: Float64),
+    (xi :: Vector{Float64} -> ((1 + xi[1])*(1 + xi[2]) / 4) :: Float64),
+    (xi :: Vector{Float64} -> ((1 - xi[1])*(1 + xi[2]) / 4) :: Float64),
 ]
 
 const phi_deriv = [
     [
-        (xi -> (- 0.25) * (1 - xi[2])),
-        (xi -> (  0.25) * (1 - xi[2])),
-        (xi -> (  0.25) * (1 + xi[2])),
-        (xi -> (- 0.25) * (1 + xi[2])),
+        (xi :: Vector{Float64} -> ((- 0.25) * (1 - xi[2])) :: Float64),
+        (xi :: Vector{Float64} -> ((  0.25) * (1 - xi[2])) :: Float64),
+        (xi :: Vector{Float64} -> ((  0.25) * (1 + xi[2])) :: Float64),
+        (xi :: Vector{Float64} -> ((- 0.25) * (1 + xi[2])) :: Float64),
     ], [
-        (xi -> (- 0.25) * (1 - xi[1])),
-        (xi -> (- 0.25) * (1 + xi[1])),
-        (xi -> (+ 0.25) * (1 + xi[1])),
-        (xi -> (+ 0.25) * (1 - xi[1])),
+        (xi :: Vector{Float64} -> ((- 0.25) * (1 - xi[1])) :: Float64),
+        (xi :: Vector{Float64} -> ((- 0.25) * (1 + xi[1])) :: Float64),
+        (xi :: Vector{Float64} -> ((+ 0.25) * (1 + xi[1])) :: Float64),
+        (xi :: Vector{Float64} -> ((+ 0.25) * (1 - xi[1])) :: Float64),
     ]
 ]
 
@@ -66,9 +66,11 @@ const dx2xis_f = (ps, Xe, Ye) -> [
     for pi in ps
 ]
 
-function build_small_mat_2d(alpha, beta,
-    dx2xis, ws, ps, gauss_n,
-)
+function build_small_mat_2d(
+    alpha :: Float64, beta :: Float64,
+    dx2xis :: Vector{Vector{Vector{Float64}}},
+    ws :: Vector{Float64}, ps :: Vector{Float64}, gauss_n :: Int64,
+) :: Matrix{Float64}
     dim = 4
 
     K_alpha1 = fill(0.0, (dim,dim))
@@ -137,9 +139,12 @@ function build_small_mat_2d(alpha, beta,
     K_alpha1 + K_alpha2 + K_beta
 end
 
-function build_mat_2d(alpha, beta, X, Y, N_e, LG, EQoLG, m;
-    gauss_n = 5
-)
+function build_mat_2d(alpha :: Float64, beta :: Float64,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64;
+    gauss_n :: Int64 = 5
+) :: Matrix{Float64}
     local sdim = 2
     local ws, ps = gauss_quadrature_table[gauss_n]
 
@@ -179,9 +184,10 @@ function build_mat_2d(alpha, beta, X, Y, N_e, LG, EQoLG, m;
     K[begin:end-1, begin:end-1]
 end
 
-function build_small_vec_2d(f, x2xis,
-    dx2xis, ws, ps, gauss_n
-)
+function build_small_vec_2d(f, x2xis :: Vector{Vector{Vector{Float64}}},
+    dx2xis :: Vector{Vector{Vector{Float64}}},
+    ws :: Vector{Float64}, ps :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
     local dim = 4
 
     local F = fill(0.0, (dim,))
@@ -203,9 +209,12 @@ function build_small_vec_2d(f, x2xis,
     F
 end
 
-function build_vec_2d(f, X, Y, N_e, LG, EQoLG, m;
-    gauss_n = 5,
-)
+function build_vec_2d(f,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64;
+    gauss_n ::Int64 = 5,
+) :: Vector{Float64}
     local ws, ps = gauss_quadrature_table[gauss_n]
 
     local F = fill(0.0, (m+1,))
@@ -233,7 +242,7 @@ function build_vec_2d(f, X, Y, N_e, LG, EQoLG, m;
     F[begin:end-1]
 end
 
-function build_LG(Ni)
+function build_LG(Ni :: AbstractVector{Int64}) :: AbstractMatrix{Int64}
     local Nx, Ny = Ni
     local i = x -> x
     local front4 = i.(0:(Ny-1)) .* (Nx + 1) .+ 1
@@ -248,7 +257,7 @@ function build_LG(Ni)
     LG
 end
 
-function build_EQ(Ni)
+function build_EQ(Ni :: AbstractVector{Int64}) :: Tuple{Int64, Vector{Int64}}
     local Nx, Ny = Ni[1], Ni[2]
     local i = x -> x
     local m = (Nx-1) * (Ny-1)
@@ -269,11 +278,18 @@ function build_EQ(Ni)
     (m, EQ)
 end
 
-function finite_elements_setup(ex :: Example, X, Y, Ni)
+function finite_elements_setup(ex :: Example,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    Ni :: AbstractVector{Int64}
+)
     finite_elements_setup(ex.f, ex.alpha, ex.beta, X, Y, Ni)
 end
 
-function finite_elements_setup(f, alpha, beta, X, Y, Ni)
+function finite_elements_setup(f,
+    alpha :: Float64, beta :: Float64,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    Ni :: AbstractVector{Int64}
+)
     local N_e = foldl(*, Ni)
 
     local LG = build_LG(Ni)
@@ -288,9 +304,10 @@ function finite_elements_setup(f, alpha, beta, X, Y, Ni)
     K, F, LG, EQoLG, m
 end
 
-function generate_space(hi, Ni;
-    noise=false
-)
+function generate_space(
+    hi :: AbstractVector{Float64}, Ni :: AbstractVector{Int64};
+    noise :: Bool = false
+) :: Tuple{AbstractVector{Float64}, AbstractVector{Float64}}
     X = repeat(0.0:(hi[1]):1.0, Ni[2]+1)
     Y = cat(
         ((x->repeat(x:x, Ni[1]+1)).(0.0:(hi[2]):1.0))...,
@@ -311,8 +328,12 @@ function generate_space(hi, Ni;
     X, Y
 end
 
-function gauss_error_2d(exact, coefs, X, Y, Ni, LG, EQoLG;
-    gauss_n = 5,
+function gauss_error_2d(exact,
+    coefs,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    Ni :: AbstractVector{Int64}, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64};
+    gauss_n :: Int64 = 5,
 )
     local N_e = foldl(*, Ni)
 

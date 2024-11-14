@@ -12,8 +12,8 @@ using LinearAlgebra: dot, norm
 
 using BenchmarkTools: @btime
 
-function run_tests(name, func, max_i :: UInt8;
-    bench_strategy=:all
+function run_tests(name :: String, func, max_i :: UInt8;
+    bench_strategy :: Symbol = :all
 )
     println("Running tests: $name")
     for i in 0x0:max_i
@@ -49,7 +49,7 @@ end
 
 const test_small_vec_2d_max = 0x02
 function test_small_vec_2d(i :: UInt8;
-    bench=true
+    bench :: Bool = true
 )
     local gauss_n = 5
     local ws, ps = gauss_quadrature_table[gauss_n]
@@ -97,7 +97,7 @@ function test_small_vec_2d(i :: UInt8;
 end
 
 const test_vec_2d_max = 0x02
-function test_vec_2d(i :: UInt8; bench=true)
+function test_vec_2d(i :: UInt8; bench :: Bool = true)
     local gauss_n = 5
 
     local Ni = (i == 0) ? (
@@ -167,7 +167,7 @@ end
 
 const test_small_mat_2d_max = 0x02
 function test_small_mat_2d(i :: UInt8;
-    bench=true
+    bench :: Bool = true
 )
     local gauss_n = 5
     local ws, ps = gauss_quadrature_table[gauss_n]
@@ -222,7 +222,7 @@ function test_small_mat_2d(i :: UInt8;
 end
 
 const test_mat_2d_max = 0x01
-function test_mat_2d(i :: UInt8; bench=true)
+function test_mat_2d(i :: UInt8; bench :: Bool = true)
     local gauss_n = 5
 
     local alpha, beta = 1.0, 1.0

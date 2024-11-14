@@ -24,7 +24,7 @@ end
 
 export gauss_quadrature_table
 # Copied from: https://pomax.github.io/bezierinfo/legendre-gauss.html
-gauss_quadrature_table = [
+const gauss_quadrature_table = [
     # 1
     ([2.0],
         [0.0]),
