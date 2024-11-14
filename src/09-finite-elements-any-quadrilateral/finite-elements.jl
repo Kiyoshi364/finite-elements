@@ -50,15 +50,16 @@ const phis_f = (ps :: AbstractVector{Float64}) ->
     map.(phi, ([
         [p1, p2]
         for p1 in ps, p2 in ps
-    ],))
+    ],)) :: Vector{Matrix{Float64}}
 
-const x2xis_f = (ps, Xe, Ye) -> [
-    [
-        dot.([Xe, Ye], (app.(phi, ([pi, pj],)),))
-        for pj in ps
-    ]
-    for pi in ps
-]
+# TODO: Remove allocation (Vector creation)
+const x2xis_f = (
+    phis :: Vector{Matrix{Float64}},
+    Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
+) -> begin
+    local dot(xs, ys) = sum(xs .* ys)
+    ((x, y) -> [x, y]).(dot(Xe, phis), dot(Ye, phis))
+end :: Matrix{Vector{Float64}}
 
 const dx2xis_f = (ps, Xe, Ye) -> [
     [
@@ -191,7 +192,8 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
     K[begin:end-1, begin:end-1]
 end
 
-function build_small_vec_2d(f, x2xis :: Vector{Vector{Vector{Float64}}},
+function build_small_vec_2d(f,
+    x2xis :: Matrix{Vector{Float64}},
     dx2xis :: Vector{Vector{Vector{Float64}}},
     phis :: Vector{Matrix{Float64}},
     ws :: Vector{Float64}, gauss_n :: Int64
@@ -202,7 +204,7 @@ function build_small_vec_2d(f, x2xis :: Vector{Vector{Vector{Float64}}},
     for i in 1:dim
         for g_i in 1:gauss_n
             for g_j in 1:gauss_n
-                local _x = x2xis[g_i][g_j]
+                local _x = x2xis[g_i,g_j]
                 local _J = dx2xis[g_i][g_j]
                 local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
                 F[i] += J * ws[g_i] * ws[g_j] * (
@@ -229,7 +231,7 @@ function build_vec_2d(f,
         local Xe = X[LGe]
         local Ye = Y[LGe]
 
-        local x2xis = x2xis_f(ps, Xe, Ye)
+        local x2xis = x2xis_f(phis, Xe, Ye)
         local dx2xis = dx2xis_f(ps, Xe, Ye)
 
         local F_e = build_small_vec_2d(f, x2xis,

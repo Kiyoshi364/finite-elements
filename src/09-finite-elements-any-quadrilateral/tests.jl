@@ -73,7 +73,7 @@ function test_small_vec_2d(i :: UInt8;
         [ 0.6666666666666666, 1.0, 1.3333333333333333, 1.0 ]
     ) : error("Index out of bounds")
 
-    local x2xis = x2xis_f(ps, Xe, Ye)
+    local x2xis = x2xis_f(phis, Xe, Ye)
 
     local dx2xis = dx2xis_f(ps, Xe, Ye)
 
