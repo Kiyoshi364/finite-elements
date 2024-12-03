@@ -4,7 +4,7 @@ using .FiniteElements: gauss_quadrature_table
 using .FiniteElements: generate_space
 
 using .FiniteElements: build_LG, build_EQ
-using .FiniteElements: phis_f, x2xis_f, dx2xis_f
+using .FiniteElements: phis_f, phi_derivs_f, x2xis_f, dx2xis_f
 using .FiniteElements: build_small_vec_2d, build_vec_2d
 using .FiniteElements: build_small_mat_2d, build_mat_2d
 
@@ -73,9 +73,10 @@ function test_small_vec_2d(i :: UInt8;
         [ 0.6666666666666666, 1.0, 1.3333333333333333, 1.0 ]
     ) : error("Index out of bounds")
 
-    local x2xis = x2xis_f(phis, Xe, Ye)
+    local phi_derivs = phi_derivs_f(ps)
 
-    local dx2xis = dx2xis_f(ps, Xe, Ye)
+    local x2xis = x2xis_f(phis, Xe, Ye)
+    local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
     local f = (i == 0) ? (
         x -> 4.0 / foldl(*, hi)
@@ -103,8 +104,6 @@ end
 
 const test_vec_2d_max = 0x02
 function test_vec_2d(i :: UInt8; bench :: Bool = true)
-    local gauss_n = 5
-
     local Ni = (i == 0) ? (
         [4, 3]
     ) : (i == 1) ? (
@@ -123,6 +122,7 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
     local ws, ps = gauss_quadrature_table[gauss_n]
 
     local phis = phis_f(ps)
+    local phi_derivs = phi_derivs_f(ps)
 
     local X, Y = (i <= 1) ? (
         generate_space(hi, Ni)
@@ -162,12 +162,12 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
 
     local ans = (bench) ? (@btime build_vec_2d(
         $f, $X, $Y, $N_e, $LG, $EQoLG, $m,
-        $phis,
-        $ws, $ps, $gauss_n,
+        $phis, $phi_derivs,
+        $ws, $gauss_n,
     )) : (build_vec_2d(
         f, X, Y, N_e, LG, EQoLG, m,
-        phis,
-        ws, ps, gauss_n
+        phis, phi_derivs,
+        ws, gauss_n
     ))
 
     test_check(i, expected, ans,
@@ -218,7 +218,8 @@ function test_small_mat_2d(i :: UInt8;
         (-0.3888888888888888) (-0.9444444444444444) (0.1111111111111111) (1.7222222222222222);
     ] ) : error("Index out of bounds")
 
-    local dx2xis = dx2xis_f(ps, Xe, Ye)
+    local phi_derivs = phi_derivs_f(ps)
+    local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
     local ans = (bench) ? (@btime build_small_mat_2d(
         $alpha, $beta,
@@ -246,6 +247,11 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
     local LG = build_LG(Ni)
     local m, EQ = build_EQ(Ni)
     local EQoLG = EQ[LG]
+
+    local gauss_n = 5
+    local ws, ps = gauss_quadrature_table[gauss_n]
+
+    local phi_derivs = phi_derivs_f(ps)
 
     local X, Y = (i == 0) ? (
         generate_space(hi, Ni)
@@ -287,10 +293,12 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
 
     local ans = (bench) ? (@btime build_mat_2d(
         $alpha, $beta, $X, $Y, $N_e, $LG, $EQoLG, $m,
-        gauss_n=$gauss_n
+        $phi_derivs,
+        $ws, $ps, $gauss_n,
     )) : (build_mat_2d(
         alpha, beta, X, Y, N_e, LG, EQoLG, m,
-        gauss_n=gauss_n
+        phi_derivs,
+        ws, ps, gauss_n,
     ))
 
     test_check(i, expected, ans,
