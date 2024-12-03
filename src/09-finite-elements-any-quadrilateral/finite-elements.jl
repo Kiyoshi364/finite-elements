@@ -50,23 +50,13 @@ const phis_f = (ps :: AbstractVector{Float64}) ->
         for p1 in ps, p2 in ps
     ],)) :: Vector{Matrix{Float64}}
 
-# TODO: use array comprehension
-const phi_derivs_f = (ps :: AbstractVector{Float64}) -> begin
-    local phi_derivs = fill(0.0, (length(ps), length(ps), sdim, 4))
-
-    for g_i in 1:length(ps)
-        p_i = ps[g_i]
-        for g_j in 1:length(ps)
-            p_j = ps[g_j]
-            for i in 1:sdim
-                for j in 1:4
-                    phi_derivs[g_i, g_j, i, j] = phi_deriv[j, i](p_i, p_j)
-                end
-            end
-        end
-    end
-    phi_derivs
-end :: Array{Float64, 4}
+const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
+    phi_deriv[j, i](ps[g_i], ps[g_j])
+    for g_i in 1:length(ps),
+        g_j in 1:length(ps),
+        i in 1:sdim,
+        j in 1:4
+] :: Array{Float64, 4}
 
 # TODO: Remove allocation (Vector creation)
 const x2xis_f = (
