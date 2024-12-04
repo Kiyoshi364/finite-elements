@@ -80,9 +80,10 @@ function test_small_vec_2d(i :: UInt8;
 
     local f = (i == 0) ? (
         (x...) -> 4.0 / foldl(*, hi)
-    ) : (i == 1) ? (
-        (x...) -> 16. * 9.0 * foldl(*, x) / foldl(*, hi) / foldl(*, hi)
-    ) : (i == 2) ? (
+    ) : (i == 1) ? ( begin
+        local prod_hi = foldl(*, hi)
+        (x...) -> 16.0 * 9.0 * foldl(*, x) / prod_hi / prod_hi
+    end ) : (i == 2) ? (
         (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
@@ -154,9 +155,10 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
 
     local f = (i == 0) ? (
         (x...) -> 4.0 / foldl(*, hi)
-    ) : (i == 1) ? (
-        (x...) -> 16. * 9.0 * foldl(*, x) / foldl(*, hi) / foldl(*, hi)
-    ) : (i == 2) ? (
+    ) : (i == 1) ? ( begin
+        local prod_hi = foldl(*, hi)
+        (x...) -> 16.0 * 9.0 * foldl(*, x) / prod_hi / prod_hi
+    end ) : (i == 2) ? (
         (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
