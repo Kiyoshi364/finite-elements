@@ -79,11 +79,11 @@ function test_small_vec_2d(i :: UInt8;
     local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
     local f = (i == 0) ? (
-        x -> 4.0 / foldl(*, hi)
+        (x...) -> 4.0 / foldl(*, hi)
     ) : (i == 1) ? (
-        x -> 16. * 9.0 * foldl(*, x) / foldl(*, hi) / foldl(*, hi)
+        (x...) -> 16. * 9.0 * foldl(*, x) / foldl(*, hi) / foldl(*, hi)
     ) : (i == 2) ? (
-        x -> foldl(+, x)
+        (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
     local ans = (bench) ? (@btime build_small_vec_2d(
@@ -153,11 +153,11 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
     ] ) : error("Index out of bounds")
 
     local f = (i == 0) ? (
-        x -> 4.0 / foldl(*, hi)
+        (x...) -> 4.0 / foldl(*, hi)
     ) : (i == 1) ? (
-        x -> 16. * 9.0 * foldl(*, x) / foldl(*, hi) / foldl(*, hi)
+        (x...) -> 16. * 9.0 * foldl(*, x) / foldl(*, hi) / foldl(*, hi)
     ) : (i == 2) ? (
-        x -> foldl(+, x)
+        (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
     local ans = (bench) ? (@btime build_vec_2d(

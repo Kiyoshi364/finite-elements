@@ -23,10 +23,10 @@ export build_small_vec_2d, build_vec_2d
 export build_small_mat_2d, build_mat_2d
 
 const phi = [
-    (xi :: Vector{Float64} -> ((1 - xi[1])*(1 - xi[2]) / 4) :: Float64),
-    (xi :: Vector{Float64} -> ((1 + xi[1])*(1 - xi[2]) / 4) :: Float64),
-    (xi :: Vector{Float64} -> ((1 + xi[1])*(1 + xi[2]) / 4) :: Float64),
-    (xi :: Vector{Float64} -> ((1 - xi[1])*(1 + xi[2]) / 4) :: Float64),
+    ((xi...) -> ((1 - xi[1])*(1 - xi[2]) / 4) :: Float64),
+    ((xi...) -> ((1 + xi[1])*(1 - xi[2]) / 4) :: Float64),
+    ((xi...) -> ((1 + xi[1])*(1 + xi[2]) / 4) :: Float64),
+    ((xi...) -> ((1 - xi[1])*(1 + xi[2]) / 4) :: Float64),
 ]
 
 const phi_deriv = [
@@ -44,11 +44,12 @@ const phi_deriv = [
 const sdim = 2
 const app = (f, xs...) -> f(xs...)
 
-const phis_f = (ps :: AbstractVector{Float64}) ->
-    map.(phi, ([
-        [p1, p2]
-        for p1 in ps, p2 in ps
-    ],)) :: Vector{Matrix{Float64}}
+const phis_f = (ps :: AbstractVector{Float64}) -> [
+    f_phi(p1, p2)
+    for f_phi in phi,
+        p1 in ps,
+        p2 in ps
+] :: Array{Float64, 3}
 
 const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
     phi_deriv[j, i](ps[g_i], ps[g_j])
@@ -58,14 +59,18 @@ const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
         j in 1:4
 ] :: Array{Float64, 4}
 
-# TODO: Remove allocation (Vector creation)
 const x2xis_f = (
-    phis :: Vector{Matrix{Float64}},
+    phis :: Array{Float64, 3},
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
-) -> begin
-    local dot(xs, ys) = sum(xs .* ys)
-    ((x, y) -> [x, y]).(dot(Xe, phis), dot(Ye, phis))
-end :: Matrix{Vector{Float64}}
+) -> [
+    sum(
+        (a == 1 ? Xe : Ye)[k] * phis[k, i, j]
+        for k in 1:(size(phis)[1])
+    )
+    for i in 1:(size(phis)[2]),
+        j in 1:(size(phis)[3]),
+        a in 1:2
+] :: Array{Float64, 3}
 
 # TODO: use array comprehension
 const dx2xis_f = (
@@ -161,7 +166,7 @@ function build_small_mat_2d(
                     _J4 = dx2xis[g_i,g_j,4]
                     J = (_J1 * _J4) - (_J2 * _J3)
                     K_beta[i,j] += J * ws[g_i] * ws[g_j] *
-                        (phi[j]([p1, p2])*phi[i]([p1, p2]))
+                        (phi[j](p1, p2)*phi[i](p1, p2))
                 end
             end
         end
@@ -216,9 +221,9 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
 end
 
 function build_small_vec_2d(f,
-    x2xis :: Matrix{Vector{Float64}},
+    x2xis :: Array{Float64, 3},
     dx2xis :: Array{Float64, 3},
-    phis :: Vector{Matrix{Float64}},
+    phis :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Vector{Float64}
     local dim = 4
@@ -227,14 +232,15 @@ function build_small_vec_2d(f,
     for i in 1:dim
         for g_i in 1:gauss_n
             for g_j in 1:gauss_n
-                local _x = x2xis[g_i,g_j]
+                local _x1 = x2xis[g_i,g_j,1]
+                local _x2 = x2xis[g_i,g_j,2]
                 local _J1 = dx2xis[g_i,g_j,1]
                 local _J2 = dx2xis[g_i,g_j,2]
                 local _J3 = dx2xis[g_i,g_j,3]
                 local _J4 = dx2xis[g_i,g_j,4]
                 local J = (_J1 * _J4) - (_J2 * _J3)
                 F[i] += J * ws[g_i] * ws[g_j] * (
-                    f(_x)*phis[i][g_i,g_j]
+                    f(_x1, _x2)*phis[i,g_i,g_j]
                 )
             end
         end
@@ -247,7 +253,7 @@ function build_vec_2d(f,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
-    phis :: Vector{Matrix{Float64}},
+    phis :: Array{Float64, 3},
     phi_derivs :: Array{Float64, 4},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Vector{Float64}
