@@ -104,23 +104,23 @@ function build_small_mat_2d(
     local dim = 4
 
     K_alpha1 = fill(0.0, (dim,dim))
-    for i in 1:dim
-        for j in 1:dim
-            for g_i in 1:gauss_n
-                for g_j in 1:gauss_n
-                    local _J1 = dx2xis[g_i,g_j,1]
-                    local _J2 = dx2xis[g_i,g_j,2]
-                    local _J3 = dx2xis[g_i,g_j,3]
-                    local _J4 = dx2xis[g_i,g_j,4]
-                    local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
-                    local H_1 = (_J4*_J4 + _J2*_J2)
-                    local H_2 = - (_J4*_J3 + _J2*_J1)
-                    K_alpha1[i,j] += J * ws[g_i] * ws[g_j] * (
-                        phi_derivs[g_i,g_j,j,1] * (
-                            (H_1 * phi_derivs[g_i,g_j,i,1])
-                            + (H_2 * phi_derivs[g_i,g_j,i,2])
-                        )
-                    )
+    for g_i in 1:gauss_n
+        for g_j in 1:gauss_n
+            local _J1 = dx2xis[g_i,g_j,1]
+            local _J2 = dx2xis[g_i,g_j,2]
+            local _J3 = dx2xis[g_i,g_j,3]
+            local _J4 = dx2xis[g_i,g_j,4]
+            local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
+            local H_1 = (_J4*_J4 + _J2*_J2)
+            local H_2 = - (_J4*_J3 + _J2*_J1)
+            local pre_calc1 = J * ws[g_i] * ws[g_j]
+            for i in 1:dim
+                local pre_calc2 = pre_calc1 * (
+                    (H_1 * phi_derivs[g_i,g_j,i,1])
+                    + (H_2 * phi_derivs[g_i,g_j,i,2])
+                )
+                for j in 1:dim
+                    K_alpha1[i,j] += pre_calc2 * phi_derivs[g_i,g_j,j,1]
                 end
             end
         end
@@ -128,23 +128,23 @@ function build_small_mat_2d(
     K_alpha1 *= alpha
 
     K_alpha2 = fill(0.0, (dim,dim))
-    for i in 1:dim
-        for j in 1:dim
-            for g_i in 1:gauss_n
-                for g_j in 1:gauss_n
-                    local _J1 = dx2xis[g_i,g_j,1]
-                    local _J2 = dx2xis[g_i,g_j,2]
-                    local _J3 = dx2xis[g_i,g_j,3]
-                    local _J4 = dx2xis[g_i,g_j,4]
-                    local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
-                    local H_1 = - (_J4*_J3 + _J2*_J1)
-                    local H_2 = (_J3*_J3 + _J1*_J1)
-                    K_alpha2[i,j] += J * ws[g_i] * ws[g_j] * (
-                        phi_derivs[g_i,g_j,j,2] * (
-                            (H_1 * phi_derivs[g_i,g_j,i,1])
-                            + (H_2 * phi_derivs[g_i,g_j,i,2])
-                        )
-                    )
+    for g_i in 1:gauss_n
+        for g_j in 1:gauss_n
+            local _J1 = dx2xis[g_i,g_j,1]
+            local _J2 = dx2xis[g_i,g_j,2]
+            local _J3 = dx2xis[g_i,g_j,3]
+            local _J4 = dx2xis[g_i,g_j,4]
+            local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
+            local H_1 = - (_J4*_J3 + _J2*_J1)
+            local H_2 = (_J3*_J3 + _J1*_J1)
+            local pre_calc1 = J * ws[g_i] * ws[g_j]
+            for i in 1:dim
+                local pre_calc2 = pre_calc1 * (
+                    (H_1 * phi_derivs[g_i,g_j,i,1])
+                    + (H_2 * phi_derivs[g_i,g_j,i,2])
+                )
+                for j in 1:dim
+                    K_alpha2[i,j] += pre_calc2 * phi_derivs[g_i,g_j,j,2]
                 end
             end
         end
@@ -152,16 +152,17 @@ function build_small_mat_2d(
     K_alpha2 *= alpha
 
     K_beta = fill(0.0, (dim,dim))
-    for i in 1:dim
-        for j in 1:dim
-            for g_i in 1:gauss_n
-                for g_j in 1:gauss_n
-                    local _J1 = dx2xis[g_i,g_j,1]
-                    local _J2 = dx2xis[g_i,g_j,2]
-                    local _J3 = dx2xis[g_i,g_j,3]
-                    local _J4 = dx2xis[g_i,g_j,4]
-                    local J = (_J1 * _J4) - (_J2 * _J3)
-                    K_beta[i,j] += J * ws[g_i] * ws[g_j] *
+    for g_i in 1:gauss_n
+        for g_j in 1:gauss_n
+            local _J1 = dx2xis[g_i,g_j,1]
+            local _J2 = dx2xis[g_i,g_j,2]
+            local _J3 = dx2xis[g_i,g_j,3]
+            local _J4 = dx2xis[g_i,g_j,4]
+            local J = (_J1 * _J4) - (_J2 * _J3)
+            local pre_calc = J * ws[g_i] * ws[g_j]
+            for i in 1:dim
+                for j in 1:dim
+                    K_beta[i,j] += pre_calc *
                         (phis[g_i,g_j,j]*phis[g_i,g_j,i])
                 end
             end
