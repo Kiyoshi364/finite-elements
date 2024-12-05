@@ -46,9 +46,9 @@ const app = (f, xs...) -> f(xs...)
 
 const phis_f = (ps :: AbstractVector{Float64}) -> [
     f_phi(p1, p2)
-    for f_phi in phi,
-        p1 in ps,
-        p2 in ps
+    for p1 in ps,
+        p2 in ps,
+        f_phi in phi
 ] :: Array{Float64, 3}
 
 const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
@@ -64,11 +64,11 @@ const x2xis_f = (
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
 ) -> [
     sum(
-        (a == 1 ? Xe : Ye)[k] * phis[k, i, j]
-        for k in 1:(size(phis)[1])
+        (a == 1 ? Xe : Ye)[k] * phis[i, j, k]
+        for k in 1:(size(phis)[3])
     )
-    for i in 1:(size(phis)[2]),
-        j in 1:(size(phis)[3]),
+    for i in 1:(size(phis)[1]),
+        j in 1:(size(phis)[2]),
         a in 1:2
 ] :: Array{Float64, 3}
 
@@ -229,19 +229,18 @@ function build_small_vec_2d(f,
     local dim = 4
 
     local F = fill(0.0, (dim,))
-    for i in 1:dim
-        for g_i in 1:gauss_n
-            for g_j in 1:gauss_n
-                local _x1 = x2xis[g_i,g_j,1]
-                local _x2 = x2xis[g_i,g_j,2]
-                local _J1 = dx2xis[g_i,g_j,1]
-                local _J2 = dx2xis[g_i,g_j,2]
-                local _J3 = dx2xis[g_i,g_j,3]
-                local _J4 = dx2xis[g_i,g_j,4]
-                local J = (_J1 * _J4) - (_J2 * _J3)
-                F[i] += J * ws[g_i] * ws[g_j] * (
-                    f(_x1, _x2)*phis[i,g_i,g_j]
-                )
+    for g_i in 1:gauss_n
+        for g_j in 1:gauss_n
+            local _x1 = x2xis[g_i,g_j,1]
+            local _x2 = x2xis[g_i,g_j,2]
+            local _J1 = dx2xis[g_i,g_j,1]
+            local _J2 = dx2xis[g_i,g_j,2]
+            local _J3 = dx2xis[g_i,g_j,3]
+            local _J4 = dx2xis[g_i,g_j,4]
+            local J = (_J1 * _J4) - (_J2 * _J3)
+            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x1, _x2)
+            for i in 1:dim
+                F[i] += pre_calc * phis[g_i,g_j,i]
             end
         end
     end
