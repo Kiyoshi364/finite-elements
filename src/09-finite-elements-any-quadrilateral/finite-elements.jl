@@ -52,11 +52,11 @@ const phis_f = (ps :: AbstractVector{Float64}) -> [
 ] :: Array{Float64, 3}
 
 const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
-    phi_deriv[j, i](ps[g_i], ps[g_j])
+    phi_deriv[i, j](ps[g_i], ps[g_j])
     for g_i in 1:length(ps),
         g_j in 1:length(ps),
-        i in 1:sdim,
-        j in 1:4
+        i in 1:4,
+        j in 1:sdim
 ] :: Array{Float64, 4}
 
 const x2xis_f = (
@@ -81,8 +81,8 @@ const dx2xis_f = (
 
     for p_i in 1:(size(phi_derivs)[1])
         for p_j in 1:(size(phi_derivs)[2])
-            phi_derivs_1 = phi_derivs[p_i, p_j, 1, :]
-            phi_derivs_2 = phi_derivs[p_i, p_j, 2, :]
+            phi_derivs_1 = phi_derivs[p_i, p_j, :, 1]
+            phi_derivs_2 = phi_derivs[p_i, p_j, :, 2]
 
             dx2xis[p_i, p_j, 1] = dot(Xe, phi_derivs_1)
             dx2xis[p_i, p_j, 2] = dot(Xe, phi_derivs_2)
@@ -97,28 +97,28 @@ end :: Array{Float64, 3}
 function build_small_mat_2d(
     alpha :: Float64, beta :: Float64,
     dx2xis :: Array{Float64, 3},
-    ws :: Vector{Float64}, ps :: Vector{Float64}, gauss_n :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 4},
+    ws :: Vector{Float64}, gauss_n :: Int64,
 ) :: Matrix{Float64}
-    dim = 4
+    local dim = 4
 
     K_alpha1 = fill(0.0, (dim,dim))
     for i in 1:dim
         for j in 1:dim
             for g_i in 1:gauss_n
-                p1 = ps[g_i]
                 for g_j in 1:gauss_n
-                    p2 = ps[g_j]
-                    _J1 = dx2xis[g_i,g_j,1]
-                    _J2 = dx2xis[g_i,g_j,2]
-                    _J3 = dx2xis[g_i,g_j,3]
-                    _J4 = dx2xis[g_i,g_j,4]
-                    J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
-                    H_1 = (_J4*_J4 + _J2*_J2)
-                    H_2 = - (_J4*_J3 + _J2*_J1)
+                    local _J1 = dx2xis[g_i,g_j,1]
+                    local _J2 = dx2xis[g_i,g_j,2]
+                    local _J3 = dx2xis[g_i,g_j,3]
+                    local _J4 = dx2xis[g_i,g_j,4]
+                    local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
+                    local H_1 = (_J4*_J4 + _J2*_J2)
+                    local H_2 = - (_J4*_J3 + _J2*_J1)
                     K_alpha1[i,j] += J * ws[g_i] * ws[g_j] * (
-                        phi_deriv[j,1](p1, p2) * (
-                            (H_1 * phi_deriv[i,1](p1, p2))
-                            + (H_2 * phi_deriv[i,2](p1, p2))
+                        phi_derivs[g_i,g_j,j,1] * (
+                            (H_1 * phi_derivs[g_i,g_j,i,1])
+                            + (H_2 * phi_derivs[g_i,g_j,i,2])
                         )
                     )
                 end
@@ -131,20 +131,18 @@ function build_small_mat_2d(
     for i in 1:dim
         for j in 1:dim
             for g_i in 1:gauss_n
-                p1 = ps[g_i]
                 for g_j in 1:gauss_n
-                    p2 = ps[g_j]
-                    _J1 = dx2xis[g_i,g_j,1]
-                    _J2 = dx2xis[g_i,g_j,2]
-                    _J3 = dx2xis[g_i,g_j,3]
-                    _J4 = dx2xis[g_i,g_j,4]
-                    J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
-                    H_1 = - (_J4*_J3 + _J2*_J1)
-                    H_2 = (_J3*_J3 + _J1*_J1)
+                    local _J1 = dx2xis[g_i,g_j,1]
+                    local _J2 = dx2xis[g_i,g_j,2]
+                    local _J3 = dx2xis[g_i,g_j,3]
+                    local _J4 = dx2xis[g_i,g_j,4]
+                    local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
+                    local H_1 = - (_J4*_J3 + _J2*_J1)
+                    local H_2 = (_J3*_J3 + _J1*_J1)
                     K_alpha2[i,j] += J * ws[g_i] * ws[g_j] * (
-                        phi_deriv[j,2](p1, p2) * (
-                            (H_1 * phi_deriv[i,1](p1, p2))
-                            + (H_2 * phi_deriv[i,2](p1, p2))
+                        phi_derivs[g_i,g_j,j,2] * (
+                            (H_1 * phi_derivs[g_i,g_j,i,1])
+                            + (H_2 * phi_derivs[g_i,g_j,i,2])
                         )
                     )
                 end
@@ -157,16 +155,14 @@ function build_small_mat_2d(
     for i in 1:dim
         for j in 1:dim
             for g_i in 1:gauss_n
-                p1 = ps[g_i]
                 for g_j in 1:gauss_n
-                    p2 = ps[g_j]
-                    _J1 = dx2xis[g_i,g_j,1]
-                    _J2 = dx2xis[g_i,g_j,2]
-                    _J3 = dx2xis[g_i,g_j,3]
-                    _J4 = dx2xis[g_i,g_j,4]
-                    J = (_J1 * _J4) - (_J2 * _J3)
+                    local _J1 = dx2xis[g_i,g_j,1]
+                    local _J2 = dx2xis[g_i,g_j,2]
+                    local _J3 = dx2xis[g_i,g_j,3]
+                    local _J4 = dx2xis[g_i,g_j,4]
+                    local J = (_J1 * _J4) - (_J2 * _J3)
                     K_beta[i,j] += J * ws[g_i] * ws[g_j] *
-                        (phi[j](p1, p2)*phi[i](p1, p2))
+                        (phis[g_i,g_j,j]*phis[g_i,g_j,i])
                 end
             end
         end
@@ -180,8 +176,9 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
     phi_derivs :: Array{Float64, 4},
-    ws :: Vector{Float64}, ps :: Vector{Float64}, gauss_n :: Int64
+    ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Matrix{Float64}
 
     local K = spzeros((m+1, m+1))
@@ -193,7 +190,9 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
         local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
         local K_e = build_small_mat_2d(alpha, beta,
-            dx2xis, ws, ps, gauss_n,
+            dx2xis,
+            phis, phi_derivs,
+            ws, gauss_n,
         )
 
         local _1 = EQoLG[1, e]

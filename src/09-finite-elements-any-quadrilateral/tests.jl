@@ -220,15 +220,16 @@ function test_small_mat_2d(i :: UInt8;
         (-0.3888888888888888) (-0.9444444444444444) (0.1111111111111111) (1.7222222222222222);
     ] ) : error("Index out of bounds")
 
+    local phis = phis_f(ps)
     local phi_derivs = phi_derivs_f(ps)
     local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
     local ans = (bench) ? (@btime build_small_mat_2d(
         $alpha, $beta,
-        $dx2xis, $ws, $ps, $gauss_n
+        $dx2xis, $phis, $phi_derivs, $ws, $gauss_n
     )) : (build_small_mat_2d(
         alpha, beta,
-        dx2xis, ws, ps, gauss_n
+        dx2xis, phis, phi_derivs, ws, gauss_n
     ))
 
     test_check(i, expected, ans)
@@ -253,6 +254,7 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
     local gauss_n = 5
     local ws, ps = gauss_quadrature_table[gauss_n]
 
+    local phis = phis_f(ps)
     local phi_derivs = phi_derivs_f(ps)
 
     local X, Y = (i == 0) ? (
@@ -295,12 +297,12 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
 
     local ans = (bench) ? (@btime build_mat_2d(
         $alpha, $beta, $X, $Y, $N_e, $LG, $EQoLG, $m,
-        $phi_derivs,
-        $ws, $ps, $gauss_n,
+        $phis, $phi_derivs,
+        $ws, $gauss_n,
     )) : (build_mat_2d(
         alpha, beta, X, Y, N_e, LG, EQoLG, m,
-        phi_derivs,
-        ws, ps, gauss_n,
+        phis, phi_derivs,
+        ws, gauss_n,
     ))
 
     test_check(i, expected, ans,
