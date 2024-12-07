@@ -81,19 +81,19 @@ const dx2xis_f = (
 
     for p_i in 1:(size(phi_derivs)[1])
         for p_j in 1:(size(phi_derivs)[2])
-            phi_derivs_1 = phi_derivs[p_i, p_j, :, 1]
-            phi_derivs_2 = phi_derivs[p_i, p_j, :, 2]
+            phi_derivs_ = view(phi_derivs, p_i, p_j, :, :)
 
-            dx2xis[p_i, p_j, 1] = dot(Xe, phi_derivs_1)
-            dx2xis[p_i, p_j, 2] = dot(Xe, phi_derivs_2)
-            dx2xis[p_i, p_j, 3] = dot(Ye, phi_derivs_1)
-            dx2xis[p_i, p_j, 4] = dot(Ye, phi_derivs_2)
+            dx2xis[p_i, p_j, 1] = dot(Xe, view(phi_derivs_, :, 1))
+            dx2xis[p_i, p_j, 2] = dot(Xe, view(phi_derivs_, :, 2))
+            dx2xis[p_i, p_j, 3] = dot(Ye, view(phi_derivs_, :, 1))
+            dx2xis[p_i, p_j, 4] = dot(Ye, view(phi_derivs_, :, 2))
         end
     end
 
     dx2xis
 end :: Array{Float64, 3}
 
+# TODO: fuse loops
 function build_small_mat_2d(
     alpha :: Float64, beta :: Float64,
     dx2xis :: Array{Float64, 3},
@@ -106,21 +106,19 @@ function build_small_mat_2d(
     K_alpha1 = fill(0.0, (dim,dim))
     for g_i in 1:gauss_n
         for g_j in 1:gauss_n
-            local _J1 = dx2xis[g_i,g_j,1]
-            local _J2 = dx2xis[g_i,g_j,2]
-            local _J3 = dx2xis[g_i,g_j,3]
-            local _J4 = dx2xis[g_i,g_j,4]
-            local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
-            local H_1 = (_J4*_J4 + _J2*_J2)
-            local H_2 = - (_J4*_J3 + _J2*_J1)
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = 1.0 / ((_J[1] * _J[4]) - (_J[2] * _J[3]))
+            local H_1 = (_J[4]*_J[4] + _J[2]*_J[2])
+            local H_2 = - (_J[4]*_J[3] + _J[2]*_J[1])
             local pre_calc1 = J * ws[g_i] * ws[g_j]
+            local phi_derivs_ = view(phi_derivs, g_i, g_j, :, :)
             for i in 1:dim
                 local pre_calc2 = pre_calc1 * (
-                    (H_1 * phi_derivs[g_i,g_j,i,1])
-                    + (H_2 * phi_derivs[g_i,g_j,i,2])
+                    (H_1 * phi_derivs_[i,1])
+                    + (H_2 * phi_derivs_[i,2])
                 )
                 for j in 1:dim
-                    K_alpha1[i,j] += pre_calc2 * phi_derivs[g_i,g_j,j,1]
+                    K_alpha1[i,j] += pre_calc2 * phi_derivs_[j,1]
                 end
             end
         end
@@ -130,21 +128,19 @@ function build_small_mat_2d(
     K_alpha2 = fill(0.0, (dim,dim))
     for g_i in 1:gauss_n
         for g_j in 1:gauss_n
-            local _J1 = dx2xis[g_i,g_j,1]
-            local _J2 = dx2xis[g_i,g_j,2]
-            local _J3 = dx2xis[g_i,g_j,3]
-            local _J4 = dx2xis[g_i,g_j,4]
-            local J = 1.0 / ((_J1 * _J4) - (_J2 * _J3))
-            local H_1 = - (_J4*_J3 + _J2*_J1)
-            local H_2 = (_J3*_J3 + _J1*_J1)
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = 1.0 / ((_J[1] * _J[4]) - (_J[2] * _J[3]))
+            local H_1 = - (_J[4]*_J[3] + _J[2]*_J[1])
+            local H_2 = (_J[3]*_J[3] + _J[1]*_J[1])
             local pre_calc1 = J * ws[g_i] * ws[g_j]
+            local phi_derivs_ = view(phi_derivs, g_i, g_j, :, :)
             for i in 1:dim
                 local pre_calc2 = pre_calc1 * (
-                    (H_1 * phi_derivs[g_i,g_j,i,1])
-                    + (H_2 * phi_derivs[g_i,g_j,i,2])
+                    (H_1 * phi_derivs_[i,1])
+                    + (H_2 * phi_derivs_[i,2])
                 )
                 for j in 1:dim
-                    K_alpha2[i,j] += pre_calc2 * phi_derivs[g_i,g_j,j,2]
+                    K_alpha2[i,j] += pre_calc2 * phi_derivs_[j,2]
                 end
             end
         end
@@ -154,16 +150,13 @@ function build_small_mat_2d(
     K_beta = fill(0.0, (dim,dim))
     for g_i in 1:gauss_n
         for g_j in 1:gauss_n
-            local _J1 = dx2xis[g_i,g_j,1]
-            local _J2 = dx2xis[g_i,g_j,2]
-            local _J3 = dx2xis[g_i,g_j,3]
-            local _J4 = dx2xis[g_i,g_j,4]
-            local J = (_J1 * _J4) - (_J2 * _J3)
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
             local pre_calc = J * ws[g_i] * ws[g_j]
+            local phis_ = view(phis, g_i, g_j, :)
             for i in 1:dim
                 for j in 1:dim
-                    K_beta[i,j] += pre_calc *
-                        (phis[g_i,g_j,j]*phis[g_i,g_j,i])
+                    K_beta[i,j] += pre_calc * (phis_[j]*phis_[i])
                 end
             end
         end
@@ -184,9 +177,9 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
 
     local K = spzeros((m+1, m+1))
     for e in 1:N_e
-        local LGe = LG[:, e]
-        local Xe = X[LGe]
-        local Ye = Y[LGe]
+        local LGe = view(LG, :, e)
+        local Xe = view(X, LGe)
+        local Ye = view(Y, LGe)
 
         local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
@@ -231,16 +224,13 @@ function build_small_vec_2d(f,
     local F = fill(0.0, (dim,))
     for g_i in 1:gauss_n
         for g_j in 1:gauss_n
-            local _x1 = x2xis[g_i,g_j,1]
-            local _x2 = x2xis[g_i,g_j,2]
-            local _J1 = dx2xis[g_i,g_j,1]
-            local _J2 = dx2xis[g_i,g_j,2]
-            local _J3 = dx2xis[g_i,g_j,3]
-            local _J4 = dx2xis[g_i,g_j,4]
-            local J = (_J1 * _J4) - (_J2 * _J3)
-            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x1, _x2)
+            local _x = view(x2xis, g_i, g_j, :)
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
+            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x[1], _x[2])
+            local phis_ = view(phis, g_i, g_j, :)
             for i in 1:dim
-                F[i] += pre_calc * phis[g_i,g_j,i]
+                F[i] += pre_calc * phis_[i]
             end
         end
     end
@@ -259,9 +249,9 @@ function build_vec_2d(f,
 
     local F = fill(0.0, (m+1,))
     for e in 1:N_e
-        local LGe = LG[:, e]
-        local Xe = X[LGe]
-        local Ye = Y[LGe]
+        local LGe = view(LG, :, e)
+        local Xe = view(X, LGe)
+        local Ye = view(Y, LGe)
 
         local x2xis = x2xis_f(phis, Xe, Ye)
         local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
@@ -278,7 +268,6 @@ function build_vec_2d(f,
         F[_3] += F_e[3]
         F[_4] += F_e[4]
     end
-
     F[begin:end-1]
 end
 
