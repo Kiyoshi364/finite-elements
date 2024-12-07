@@ -93,7 +93,6 @@ const dx2xis_f = (
     dx2xis
 end :: Array{Float64, 3}
 
-# TODO: fuse loops
 function build_small_mat_2d(
     alpha :: Float64, beta :: Float64,
     dx2xis :: Array{Float64, 3},
@@ -103,67 +102,46 @@ function build_small_mat_2d(
 ) :: Matrix{Float64}
     local dim = 4
 
-    K_alpha1 = fill(0.0, (dim,dim))
-    for g_i in 1:gauss_n
-        for g_j in 1:gauss_n
-            local _J = view(dx2xis, g_i, g_j, :)
-            local J = 1.0 / ((_J[1] * _J[4]) - (_J[2] * _J[3]))
-            local H_1 = (_J[4]*_J[4] + _J[2]*_J[2])
-            local H_2 = - (_J[4]*_J[3] + _J[2]*_J[1])
-            local pre_calc1 = J * ws[g_i] * ws[g_j]
-            local phi_derivs_ = view(phi_derivs, g_i, g_j, :, :)
-            for i in 1:dim
-                local pre_calc2 = pre_calc1 * (
-                    (H_1 * phi_derivs_[i,1])
-                    + (H_2 * phi_derivs_[i,2])
-                )
-                for j in 1:dim
-                    K_alpha1[i,j] += pre_calc2 * phi_derivs_[j,1]
-                end
-            end
-        end
-    end
-    K_alpha1 *= alpha
+    K = fill(0.0, (dim,dim))
 
-    K_alpha2 = fill(0.0, (dim,dim))
     for g_i in 1:gauss_n
         for g_j in 1:gauss_n
-            local _J = view(dx2xis, g_i, g_j, :)
-            local J = 1.0 / ((_J[1] * _J[4]) - (_J[2] * _J[3]))
-            local H_1 = - (_J[4]*_J[3] + _J[2]*_J[1])
-            local H_2 = (_J[3]*_J[3] + _J[1]*_J[1])
-            local pre_calc1 = J * ws[g_i] * ws[g_j]
-            local phi_derivs_ = view(phi_derivs, g_i, g_j, :, :)
-            for i in 1:dim
-                local pre_calc2 = pre_calc1 * (
-                    (H_1 * phi_derivs_[i,1])
-                    + (H_2 * phi_derivs_[i,2])
-                )
-                for j in 1:dim
-                    K_alpha2[i,j] += pre_calc2 * phi_derivs_[j,2]
-                end
-            end
-        end
-    end
-    K_alpha2 *= alpha
+            local phis_ = view(phis, g_i, g_j, :)
 
-    K_beta = fill(0.0, (dim,dim))
-    for g_i in 1:gauss_n
-        for g_j in 1:gauss_n
             local _J = view(dx2xis, g_i, g_j, :)
             local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
-            local pre_calc = J * ws[g_i] * ws[g_j]
-            local phis_ = view(phis, g_i, g_j, :)
+            local invJ = 1.0 / J
+
+            local H1_1 = (_J[4]*_J[4] + _J[2]*_J[2])
+            local H1_2 = - (_J[4]*_J[3] + _J[2]*_J[1])
+
+            local H2_1 = - (_J[4]*_J[3] + _J[2]*_J[1])
+            local H2_2 = (_J[3]*_J[3] + _J[1]*_J[1])
+
+            local alpha_pre_calc = alpha * invJ * ws[g_i] * ws[g_j]
+            local beta_pre_calc = beta * J * ws[g_i] * ws[g_j]
+            local phi_derivs_ = view(phi_derivs, g_i, g_j, :, :)
             for i in 1:dim
+                local alpha1_pre_calc = alpha_pre_calc * (
+                    (H1_1 * phi_derivs_[i,1])
+                    + (H1_2 * phi_derivs_[i,2])
+                )
+                local alpha2_pre_calc = alpha_pre_calc * (
+                    (H2_1 * phi_derivs_[i,1])
+                    + (H2_2 * phi_derivs_[i,2])
+                )
                 for j in 1:dim
-                    K_beta[i,j] += pre_calc * (phis_[j]*phis_[i])
+                    local kij = (
+                        (alpha1_pre_calc * phi_derivs_[j,1])
+                        + (alpha2_pre_calc * phi_derivs_[j,2])
+                        + (beta_pre_calc * (phis_[j]*phis_[i]))
+                    )
+                    K[i,j] += kij
                 end
             end
         end
     end
-    K_beta *= beta
-
-    K_alpha1 + K_alpha2 + K_beta
+    K
 end
 
 function build_mat_2d(alpha :: Float64, beta :: Float64,
@@ -234,7 +212,6 @@ function build_small_vec_2d(f,
             end
         end
     end
-
     F
 end
 
