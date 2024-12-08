@@ -11,12 +11,13 @@ using .FiniteElements: build_vec_mat_2d
 
 using LinearAlgebra: dot, norm
 
-using BenchmarkTools: @btime
+using BenchmarkTools: @benchmarkable
+import BenchmarkTools
 
 function run_tests(name :: String, func, max_i :: UInt8;
     bench_strategy :: Symbol = :all
 )
-    println("Running tests: $name")
+    println("# Running tests: $name")
     for i in 0x0:max_i
         local bench = (bench_strategy == :all) ? (
             true
@@ -32,6 +33,36 @@ function run_tests(name :: String, func, max_i :: UInt8;
     println()
 end
 
+function run_bench(b :: BenchmarkTools.Benchmark;
+    bench :: Bool = true
+)
+    b.params.evals = (bench) ? b.params.evals : 1
+    BenchmarkTools.tune!(b)
+    BenchmarkTools.run_result(b)
+end
+
+function print_trial(trial :: BenchmarkTools.Trial;
+    bench :: Bool = true
+)
+    if (false && bench)
+        display(trial)
+    else
+        local trialmin = trial
+        local trialallocs = BenchmarkTools.allocs(trialmin)
+        println(
+            "  ",
+            BenchmarkTools.prettytime(BenchmarkTools.time(trialmin)),
+            " (",
+            trialallocs,
+            " allocation",
+            trialallocs == 1 ? "" : "s",
+            ": ",
+            BenchmarkTools.prettymemory(BenchmarkTools.memory(trialmin)),
+            ")",
+        )
+    end
+end
+
 const default_tol = 1e-12
 function test_check(i :: UInt8, expected, actual;
     tol=default_tol,
@@ -39,9 +70,9 @@ function test_check(i :: UInt8, expected, actual;
 )
     local err = norm((expected - actual)[begin:end])
     if msg == nothing
-        println("test $i: err is $err, tol is $tol")
+        println(". test $i: err is $err, tol is $tol")
     else
-        println("test $i ($msg): err is $err, tol is $tol")
+        println(". test $i ($msg): err is $err, tol is $tol")
     end
     if err >= tol
         println("==============================")
@@ -93,18 +124,14 @@ function test_small_vec_2d(i :: UInt8;
         (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
-    local ans = (bench) ? (@btime build_small_vec_2d(
+    local b = @benchmarkable build_small_vec_2d(
         $f, $x2xis,
         $dx2xis,
         $phis, $ws, $gauss_n
-    )) : (build_small_vec_2d(
-        f, x2xis,
-        dx2xis,
-        phis,
-        ws, gauss_n
-    ))
-
+    )
+    local trial, ans = run_bench(b, bench=bench)
     test_check(i, expected, ans)
+    print_trial(trial, bench=bench)
 
     ans
 end
@@ -168,19 +195,16 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
         (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
-    local ans = (bench) ? (@btime build_vec_2d(
+    local b = @benchmarkable build_vec_2d(
         $f, $X, $Y, $N_e, $LG, $EQoLG, $m,
         $phis, $phi_derivs,
         $ws, $gauss_n,
-    )) : (build_vec_2d(
-        f, X, Y, N_e, LG, EQoLG, m,
-        phis, phi_derivs,
-        ws, gauss_n
-    ))
-
+    )
+    local trial, ans = run_bench(b, bench=bench)
     test_check(i, expected, ans,
         tol=(i == 2) ? 1e-7 : default_tol
     )
+    print_trial(trial, bench=bench)
 
     ans
 end
@@ -230,15 +254,13 @@ function test_small_mat_2d(i :: UInt8;
     local phi_derivs = phi_derivs_f(ps)
     local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
-    local ans = (bench) ? (@btime build_small_mat_2d(
+    local b = @benchmarkable build_small_mat_2d(
         $alpha, $beta,
         $dx2xis, $phis, $phi_derivs, $ws, $gauss_n
-    )) : (build_small_mat_2d(
-        alpha, beta,
-        dx2xis, phis, phi_derivs, ws, gauss_n
-    ))
-
+    )
+    local trial, ans = run_bench(b, bench=bench)
     test_check(i, expected, ans)
+    print_trial(trial, bench=bench)
 
     ans
 end
@@ -293,19 +315,16 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
           0.0       -0.421416    0.0453884   0.0       -0.885907    2.91071;
     ] ) : error("Index out of bounds")
 
-    local ans = (bench) ? (@btime build_mat_2d(
+    local b = @benchmarkable build_mat_2d(
         $alpha, $beta, $X, $Y, $N_e, $LG, $EQoLG, $m,
         $phis, $phi_derivs,
         $ws, $gauss_n,
-    )) : (build_mat_2d(
-        alpha, beta, X, Y, N_e, LG, EQoLG, m,
-        phis, phi_derivs,
-        ws, gauss_n,
-    ))
-
+    )
+    local trial, ans = run_bench(b, bench=bench)
     test_check(i, expected, ans,
         tol=(i == 1) ? 1e-2 : 1e-4
     )
+    print_trial(trial, bench=bench)
 
     ans
 end
@@ -362,18 +381,13 @@ function test_vec_mat_2d(i :: UInt8; bench :: Bool = true)
 
     local f = (x...) -> foldl(+, x)
 
-    local ans = (bench) ? (@btime build_vec_mat_2d(
+    local b = @benchmarkable build_vec_mat_2d(
         $f, $alpha, $beta,
         $X, $Y, $N_e, $LG, $EQoLG, $m,
         $phis, $phi_derivs,
         $ws, $gauss_n,
-    )) : (build_vec_mat_2d(
-        f, alpha, beta,
-        X, Y, N_e, LG, EQoLG, m,
-        phis, phi_derivs,
-        ws, gauss_n,
-    ))
-
+    )
+    local trial, ans = run_bench(b, bench=bench)
     test_check(i, expected[1], ans[1],
         tol=1e-7,
         msg="vec",
@@ -383,6 +397,7 @@ function test_vec_mat_2d(i :: UInt8; bench :: Bool = true)
         tol=1e-2,
         msg="mat",
     )
+    print_trial(trial, bench=bench)
 
     ans
 end
