@@ -68,6 +68,27 @@
             ];
           };
 
+          tex-summary = myShell {
+            name = "tex-summary";
+            buildInputs = with pkgs; [
+              (texlive.combine
+                { inherit (texlive)
+                  scheme-small
+
+                  biblatex
+                  csquotes
+                ; }
+              )
+
+              (aspellWithDicts (dicts: with dicts; [
+                en
+              ]))
+
+              poppler_utils
+              zathura
+            ];
+          };
+
           md = myShell {
             name = "markdown";
             buildInputs = with pkgs; [
