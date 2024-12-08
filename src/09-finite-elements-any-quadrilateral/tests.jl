@@ -7,6 +7,7 @@ using .FiniteElements: build_LG, build_EQ
 using .FiniteElements: phis_f, phi_derivs_f, x2xis_f, dx2xis_f
 using .FiniteElements: build_small_vec_2d, build_vec_2d
 using .FiniteElements: build_small_mat_2d, build_mat_2d
+using .FiniteElements: build_vec_mat_2d
 
 using LinearAlgebra: dot, norm
 
@@ -33,10 +34,15 @@ end
 
 const default_tol = 1e-12
 function test_check(i :: UInt8, expected, actual;
-    tol=default_tol
+    tol=default_tol,
+    msg=nothing,
 )
     local err = norm((expected - actual)[begin:end])
-    println("test $i: err is $err, tol is $tol")
+    if msg == nothing
+        println("test $i: err is $err, tol is $tol")
+    else
+        println("test $i ($msg): err is $err, tol is $tol")
+    end
     if err >= tol
         println("==============================")
         println("expected:")
@@ -287,14 +293,6 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
           0.0       -0.421416    0.0453884   0.0       -0.885907    2.91071;
     ] ) : error("Index out of bounds")
 
-    local f = (i == 0) ? (
-        x -> 4.0 / foldl(*, hi)
-    ) : (i == 1) ? (
-        x -> 16. * 9.0 * foldl(*, x) / foldl(*, hi) / foldl(*, hi)
-    ) : (i == 2) ? (
-        x -> foldl(+, x)
-    ) : error("Index out of bounds")
-
     local ans = (bench) ? (@btime build_mat_2d(
         $alpha, $beta, $X, $Y, $N_e, $LG, $EQoLG, $m,
         $phis, $phi_derivs,
@@ -312,7 +310,85 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
     ans
 end
 
+const test_vec_mat_2d_max = 0x00
+function test_vec_mat_2d(i :: UInt8; bench :: Bool = true)
+    local gauss_n = 5
+
+    local alpha, beta = 1.0, 1.0
+
+    local Ni = [4, 3]
+    local N_e = foldl(*, Ni)
+    local hi = 1 ./ Ni
+
+    local LG = build_LG(Ni)
+    local m, EQ = build_EQ(Ni)
+    local EQoLG = EQ[LG]
+
+    local gauss_n = 5
+    local ws, ps = gauss_quadrature_table[gauss_n]
+
+    local phis = phis_f(ps)
+    local phi_derivs = phi_derivs_f(ps)
+
+    local X, Y = ( [
+        0.0, 0.25, 0.5, 0.75, 1.0,
+        0.0, 0.266168, 0.493792, 0.747176, 1.0,
+        0.0, 0.275391, 0.521668, 0.708237, 1.0,
+        0.0, 0.25, 0.5, 0.75, 1.0,
+    ], [
+        0.0, 0.0, 0.0, 0.0, 0.0,
+        0.333333, 0.352246, 0.36139, 0.326172, 0.333333,
+        0.666667, 0.633228, 0.693524, 0.689905, 0.666667,
+        1.0, 1.0, 1.0, 1.0, 1.0,
+    ] )
+
+    local expected_vec = [
+        0.047603316256427886,
+        0.0685848331877617,
+        0.09299899556951925,
+        0.07729379019471166,
+        0.08630556638050947,
+        0.11514211312826136
+    ]
+    local expected_mat = [
+          2.78503   -0.710679    0.0        -0.203308  -0.246537    0.0;
+         -0.710679   2.93963    -0.692196   -0.453569   0.0280001  -0.421416;
+          0.0       -0.692196    2.86423     0.0       -0.321263    0.0453884;
+         -0.203308  -0.453569    0.0         2.82204   -0.608672    0.0;
+         -0.246537   0.0280001  -0.321263   -0.608672   2.87005    -0.885907;
+          0.0       -0.421416    0.0453884   0.0       -0.885907    2.91071;
+    ]
+    local expected = (expected_vec, expected_mat)
+
+    local f = (x...) -> foldl(+, x)
+
+    local ans = (bench) ? (@btime build_vec_mat_2d(
+        $f, $alpha, $beta,
+        $X, $Y, $N_e, $LG, $EQoLG, $m,
+        $phis, $phi_derivs,
+        $ws, $gauss_n,
+    )) : (build_vec_mat_2d(
+        f, alpha, beta,
+        X, Y, N_e, LG, EQoLG, m,
+        phis, phi_derivs,
+        ws, gauss_n,
+    ))
+
+    test_check(i, expected[1], ans[1],
+        tol=1e-7,
+        msg="vec",
+    )
+
+    test_check(i, expected[2], ans[2],
+        tol=1e-2,
+        msg="mat",
+    )
+
+    ans
+end
+
 run_tests("test_small_vec_2d", test_small_vec_2d, test_small_vec_2d_max, bench_strategy=:all)
 run_tests("test_vec_2d", test_vec_2d, test_vec_2d_max, bench_strategy=:last)
 run_tests("test_small_mat_2d", test_small_mat_2d, test_small_mat_2d_max, bench_strategy=:all)
 run_tests("test_mat_2d", test_mat_2d, test_mat_2d_max, bench_strategy=:last)
+run_tests("test_vec_mat_2d", test_vec_mat_2d, test_vec_mat_2d_max, bench_strategy=:all)
