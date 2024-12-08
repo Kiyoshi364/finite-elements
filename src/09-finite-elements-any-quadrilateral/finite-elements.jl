@@ -144,7 +144,8 @@ function build_small_mat_2d(
     K
 end
 
-function build_mat_2d(alpha :: Float64, beta :: Float64,
+function build_mat_2d(
+    alpha :: Float64, beta :: Float64,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
@@ -161,7 +162,8 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
 
         local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
-        local K_e = build_small_mat_2d(alpha, beta,
+        local K_e = build_small_mat_2d(
+            alpha, beta,
             dx2xis,
             phis, phi_derivs,
             ws, gauss_n,
@@ -191,7 +193,8 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
     K[begin:end-1, begin:end-1]
 end
 
-function build_small_vec_2d(f :: Function,
+function build_small_vec_2d(
+    f :: Function,
     x2xis :: Array{Float64, 3},
     dx2xis :: Array{Float64, 3},
     phis :: Array{Float64, 3},
@@ -215,7 +218,8 @@ function build_small_vec_2d(f :: Function,
     F
 end
 
-function build_vec_2d(f :: Function,
+function build_vec_2d(
+    f :: Function,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
@@ -233,9 +237,12 @@ function build_vec_2d(f :: Function,
         local x2xis = x2xis_f(phis, Xe, Ye)
         local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
-        local F_e = build_small_vec_2d(f, x2xis,
-            dx2xis, phis, ws, gauss_n
+        local F_e = build_small_vec_2d(
+            f,
+            x2xis, dx2xis,
+            phis, ws, gauss_n
         )
+
         local _1 = EQoLG[1, e]
         local _2 = EQoLG[2, e]
         local _3 = EQoLG[3, e]
@@ -315,11 +322,13 @@ function finite_elements_setup(f,
     local phis = phis_f(ps)
     local phi_derivs = phi_derivs_f(ps)
 
-    local K = build_mat_2d(alpha, beta, X, Y, N_e, LG, EQoLG, m,
+    local K = build_mat_2d(
+        alpha, beta, X, Y, N_e, LG, EQoLG, m,
         phi_derivs,
         ws, ps, gauss_n,
     )
-    local F = build_vec_2d(f, X, Y, N_e, LG, EQoLG, m,
+    local F = build_vec_2d(
+        f, X, Y, N_e, LG, EQoLG, m,
         phis, phi_derivs,
         ws, gauss_n,
     )
