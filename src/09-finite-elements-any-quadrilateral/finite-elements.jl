@@ -191,7 +191,7 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
     K[begin:end-1, begin:end-1]
 end
 
-function build_small_vec_2d(f,
+function build_small_vec_2d(f :: Function,
     x2xis :: Array{Float64, 3},
     dx2xis :: Array{Float64, 3},
     phis :: Array{Float64, 3},
@@ -215,7 +215,7 @@ function build_small_vec_2d(f,
     F
 end
 
-function build_vec_2d(f,
+function build_vec_2d(f :: Function,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
