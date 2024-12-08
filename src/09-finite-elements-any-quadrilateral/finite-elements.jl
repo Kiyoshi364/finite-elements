@@ -41,6 +41,7 @@ const phi_deriv = [
     ((xi...) -> ((+ 0.25) * (1 - xi[1])) :: Float64)
 ]
 
+const dim = 4
 const sdim = 2
 const app = (f, xs...) -> f(xs...)
 
@@ -62,35 +63,52 @@ const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
 const x2xis_f = (
     phis :: Array{Float64, 3},
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
-) -> [
-    sum(
-        (a == 1 ? Xe : Ye)[k] * phis[i, j, k]
-        for k in 1:(size(phis)[3])
-    )
-    for i in 1:(size(phis)[1]),
-        j in 1:(size(phis)[2]),
-        a in 1:2
-] :: Array{Float64, 3}
+) -> begin
+    local x2xis = Array{Float64}(undef, size(phis)[1:2]..., sdim)
+    x2xis_f!(x2xis, phis, Xe, Ye)
+end :: Array{Float64, 3}
 
-# TODO: use array comprehension
+const x2xis_f! = (
+    out :: Array{Float64, 3},
+    phis :: Array{Float64, 3},
+    Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
+) -> begin
+    local sz = size(phis)
+    for i in 1:(sz[1]),
+        j in 1:(sz[2])
+        local phis_ = view(phis, i, j, :)
+        out[i,j,1] = dot(Xe, phis_)
+        out[i,j,2] = dot(Ye, phis_)
+    end
+    out
+end :: Array{Float64, 3}
+
 const dx2xis_f = (
     phi_derivs :: Array{Float64, 4},
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
 ) -> begin
-    dx2xis = fill(0.0, (size(phi_derivs)[1:2]..., length(Xe)))
+    local dx2xis = Array{Float64}(undef, (size(phi_derivs)[1:2]..., length(Xe)))
+    dx2xis_f!(dx2xis, phi_derivs, Xe, Ye)
+end :: Array{Float64, 3}
 
-    for p_i in 1:(size(phi_derivs)[1])
-        for p_j in 1:(size(phi_derivs)[2])
+const dx2xis_f! = (
+    out :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 4},
+    Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
+) -> begin
+    local sz = size(phi_derivs)
+    for p_i in 1:(sz[1])
+        for p_j in 1:(sz[2])
             phi_derivs_ = view(phi_derivs, p_i, p_j, :, :)
 
-            dx2xis[p_i, p_j, 1] = dot(Xe, view(phi_derivs_, :, 1))
-            dx2xis[p_i, p_j, 2] = dot(Xe, view(phi_derivs_, :, 2))
-            dx2xis[p_i, p_j, 3] = dot(Ye, view(phi_derivs_, :, 1))
-            dx2xis[p_i, p_j, 4] = dot(Ye, view(phi_derivs_, :, 2))
+            out[p_i, p_j, 1] = dot(Xe, view(phi_derivs_, :, 1))
+            out[p_i, p_j, 2] = dot(Xe, view(phi_derivs_, :, 2))
+            out[p_i, p_j, 3] = dot(Ye, view(phi_derivs_, :, 1))
+            out[p_i, p_j, 4] = dot(Ye, view(phi_derivs_, :, 2))
         end
     end
 
-    dx2xis
+    out
 end :: Array{Float64, 3}
 
 function build_small_mat_2d(
@@ -100,10 +118,24 @@ function build_small_mat_2d(
     phi_derivs :: Array{Float64, 4},
     ws :: Vector{Float64}, gauss_n :: Int64,
 ) :: Matrix{Float64}
-    local dim = 4
-
     K = fill(0.0, (dim,dim))
+    build_small_mat_2d!(
+        K, alpha, beta,
+        dx2xis, phis,
+        phi_derivs,
+        ws, gauss_n,
+    )
+end
 
+function build_small_mat_2d!(
+    out :: Matrix{Float64},
+    alpha :: Float64, beta :: Float64,
+    dx2xis :: Array{Float64, 3},
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 4},
+    ws :: Vector{Float64}, gauss_n :: Int64,
+) :: Matrix{Float64}
+    fill!(out, 0.0)
     for g_i in 1:gauss_n
         for g_j in 1:gauss_n
             local phis_ = view(phis, g_i, g_j, :)
@@ -136,12 +168,12 @@ function build_small_mat_2d(
                         + (alpha2_pre_calc * phi_derivs_[j,2])
                         + (beta_pre_calc * (phis_[j]*phis_[i]))
                     )
-                    K[i,j] += kij
+                    out[i,j] += kij
                 end
             end
         end
     end
-    K
+    out
 end
 
 function build_mat_2d(alpha :: Float64, beta :: Float64,
@@ -154,14 +186,16 @@ function build_mat_2d(alpha :: Float64, beta :: Float64,
 ) :: Matrix{Float64}
 
     local K = spzeros((m+1, m+1))
+    local dx2xis = fill(0.0, (size(phi_derivs)[1:2]..., dim))
+    local K_e = fill(0.0, (dim, dim))
     for e in 1:N_e
         local LGe = view(LG, :, e)
         local Xe = view(X, LGe)
         local Ye = view(Y, LGe)
 
-        local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
+        dx2xis_f!(dx2xis, phi_derivs, Xe, Ye)
 
-        local K_e = build_small_mat_2d(alpha, beta,
+        build_small_mat_2d!(K_e, alpha, beta,
             dx2xis,
             phis, phi_derivs,
             ws, gauss_n,
@@ -197,9 +231,21 @@ function build_small_vec_2d(f,
     phis :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Vector{Float64}
-    local dim = 4
-
     local F = fill(0.0, (dim,))
+    build_small_vec_2d!(F, f, x2xis,
+        dx2xis, phis, ws, gauss_n
+    )
+end
+
+function build_small_vec_2d!(
+    out :: Vector{Float64},
+    f :: Function,
+    x2xis :: Array{Float64, 3},
+    dx2xis :: Array{Float64, 3},
+    phis :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+    fill!(out, 0.0)
     for g_i in 1:gauss_n
         for g_j in 1:gauss_n
             local _x = view(x2xis, g_i, g_j, :)
@@ -208,11 +254,11 @@ function build_small_vec_2d(f,
             local pre_calc = J * ws[g_i] * ws[g_j] * f(_x[1], _x[2])
             local phis_ = view(phis, g_i, g_j, :)
             for i in 1:dim
-                F[i] += pre_calc * phis_[i]
+                out[i] += pre_calc * phis_[i]
             end
         end
     end
-    F
+    out
 end
 
 function build_vec_2d(f,
@@ -225,15 +271,18 @@ function build_vec_2d(f,
 ) :: Vector{Float64}
 
     local F = fill(0.0, (m+1,))
+    local x2xis = fill(0.0, (size(phis)[1:2]..., sdim))
+    local dx2xis = fill(0.0, (size(phi_derivs)[1:2]..., dim))
+    local F_e = fill(0.0, (dim,))
     for e in 1:N_e
         local LGe = view(LG, :, e)
         local Xe = view(X, LGe)
         local Ye = view(Y, LGe)
 
-        local x2xis = x2xis_f(phis, Xe, Ye)
-        local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
+        x2xis_f!(x2xis, phis, Xe, Ye)
+        dx2xis_f!(dx2xis, phi_derivs, Xe, Ye)
 
-        local F_e = build_small_vec_2d(f, x2xis,
+        build_small_vec_2d!(F_e, f, x2xis,
             dx2xis, phis, ws, gauss_n
         )
         local _1 = EQoLG[1, e]
