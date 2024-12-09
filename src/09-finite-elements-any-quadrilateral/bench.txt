@@ -1,50 +1,50 @@
 # Running tests: test_small_vec_2d
 . test 0: err is 6.661338147750939e-16, tol is 1.0e-12
-  1.305 μs (1 allocation: 96 bytes)
+  1.304 μs (1 allocation: 96 bytes)
 . test 1: err is 1.3322676295501878e-15, tol is 1.0e-12
   1.635 μs (1 allocation: 96 bytes)
 . test 2: err is 3.1401849173675503e-16, tol is 1.0e-12
-  1.204 μs (1 allocation: 96 bytes)
+  1.205 μs (1 allocation: 96 bytes)
 
 # Running tests: test_vec_2d
 . test 0: err is 2.175583928816829e-15, tol is 1.0e-12
-  104.162 μs (39 allocations: 17.67 KiB)
+  104.511 μs (39 allocations: 17.67 KiB)
 . test 1: err is 1.2710574864626038e-13, tol is 1.0e-12
-  143.924 μs (51 allocations: 23.53 KiB)
+  143.712 μs (51 allocations: 23.53 KiB)
 . test 2: err is 9.685704431586948e-8, tol is 1.0e-7
-  103.250 μs (38 allocations: 17.66 KiB)
+  103.474 μs (38 allocations: 17.66 KiB)
 
 # Running tests: test_small_mat_2d
 . test 0: err is 1.2947314098277875e-15, tol is 1.0e-12
-  7.556 μs (1 allocation: 192 bytes)
+  7.578 μs (1 allocation: 192 bytes)
 . test 1: err is 1.538370149106851e-15, tol is 1.0e-12
-  7.590 μs (1 allocation: 192 bytes)
+  7.597 μs (1 allocation: 192 bytes)
 . test 2: err is 4.502267502567529e-16, tol is 1.0e-12
-  7.594 μs (1 allocation: 192 bytes)
+  7.588 μs (1 allocation: 192 bytes)
 
 # Running tests: test_mat_2d
 . test 0: err is 1.1896216734131806e-5, tol is 0.0001
-  164.437 μs (37 allocations: 17.75 KiB)
+  164.511 μs (37 allocations: 17.75 KiB)
 . test 1: err is 0.0053522765021198, tol is 0.01
-  164.449 μs (37 allocations: 17.75 KiB)
+  164.536 μs (37 allocations: 17.75 KiB)
 
 # Running tests: test_vec_mat_2d
 . test 0 (vec): err is 9.685704431586948e-8, tol is 1.0e-7
 . test 0 (mat): err is 0.0053522765021198, tol is 0.01
-  220.924 μs (63 allocations: 24.91 KiB)
+  221.061 μs (63 allocations: 24.91 KiB)
 
 # Running tests: test_vec_mat_2d_ref
 . test 0 (vec): err is 9.685704431586948e-8, tol is 1.0e-7
 . test 0 (mat): err is 0.0053522765021198, tol is 0.01
-  205.999 μs (43 allocations: 9.98 KiB)
+  205.924 μs (43 allocations: 9.98 KiB)
 
 # Running tests: test_vec_mat_2d_iter
 . test 0 (vec): err is 9.685704431586948e-8, tol is 1.0e-7
 . test 0 (mat): err is 0.0053522765021198, tol is 0.01
-  248.873 μs (112 allocations: 27.55 KiB)
+  248.123 μs (112 allocations: 27.55 KiB)
 
 # Running tests: test_vec_mat_2d_iterref
 . test 0 (vec): err is 9.685704431586948e-8, tol is 1.0e-7
 . test 0 (mat): err is 0.0053522765021198, tol is 0.01
-  234.849 μs (104 allocations: 13.00 KiB)
+  233.898 μs (104 allocations: 13.00 KiB)
 

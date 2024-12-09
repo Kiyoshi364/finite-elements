@@ -383,7 +383,7 @@ function test_vec_mat_2d_template(the_func :: Function) :: Function
 
     local f = (x...) -> foldl(+, x)
 
-    local b = @benchmarkable $the_func(
+    local b = @benchmarkable $(the_func)(
         $f, $alpha, $beta,
         $X, $Y, $N_e, $LG, $EQoLG, $m,
         $phis, $phi_derivs,
