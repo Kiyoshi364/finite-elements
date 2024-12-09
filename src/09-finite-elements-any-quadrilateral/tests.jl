@@ -7,7 +7,7 @@ using .FiniteElements: build_LG, build_EQ
 using .FiniteElements: phis_f, phi_derivs_f, x2xis_f, dx2xis_f
 using .FiniteElements: build_small_vec_2d, build_vec_2d
 using .FiniteElements: build_small_mat_2d, build_mat_2d
-using .FiniteElements: build_vec_mat_2d
+using .FiniteElements: build_vec_mat_2d, build_vec_mat_2d_ref
 using .FiniteElements: build_vec_mat_2d_iter, build_vec_mat_2d_iterref
 
 using LinearAlgebra: dot, norm
@@ -411,6 +411,7 @@ run_tests("test_mat_2d", test_mat_2d, test_mat_2d_max, bench_strategy=:last)
 
 const names_funcs = [
     ("test_vec_mat_2d", build_vec_mat_2d)
+    ("test_vec_mat_2d_ref", build_vec_mat_2d_ref)
     ("test_vec_mat_2d_iter", build_vec_mat_2d_iter)
     ("test_vec_mat_2d_iterref", build_vec_mat_2d_iterref)
 ]

@@ -21,7 +21,7 @@ export build_LG, build_EQ
 export phis_f, phi_derivs_f, x2xis_f, dx2xis_f
 export build_small_vec_2d, build_vec_2d
 export build_small_mat_2d, build_mat_2d
-export build_vec_mat_2d
+export build_vec_mat_2d, build_vec_mat_2d_ref
 export build_vec_mat_2d_iter, build_vec_mat_2d_iterref
 
 const phi = [
@@ -317,6 +317,71 @@ function build_vec_mat_2d(
         local F_e = build_small_vec_2d(
             f,
             x2xis, dx2xis,
+            phis, ws, gauss_n
+        )
+
+        local _1 = EQoLG[1, e]
+        local _2 = EQoLG[2, e]
+        local _3 = EQoLG[3, e]
+        local _4 = EQoLG[4, e]
+
+        F[_1] += F_e[1]
+        F[_2] += F_e[2]
+        F[_3] += F_e[3]
+        F[_4] += F_e[4]
+        K[_1,_1] += K_e[1,1]
+        K[_1,_2] += K_e[1,2]
+        K[_1,_3] += K_e[1,3]
+        K[_1,_4] += K_e[1,4]
+        K[_2,_1] += K_e[2,1]
+        K[_2,_2] += K_e[2,2]
+        K[_2,_3] += K_e[2,3]
+        K[_2,_4] += K_e[2,4]
+        K[_3,_1] += K_e[3,1]
+        K[_3,_2] += K_e[3,2]
+        K[_3,_3] += K_e[3,3]
+        K[_3,_4] += K_e[3,4]
+        K[_4,_1] += K_e[4,1]
+        K[_4,_2] += K_e[4,2]
+        K[_4,_3] += K_e[4,3]
+        K[_4,_4] += K_e[4,4]
+    end
+
+    (F[begin:end-1], K[begin:end-1,begin:end-1])
+end
+
+function build_vec_mat_2d_ref(
+    f :: Function,
+    alpha :: Float64, beta :: Float64,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 4},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Tuple{Vector{Float64}, Matrix{Float64}}
+
+    local K = spzeros((m+1, m+1))
+    local F = fill(0.0, (m+1,))
+    local ref_x2xis = Ref(fill(0.0, (size(phis)[1:2]..., sdim)))
+    local ref_dx2xis = Ref(fill(0.0, (size(phi_derivs)[1:2]..., dim)))
+    for e in 1:N_e
+        local LGe = view(LG, :, e)
+        local Xe = view(X, LGe)
+        local Ye = view(Y, LGe)
+
+        x2xis_f_ref!(ref_x2xis, phis, Xe, Ye)
+        dx2xis_f_ref!(ref_dx2xis, phi_derivs, Xe, Ye)
+
+        local K_e = build_small_mat_2d(
+            alpha, beta,
+            ref_dx2xis[],
+            phis, phi_derivs,
+            ws, gauss_n,
+        )
+        local F_e = build_small_vec_2d(
+            f,
+            ref_x2xis[], ref_dx2xis[],
             phis, ws, gauss_n
         )
 
