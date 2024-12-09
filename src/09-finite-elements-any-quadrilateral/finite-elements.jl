@@ -73,7 +73,6 @@ const x2xis_f = (
         a in 1:2
 ] :: Array{Float64, 3}
 
-# TODO: use array comprehension
 const dx2xis_f = (
     phi_derivs :: Array{Float64, 4},
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
