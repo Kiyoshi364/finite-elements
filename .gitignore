@@ -1,6 +1,8 @@
 *.pdf
 *.gif
 
+results.json
+
 # Latex
 **/folder-build/*.aux
 **/folder-build/*.log

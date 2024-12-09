@@ -10,7 +10,10 @@ using LinearAlgebra: dot
 
 using SparseArrays: spzeros
 
+import Random
+
 export finite_elements_setup
+export gauss_quadrature_table
 export generate_space
 export gauss_error_2d
 export phi, phi_deriv, instantiate_solution
@@ -666,7 +669,8 @@ end
 function generate_space(
     hi :: AbstractVector{Float64}, Ni :: AbstractVector{Int64}
 ;
-    noise :: Bool = false
+    noise :: Bool = false,
+    seed :: Union{Int64, Nothing} = Nothing,
 ) :: Tuple{AbstractVector{Float64}, AbstractVector{Float64}}
     X = repeat(0.0:(hi[1]):1.0, Ni[2]+1)
     Y = cat(
@@ -675,12 +679,15 @@ function generate_space(
     )
 
     if noise
+        if seed !== nothing
+            Random.seed!(seed)
+        end
         scale = hi ./ 4
         for i in 2:Ni[2]
             for j in 2:Ni[1]
                 idx = (i-1) * (Ni[1]+1) + (j-1) + 1
-                X[idx] += scale[1] * 2*(rand(Float64) - 0.5)
-                Y[idx] += scale[2] * 2*(rand(Float64) - 0.5)
+                X[idx] += scale[1] * 2*(Random.rand(Float64) - 0.5)
+                Y[idx] += scale[2] * 2*(Random.rand(Float64) - 0.5)
             end
         end
     end
