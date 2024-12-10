@@ -67,7 +67,10 @@ for i in min_max
     end
 end
 
-BT.tune!(suite)
+BT.tune!(
+    suite,
+    verbose=true
+)
 
 bench = BT.run(
     suite,
