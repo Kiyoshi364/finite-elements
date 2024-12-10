@@ -670,7 +670,7 @@ function generate_space(
     hi :: AbstractVector{Float64}, Ni :: AbstractVector{Int64}
 ;
     noise :: Bool = false,
-    seed :: Union{Int64, Nothing} = Nothing,
+    seed :: Union{Int64, Nothing} = nothing,
 ) :: Tuple{AbstractVector{Float64}, AbstractVector{Float64}}
     X = repeat(0.0:(hi[1]):1.0, Ni[2]+1)
     Y = cat(
