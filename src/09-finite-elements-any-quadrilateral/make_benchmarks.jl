@@ -30,12 +30,6 @@ for i in 1:length(names_funcs)
     suite[names_funcs[i][1]] = BenchmarkGroup(tags[i])
 end
 
-const gauss_n = 5
-const ws, ps = gauss_quadrature_table[gauss_n]
-
-const phis = phis_f(ps)
-const phi_derivs = phi_derivs_f(ps)
-
 const f = (x...) -> foldl(+, x)
 const alpha, beta = 1.0, 1.0
 
@@ -58,12 +52,20 @@ for i in min_max
     )
 
     for (name, func) in names_funcs
-        suite[name][pow] = @benchmarkable $(func)(
-            $f, $alpha, $beta,
-            $X, $Y, $N_e, $LG, $EQoLG, $m,
-            $phis, $phi_derivs,
-            $ws, $gauss_n,
-        )
+        suite[name][pow] = @benchmarkable begin
+            local gauss_n = 5
+            local ws, ps = gauss_quadrature_table[gauss_n]
+
+            local phis = phis_f(ps)
+            local phi_derivs = phi_derivs_f(ps)
+
+            $(func)(
+                $f, $alpha, $beta,
+                $X, $Y, $N_e, $LG, $EQoLG, $m,
+                phis, phi_derivs,
+                ws, gauss_n,
+            )
+        end
     end
 end
 
