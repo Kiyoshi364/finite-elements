@@ -652,13 +652,10 @@ function finite_elements_setup(f,
     local phis = phis_f(ps)
     local phi_derivs = phi_derivs_f(ps)
 
-    local K = build_mat_2d(
-        alpha, beta, X, Y, N_e, LG, EQoLG, m,
-        phi_derivs,
-        ws, ps, gauss_n,
-    )
-    local F = build_vec_2d(
-        f, X, Y, N_e, LG, EQoLG, m,
+    local F, K = build_vec_mat_2d_ref(
+        f, alpha, beta,
+        X, Y,
+        N_e, LG, EQoLG, m,
         phis, phi_derivs,
         ws, gauss_n,
     )
@@ -695,8 +692,9 @@ function generate_space(
     X, Y
 end
 
-function gauss_error_2d(exact,
-    coefs,
+function gauss_error_2d(
+    exact :: Function,
+    coefs :: AbstractVector{Float64},
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
     Ni :: AbstractVector{Int64}, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}
@@ -707,6 +705,9 @@ function gauss_error_2d(exact,
 
     local ws, ps = gauss_quadrature_table[gauss_n]
 
+    local phis = phis_f(ps)
+    local phi_derivs = phi_derivs_f(ps)
+
     local coefs_ext = cat(coefs, 0.0, dims=1)
 
     local acc = 0.0
@@ -716,19 +717,17 @@ function gauss_error_2d(exact,
         local Xe = X[LGe]
         local Ye = Y[LGe]
 
-        local x2xis = x2xis_f(ps, Xe, Ye)
-        local dx2xis = dx2xis_f(ps, Xe, Ye)
+        local x2xis = x2xis_f(phis, Xe, Ye)
+        local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
         for g_i = 1:gauss_n
-            local p1 = ps[g_i]
             for g_j in 1:gauss_n
-                local p2 = ps[g_j]
-                local _x = x2xis[g_i][g_j]
-                local _J = dx2xis[g_i][g_j]
+                local _x = view(x2xis, g_i, g_j, :)
+                local _J = view(dx2xis, g_i, g_j, :)
                 local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
-                local diff = exact(x2xis[g_i][g_j])
+                local diff = exact(_x...)
                 for i in 1:4
-                    diff -= coefs_ext[EQoLG[i, e]] * phi[i]([p1, p2])
+                    diff -= coefs_ext[EQoLG[i, e]] * phis[g_i, g_j, i]
                 end
                 acc += J * ws[g_i] * ws[g_j] * diff * diff
             end

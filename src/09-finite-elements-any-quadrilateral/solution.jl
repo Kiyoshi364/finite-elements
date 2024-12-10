@@ -22,7 +22,7 @@ const c = K \ F
 
 display(c)
 display([
-    exact([X[idx], Y[idx]])
+    exact(X[idx], Y[idx])
     for i in 2:Ni[2]
     for j in 2:Ni[1]
     for idx in [(i-1) * (Ni[1]+1) + (j-1) + 1]
