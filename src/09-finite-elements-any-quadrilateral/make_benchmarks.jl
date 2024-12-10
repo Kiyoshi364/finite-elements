@@ -13,10 +13,10 @@ using BenchmarkTools: @benchmarkable, BenchmarkGroup
 import BenchmarkTools as BT
 
 const names_funcs = [
-    ("baseline", build_vec_mat_2d),
-    ("ref", build_vec_mat_2d_ref),
-    ("iter", build_vec_mat_2d_iter),
-    ("iter_ref", build_vec_mat_2d_iterref),
+    (:baseline, build_vec_mat_2d),
+    (:ref, build_vec_mat_2d_ref),
+    (:iter, build_vec_mat_2d_iter),
+    (:iter_ref, build_vec_mat_2d_iterref),
 ]
 const tags = [
     ["no_ref", "no_iter"],
