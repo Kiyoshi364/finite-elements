@@ -9,6 +9,9 @@ using .FiniteElements: phis_f, phi_derivs_f
 using .FiniteElements: build_vec_mat_2d, build_vec_mat_2d_ref
 using .FiniteElements: build_vec_mat_2d_iter, build_vec_mat_2d_iterref
 
+include("bacarmo.jl")
+using .Bacarmo: monta_K_quadrilatero, monta_F_quadrilatero
+
 using BenchmarkTools: @benchmarkable, BenchmarkGroup
 import BenchmarkTools as BT
 
@@ -29,6 +32,7 @@ suite = BenchmarkGroup()
 for i in 1:length(names_funcs)
     suite[names_funcs[i][1]] = BenchmarkGroup(tags[i])
 end
+suite[:bacarmo] = BenchmarkGroup(["bacarmo"])
 
 const f = (x...) -> foldl(+, x)
 const alpha, beta = 1.0, 1.0
@@ -66,6 +70,10 @@ for i in min_max
                 ws, gauss_n,
             )
         end
+    end
+    suite[:bacarmo][pow] = @benchmarkable begin
+        monta_K_quadrilatero($alpha, $beta, $X, $Y, $m, $EQ, $LG)
+        monta_F_quadrilatero($f, $X, $Y, $m, $EQ, $LG)
     end
 end
 
