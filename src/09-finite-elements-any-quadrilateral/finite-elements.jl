@@ -188,7 +188,7 @@ function build_mat_2d(
     phis :: Array{Float64, 3},
     phi_derivs :: Array{Float64, 4},
     ws :: Vector{Float64}, gauss_n :: Int64
-) :: Matrix{Float64}
+) :: AbstractMatrix{Float64}
 
     local K = spzeros((m+1, m+1))
     for e in 1:N_e
@@ -299,7 +299,7 @@ function build_vec_mat_2d(
     phis :: Array{Float64, 3},
     phi_derivs :: Array{Float64, 4},
     ws :: Vector{Float64}, gauss_n :: Int64
-) :: Tuple{Vector{Float64}, Matrix{Float64}}
+) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
     local K = spzeros((m+1, m+1))
     local F = fill(0.0, (m+1,))
@@ -344,7 +344,7 @@ function build_vec_mat_2d_ref(
     phis :: Array{Float64, 3},
     phi_derivs :: Array{Float64, 4},
     ws :: Vector{Float64}, gauss_n :: Int64
-) :: Tuple{Vector{Float64}, Matrix{Float64}}
+) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
     local K = spzeros((m+1, m+1))
     local F = fill(0.0, (m+1,))
@@ -447,7 +447,7 @@ function build_vec_mat_2d_iter(
     phis :: Array{Float64, 3},
     phi_derivs :: Array{Float64, 4},
     ws :: Vector{Float64}, gauss_n :: Int64
-) :: Tuple{Vector{Float64}, Matrix{Float64}}
+) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
     local iter = FiniteElementIter(
         X, Y,
@@ -548,7 +548,7 @@ function build_vec_mat_2d_iterref(
     phis :: Array{Float64, 3},
     phi_derivs :: Array{Float64, 4},
     ws :: Vector{Float64}, gauss_n :: Int64
-) :: Tuple{Vector{Float64}, Matrix{Float64}}
+) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
     local iter = FiniteElementIterRef(
         X, Y,
