@@ -7,6 +7,11 @@ using Plots: plot, plot!, savefig
 const names = [
     :baseline, :ref, :iter, :iter_ref, :bacarmo
 ]
+const tests_names = [
+    (:build_vec, "vec"),
+    (:build_mat, "mat"),
+    (:build_both, "both"),
+]
 const markershapes = [
     :circle,
     :square,
@@ -94,18 +99,23 @@ const groups_file_label_func = [
     ("min_memory", "memory (bytes)", (x -> BT.memory(BT.minimum(x)))),
 ]
 
-for (file, label, f) in groups_file_label_func
-    local p = make_group_graph(
-        f(bench),
-        label=label
-    )
-    savefig(p, "$(out_dir)$(file).$(ext)")
-end
+for (test, test_name) in tests_names
+    local test_bench = bench[test]
+    for (file, label, f) in groups_file_label_func
+        local p = make_group_graph(
+            f(test_bench),
+            label=label
+        )
+        savefig(p, "$(out_dir)$(test_name)-$(file).$(ext)")
+    end
 
-for (name, single_bench) in bench
-    local p = make_single_graph(
-        name,
-        single_bench,
-    )
-    savefig(p, "$(out_dir)$(name).$(ext)")
+    for (name, single_bench) in test_bench
+        if 0 < length(single_bench)
+            local p = make_single_graph(
+                name,
+                single_bench,
+            )
+            savefig(p, "$(out_dir)$(test_name)-$(name).$(ext)")
+        end
+    end
 end
