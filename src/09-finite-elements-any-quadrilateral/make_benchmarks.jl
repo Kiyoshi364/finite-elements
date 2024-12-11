@@ -63,17 +63,20 @@ for i in min_max
             local phis = phis_f(ps)
             local phi_derivs = phi_derivs_f(ps)
 
-            $(func)(
+            local (F, K) = $(func)(
                 $f, $alpha, $beta,
                 $X, $Y, $N_e, $LG, $EQoLG, $m,
                 phis, phi_derivs,
                 ws, gauss_n,
             )
+
+            F, K
         end
     end
     suite[:bacarmo][pow] = @benchmarkable begin
-        monta_K_quadrilatero($alpha, $beta, $X, $Y, $m, $EQ, $LG)
-        monta_F_quadrilatero($f, $X, $Y, $m, $EQ, $LG)
+        local K = monta_K_quadrilatero($alpha, $beta, $X, $Y, $m, $EQ, $LG)
+        local F = monta_F_quadrilatero($f, $X, $Y, $m, $EQ, $LG)
+        F, K
     end
 end
 
