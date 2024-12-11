@@ -61,7 +61,7 @@ const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
     phi_deriv[i, j](ps[g_i], ps[g_j])
     for g_i in 1:length(ps),
         g_j in 1:length(ps),
-        i in 1:4,
+        i in 1:dim,
         j in 1:sdim
 ] :: Array{Float64, 4}
 
