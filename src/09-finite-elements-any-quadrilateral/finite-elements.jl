@@ -73,15 +73,16 @@ end :: Array{Float64, 3}
 const x2xis_f = (
     phis :: Array{Float64, 3},
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
-) -> [
-    sum(
-        (a == 1 ? Xe : Ye)[k] * phis[i, j, k]
-        for k in 1:(size(phis)[3])
-    )
+) -> begin
+    local x2xis = fill(0.0, (size(phis)[1:2]..., sdim))
     for i in 1:(size(phis)[1]),
-        j in 1:(size(phis)[2]),
-        a in 1:sdim
-] :: Array{Float64, 3}
+        j in 1:(size(phis)[2])
+        local phis_ = view(phis, i, j, :)
+        x2xis[i,j,1] = dot(Xe, phis_)
+        x2xis[i,j,2] = dot(Ye, phis_)
+    end
+    x2xis
+end :: Array{Float64, 3}
 
 const x2xis_f_ref! = (
     ref_out :: Ref{Array{Float64, 3}},
