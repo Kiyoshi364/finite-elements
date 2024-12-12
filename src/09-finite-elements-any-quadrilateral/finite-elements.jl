@@ -205,26 +205,12 @@ function build_mat_2d(
             ws, gauss_n,
         )
 
-        local _1 = EQoLG[1, e]
-        local _2 = EQoLG[2, e]
-        local _3 = EQoLG[3, e]
-        local _4 = EQoLG[4, e]
-        K[_1,_1] += K_e[1,1]
-        K[_1,_2] += K_e[1,2]
-        K[_1,_3] += K_e[1,3]
-        K[_1,_4] += K_e[1,4]
-        K[_2,_1] += K_e[2,1]
-        K[_2,_2] += K_e[2,2]
-        K[_2,_3] += K_e[2,3]
-        K[_2,_4] += K_e[2,4]
-        K[_3,_1] += K_e[3,1]
-        K[_3,_2] += K_e[3,2]
-        K[_3,_3] += K_e[3,3]
-        K[_3,_4] += K_e[3,4]
-        K[_4,_1] += K_e[4,1]
-        K[_4,_2] += K_e[4,2]
-        K[_4,_3] += K_e[4,3]
-        K[_4,_4] += K_e[4,4]
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            for j in 1:dim
+                K[EQoLG_[i], EQoLG_[j]] += K_e[i, j]
+            end
+        end
     end
     K[begin:end-1, begin:end-1]
 end
@@ -278,14 +264,10 @@ function build_vec_2d(
             phis, ws, gauss_n
         )
 
-        local _1 = EQoLG[1, e]
-        local _2 = EQoLG[2, e]
-        local _3 = EQoLG[3, e]
-        local _4 = EQoLG[4, e]
-        F[_1] += F_e[1]
-        F[_2] += F_e[2]
-        F[_3] += F_e[3]
-        F[_4] += F_e[4]
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += F_e[i]
+        end
     end
     F[begin:end-1]
 end
