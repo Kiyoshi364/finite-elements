@@ -50,20 +50,25 @@ const dim = 4
 const sdim = 2
 const app = (f, xs...) -> f(xs...)
 
-const phis_f = (ps :: AbstractVector{Float64}) -> [
-    f_phi(p1, p2)
-    for p1 in ps,
-        p2 in ps,
-        f_phi in phi
-] :: Array{Float64, 3}
+const phis_f = (ps :: AbstractVector{Float64}) -> begin
+    local phis = fill(0.0, (length(ps), length(ps), length(phi)))
+    for (g_i, p1) in enumerate(ps),
+        (g_j, p2) in enumerate(ps),
+        (i, f_phi) in enumerate(phi)
+        phis[g_i,g_j,i] = f_phi(p1, p2)
+    end
+    phis
+end :: Array{Float64, 3}
 
-const phi_derivs_f = (ps :: AbstractVector{Float64}) -> [
-    phi_deriv[i, j](ps[g_i], ps[g_j])
+const phi_derivs_f = (ps :: AbstractVector{Float64}) -> begin
+    phi_derivs = fill(0.0, (length(ps), sdim, dim))
     for g_i in 1:length(ps),
-        g_j in 1:length(ps),
+        j in 1:sdim,
         i in 1:dim,
-        j in 1:sdim
-] :: Array{Float64, 4}
+        phi_derivs[g_i,j,i] = phi_deriv[i,j](ps[g_i], ps[g_i])
+    end
+    phi_derivs
+end :: Array{Float64, 3}
 
 const x2xis_f = (
     phis :: Array{Float64, 3},
@@ -93,19 +98,20 @@ const x2xis_f_ref! = (
 end :: Ref{Array{Float64, 3}}
 
 const dx2xis_f = (
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
 ) -> begin
-    dx2xis = fill(0.0, (size(phi_derivs)[1:2]..., length(Xe)))
+    dx2xis = fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], length(Xe)))
 
     for p_i in 1:(size(phi_derivs)[1])
-        for p_j in 1:(size(phi_derivs)[2])
-            phi_derivs_ = view(phi_derivs, p_i, p_j, :, :)
+        phi_derivs_i = view(phi_derivs, p_i, 2, :)
+        for p_j in 1:(size(phi_derivs)[1])
+            phi_derivs_j = view(phi_derivs, p_j, 1, :)
 
-            dx2xis[p_i, p_j, 1] = dot(Xe, view(phi_derivs_, :, 1))
-            dx2xis[p_i, p_j, 2] = dot(Xe, view(phi_derivs_, :, 2))
-            dx2xis[p_i, p_j, 3] = dot(Ye, view(phi_derivs_, :, 1))
-            dx2xis[p_i, p_j, 4] = dot(Ye, view(phi_derivs_, :, 2))
+            dx2xis[p_i, p_j, 1] = dot(Xe, phi_derivs_j)
+            dx2xis[p_i, p_j, 2] = dot(Xe, phi_derivs_i)
+            dx2xis[p_i, p_j, 3] = dot(Ye, phi_derivs_j)
+            dx2xis[p_i, p_j, 4] = dot(Ye, phi_derivs_i)
         end
     end
 
@@ -114,17 +120,18 @@ end :: Array{Float64, 3}
 
 const dx2xis_f_ref! = (
     ref_out :: Ref{Array{Float64, 3}},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     Xe :: AbstractVector{Float64}, Ye :: AbstractVector{Float64}
 ) -> begin
     for p_i in 1:(size(phi_derivs)[1])
-        for p_j in 1:(size(phi_derivs)[2])
-            phi_derivs_ = view(phi_derivs, p_i, p_j, :, :)
+        phi_derivs_i = view(phi_derivs, p_i, 2, :)
+        for p_j in 1:(size(phi_derivs)[1])
+            phi_derivs_j = view(phi_derivs, p_j, 1, :)
 
-            ref_out[][p_i, p_j, 1] = dot(Xe, view(phi_derivs_, :, 1))
-            ref_out[][p_i, p_j, 2] = dot(Xe, view(phi_derivs_, :, 2))
-            ref_out[][p_i, p_j, 3] = dot(Ye, view(phi_derivs_, :, 1))
-            ref_out[][p_i, p_j, 4] = dot(Ye, view(phi_derivs_, :, 2))
+            ref_out[][p_i, p_j, 1] = dot(Xe, phi_derivs_j)
+            ref_out[][p_i, p_j, 2] = dot(Xe, phi_derivs_i)
+            ref_out[][p_i, p_j, 3] = dot(Ye, phi_derivs_j)
+            ref_out[][p_i, p_j, 4] = dot(Ye, phi_derivs_i)
         end
     end
     ref_out
@@ -134,13 +141,14 @@ function build_small_mat_2d(
     alpha :: Float64, beta :: Float64,
     dx2xis :: Array{Float64, 3},
     phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64,
 ) :: Matrix{Float64}
 
     K = fill(0.0, (dim,dim))
 
     for g_i in 1:gauss_n
+        local phi_derivs_i = view(phi_derivs, g_i, 2, :)
         for g_j in 1:gauss_n
             local phis_ = view(phis, g_i, g_j, :)
 
@@ -156,20 +164,20 @@ function build_small_mat_2d(
 
             local alpha_pre_calc = alpha * invJ * ws[g_i] * ws[g_j]
             local beta_pre_calc = beta * J * ws[g_i] * ws[g_j]
-            local phi_derivs_ = view(phi_derivs, g_i, g_j, :, :)
+            local phi_derivs_j = view(phi_derivs, g_j, 1, :)
             for i in 1:dim
                 local alpha1_pre_calc = alpha_pre_calc * (
-                    (H1_1 * phi_derivs_[i,1])
-                    + (H1_2 * phi_derivs_[i,2])
+                    (H1_1 * phi_derivs_j[i])
+                    + (H1_2 * phi_derivs_i[i])
                 )
                 local alpha2_pre_calc = alpha_pre_calc * (
-                    (H2_1 * phi_derivs_[i,1])
-                    + (H2_2 * phi_derivs_[i,2])
+                    (H2_1 * phi_derivs_j[i])
+                    + (H2_2 * phi_derivs_i[i])
                 )
                 for j in 1:dim
                     local kij = (
-                        (alpha1_pre_calc * phi_derivs_[j,1])
-                        + (alpha2_pre_calc * phi_derivs_[j,2])
+                        (alpha1_pre_calc * phi_derivs_j[j])
+                        + (alpha2_pre_calc * phi_derivs_i[j])
                         + (beta_pre_calc * (phis_[j]*phis_[i]))
                     )
                     K[i,j] += kij
@@ -186,7 +194,7 @@ function build_mat_2d(
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
     phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: AbstractMatrix{Float64}
 
@@ -245,7 +253,7 @@ function build_vec_2d(
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
     phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Vector{Float64}
 
@@ -279,7 +287,7 @@ function build_vec_mat_2d(
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
     phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
@@ -324,14 +332,14 @@ function build_vec_mat_2d_ref(
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
     phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
     local K = spzeros((m+1, m+1))
     local F = fill(0.0, (m+1,))
     local ref_x2xis = Ref(fill(0.0, (size(phis)[1:2]..., sdim)))
-    local ref_dx2xis = Ref(fill(0.0, (size(phi_derivs)[1:2]..., dim)))
+    local ref_dx2xis = Ref(fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], dim)))
     for e in 1:N_e
         local LGe = view(LG, :, e)
         local Xe = view(X, LGe)
@@ -375,7 +383,7 @@ struct FiniteElementIter
     N_e :: Int64
     LG :: AbstractMatrix{Int64}
     phis :: Array{Float64, 3}
-    phi_derivs :: Array{Float64, 4}
+    phi_derivs :: Array{Float64, 3}
 
     FiniteElementIter(
         X :: AbstractVector{Float64},
@@ -383,7 +391,7 @@ struct FiniteElementIter
         N_e :: Int64,
         LG :: AbstractMatrix{Int64},
         phis :: Array{Float64, 3},
-        phi_derivs :: Array{Float64, 4},
+        phi_derivs :: Array{Float64, 3},
     ) = begin
         new(
             X, Y,
@@ -427,7 +435,7 @@ function build_vec_mat_2d_iter(
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
     phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
@@ -477,7 +485,7 @@ struct FiniteElementIterRef
         iter :: FiniteElementIter,
     ) = begin
         local x2xis = Ref(fill(0.0, (size(iter.phis)[1:2]..., sdim)))
-        local dx2xis = Ref(fill(0.0, (size(iter.phi_derivs)[1:2]..., dim)))
+        local dx2xis = Ref(fill(0.0, (size(iter.phi_derivs)[1], size(iter.phi_derivs)[1], dim)))
         new(iter, x2xis, dx2xis)
     end
     FiniteElementIterRef(
@@ -486,7 +494,7 @@ struct FiniteElementIterRef
         N_e :: Int64,
         LG :: AbstractMatrix{Int64},
         phis :: Array{Float64, 3},
-        phi_derivs :: Array{Float64, 4},
+        phi_derivs :: Array{Float64, 3},
     ) = FiniteElementIterRef(
         FiniteElementIter(
             X, Y,
@@ -528,7 +536,7 @@ function build_vec_mat_2d_iterref(
     N_e :: Int64, LG :: AbstractMatrix{Int64},
     EQoLG :: Matrix{Int64}, m :: Int64,
     phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 4},
+    phi_derivs :: Array{Float64, 3},
     ws :: Vector{Float64}, gauss_n :: Int64
 ) :: Tuple{Vector{Float64}, AbstractMatrix{Float64}}
 
