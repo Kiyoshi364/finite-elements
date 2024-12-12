@@ -24,14 +24,14 @@ const names = [
 const tests = [
     :build_vec, :build_mat, :build_both,
 ]
-const tests_groups = Dict(
-    :build_vec  => [
+const tests_groups = (;
+    build_vec  = [
         (:baseline, build_vec_2d),
     ],
-    :build_mat  => [
+    build_mat  = [
         (:baseline, build_mat_2d),
     ],
-    :build_both => [
+    build_both = [
         (:baseline, build_vec_mat_2d),
         (:ref     , build_vec_mat_2d_ref),
         (:iter    , build_vec_mat_2d_iter),
@@ -50,19 +50,19 @@ const names_fullfuncs = (;
     iter     = build_vec_mat_2d_iter,
     iter_ref = build_vec_mat_2d_iterref,
 )
-const names_tags = [
-    (:baseline, ["no_ref", "no_iter"]),
-    (:ref,      [   "ref", "no_iter"]),
-    (:iter,     ["no_ref",    "iter"]),
-    (:iter_ref, [   "ref",    "iter"]),
-    (:bacarmo,  ["bacarmo"          ]),
-]
+const names_tags = (;
+    baseline = ["no_ref", "no_iter"],
+    ref      = [   "ref", "no_iter"],
+    iter     = ["no_ref",    "iter"],
+    iter_ref = [   "ref",    "iter"],
+    bacarmo  = ["bacarmo"          ],
+)
 
 suite = BenchmarkGroup()
 for (test, test_tags) in tests_tags
     suite[test] = BenchmarkGroup(test_tags)
-    for (name, name_tags) in names_tags
-        suite[test][name] = BenchmarkGroup(name_tags)
+    for (impl_name, func) in tests_groups[test]
+        suite[test][impl_name] = BenchmarkGroup(names_tags[impl_name])
     end
 end
 

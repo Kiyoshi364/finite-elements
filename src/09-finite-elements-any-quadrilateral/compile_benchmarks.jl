@@ -41,17 +41,19 @@ function make_group_graph(
     )
     for (i, name) in enumerate(names)
         local subgroup = group[String(name)]
-        local pretty_name = name_prettyname[name]
-        local keys_str = [ k for k in keys(subgroup) ]
-        local keys_int = parse.(Int64, keys_str)
-        local perm = sortperm(keys_int)
-        keys_str = keys_str[perm]
-        keys_int = keys_int[perm]
-        local values_ = getindex.((subgroup,), keys_str)
-        plot!(p, keys_int .* keys_int, values_,
-            label=pretty_name,
-            markershape=markershapes[i],
-        )
+        if 0 < length(subgroup)
+            local pretty_name = name_prettyname[name]
+            local keys_str = [ k for k in keys(subgroup) ]
+            local keys_int = parse.(Int64, keys_str)
+            local perm = sortperm(keys_int)
+            keys_str = keys_str[perm]
+            keys_int = keys_int[perm]
+            local values_ = getindex.((subgroup,), keys_str)
+            plot!(p, keys_int .* keys_int, values_,
+                label=pretty_name,
+                markershape=markershapes[i],
+            )
+        end
     end
     p
 end
