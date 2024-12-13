@@ -5,8 +5,15 @@ using .FiniteElements: generate_space
 
 using .FiniteElements: build_LG, build_EQ
 using .FiniteElements: phis_f, phi_derivs_f, x2xis_f, dx2xis_f
-using .FiniteElements: build_small_vec_2d, build_vec_2d
-using .FiniteElements: build_small_mat_2d, build_mat_2d
+
+using .FiniteElements: build_small_vec_2d, build_small_vec_2d_ref!
+using .FiniteElements: build_vec_2d, build_vec_2d_ref
+using .FiniteElements: build_vec_2d_iter, build_vec_2d_iterref
+
+using .FiniteElements: build_small_mat_2d, build_small_mat_2d_ref!
+using .FiniteElements: build_mat_2d, build_mat_2d_ref
+using .FiniteElements: build_mat_2d_iter, build_mat_2d_iterref
+
 using .FiniteElements: build_vec_mat_2d, build_vec_mat_2d_ref
 using .FiniteElements: build_vec_mat_2d_iter, build_vec_mat_2d_iterref
 
@@ -15,7 +22,7 @@ using LinearAlgebra: dot, norm
 using BenchmarkTools: @benchmarkable
 import BenchmarkTools
 
-function run_tests(name :: String, func, max_i :: UInt8;
+function run_tests(name :: String, func :: Function, max_i :: UInt8;
     bench_strategy :: Symbol = :all
 )
     println("# Running tests: $name")
@@ -86,9 +93,8 @@ function test_check(i :: UInt8, expected, actual;
 end
 
 const test_small_vec_2d_max = 0x02
-function test_small_vec_2d(i :: UInt8;
-    bench :: Bool = true
-)
+function test_small_vec_2d_template(the_func :: Function, is_ref :: Bool) :: Function
+(i :: UInt8; bench :: Bool = true) -> begin
     local gauss_n = 5
     local ws, ps = gauss_quadrature_table[gauss_n]
 
@@ -125,20 +131,32 @@ function test_small_vec_2d(i :: UInt8;
         (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
-    local b = @benchmarkable build_small_vec_2d(
+    local b = (is_ref) ? begin
+        local ref_out = Ref(fill(0.0, (4,)))
+        @benchmarkable begin
+            $(the_func)(
+                $ref_out,
+                $f, $x2xis,
+                $dx2xis,
+                $phis, $ws, $gauss_n
+            )
+            $ref_out[]
+        end
+    end : (@benchmarkable $(the_func)(
         $f, $x2xis,
         $dx2xis,
         $phis, $ws, $gauss_n
-    )
+    ))
     local trial, ans = run_bench(b, bench=bench)
     test_check(i, expected, ans)
     print_trial(trial, bench=bench)
 
     ans
-end
+end end
 
 const test_vec_2d_max = 0x02
-function test_vec_2d(i :: UInt8; bench :: Bool = true)
+function test_vec_2d_template(the_func :: Function) :: Function
+(i :: UInt8; bench :: Bool = true) -> begin
     local Ni = (i == 0) ? (
         [4, 3]
     ) : (i == 1) ? (
@@ -196,7 +214,7 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
         (x...) -> foldl(+, x)
     ) : error("Index out of bounds")
 
-    local b = @benchmarkable build_vec_2d(
+    local b = @benchmarkable $(the_func)(
         $f, $X, $Y, $N_e, $LG, $EQoLG, $m,
         $phis, $phi_derivs,
         $ws, $gauss_n,
@@ -208,12 +226,11 @@ function test_vec_2d(i :: UInt8; bench :: Bool = true)
     print_trial(trial, bench=bench)
 
     ans
-end
+end end
 
 const test_small_mat_2d_max = 0x02
-function test_small_mat_2d(i :: UInt8;
-    bench :: Bool = true
-)
+function test_small_mat_2d_template(the_func :: Function, is_ref :: Bool) :: Function
+(i :: UInt8; bench :: Bool = true) -> begin
     local gauss_n = 5
     local ws, ps = gauss_quadrature_table[gauss_n]
 
@@ -255,19 +272,30 @@ function test_small_mat_2d(i :: UInt8;
     local phi_derivs = phi_derivs_f(ps)
     local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
 
-    local b = @benchmarkable build_small_mat_2d(
+    local b = (is_ref) ? begin
+        local ref_out = Ref(fill(0.0, (4, 4)))
+        @benchmarkable begin
+            $(the_func)(
+                $ref_out,
+                $alpha, $beta,
+                $dx2xis, $phis, $phi_derivs, $ws, $gauss_n
+            )
+            $ref_out[]
+        end
+    end : (@benchmarkable $(the_func)(
         $alpha, $beta,
         $dx2xis, $phis, $phi_derivs, $ws, $gauss_n
-    )
+    ))
     local trial, ans = run_bench(b, bench=bench)
     test_check(i, expected, ans)
     print_trial(trial, bench=bench)
 
     ans
-end
+end end
 
 const test_mat_2d_max = 0x01
-function test_mat_2d(i :: UInt8; bench :: Bool = true)
+function test_mat_2d_template(the_func :: Function) :: Function
+(i :: UInt8; bench :: Bool = true) -> begin
     local gauss_n = 5
 
     local alpha, beta = 1.0, 1.0
@@ -316,7 +344,7 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
           0.0       -0.421416    0.0453884   0.0       -0.885907    2.91071;
     ] ) : error("Index out of bounds")
 
-    local b = @benchmarkable build_mat_2d(
+    local b = @benchmarkable $(the_func)(
         $alpha, $beta, $X, $Y, $N_e, $LG, $EQoLG, $m,
         $phis, $phi_derivs,
         $ws, $gauss_n,
@@ -328,7 +356,7 @@ function test_mat_2d(i :: UInt8; bench :: Bool = true)
     print_trial(trial, bench=bench)
 
     ans
-end
+end end
 
 const test_vec_mat_2d_max = 0x00
 function test_vec_mat_2d_template(the_func :: Function) :: Function
@@ -404,17 +432,49 @@ function test_vec_mat_2d_template(the_func :: Function) :: Function
     ans
 end end
 
-run_tests("test_small_vec_2d", test_small_vec_2d, test_small_vec_2d_max, bench_strategy=:all)
-run_tests("test_vec_2d", test_vec_2d, test_vec_2d_max, bench_strategy=:last)
-run_tests("test_small_mat_2d", test_small_mat_2d, test_small_mat_2d_max, bench_strategy=:all)
-run_tests("test_mat_2d", test_mat_2d, test_mat_2d_max, bench_strategy=:last)
-
-const names_funcs = [
-    ("test_vec_mat_2d", build_vec_mat_2d)
-    ("test_vec_mat_2d_ref", build_vec_mat_2d_ref)
-    ("test_vec_mat_2d_iter", build_vec_mat_2d_iter)
-    ("test_vec_mat_2d_iterref", build_vec_mat_2d_iterref)
+const names_localvec_isref = [
+    ("test_small_vec_2d", build_small_vec_2d, false),
+    ("test_small_vec_2d_ref", build_small_vec_2d_ref!, true),
 ]
-for (name, func) in names_funcs
+for (name, func, is_ref) in names_localvec_isref
+    run_tests(name, test_small_vec_2d_template(func, is_ref), test_small_vec_2d_max, bench_strategy=:all)
+end
+
+const names_funcvec = [
+    ("test_vec_2d", build_vec_2d),
+    ("test_vec_2d_ref", build_vec_2d_ref),
+    ("test_vec_2d_iter", build_vec_2d_iter),
+    ("test_vec_2d_iterref", build_vec_2d_iterref),
+]
+
+for (name, func) in names_funcvec
+    run_tests(name, test_vec_2d_template(func), test_vec_2d_max, bench_strategy=:last)
+end
+
+const names_localmat_isref = [
+    ("test_small_mat_2d", build_small_mat_2d, false),
+    ("test_small_mat_2d_ref", build_small_mat_2d_ref!, true),
+]
+for (name, func, is_ref) in names_localmat_isref
+    run_tests(name, test_small_mat_2d_template(func, is_ref), test_small_mat_2d_max, bench_strategy=:all)
+end
+
+const names_funcmat = [
+    ("test_mat_2d", build_mat_2d),
+    ("test_mat_2d_ref", build_mat_2d_ref),
+    ("test_mat_2d_iter", build_mat_2d_iter),
+    ("test_mat_2d_iterref", build_mat_2d_iterref),
+]
+for (name, func) in names_funcmat
+    run_tests(name, test_mat_2d_template(func), test_mat_2d_max, bench_strategy=:last)
+end
+
+const names_funcboth = [
+    ("test_vec_mat_2d", build_vec_mat_2d),
+    ("test_vec_mat_2d_ref", build_vec_mat_2d_ref),
+    ("test_vec_mat_2d_iter", build_vec_mat_2d_iter),
+    ("test_vec_mat_2d_iterref", build_vec_mat_2d_iterref),
+]
+for (name, func) in names_funcboth
     run_tests(name, test_vec_mat_2d_template(func), test_vec_mat_2d_max, bench_strategy=:all)
 end

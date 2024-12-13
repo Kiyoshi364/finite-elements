@@ -19,14 +19,6 @@ export gauss_error_2d
 export phi, phi_deriv, instantiate_solution
 export Example, example
 
-# For tests
-export build_LG, build_EQ
-export phis_f, phi_derivs_f, x2xis_f, dx2xis_f
-export build_small_vec_2d, build_vec_2d
-export build_small_mat_2d, build_mat_2d
-export build_vec_mat_2d, build_vec_mat_2d_ref
-export build_vec_mat_2d_iter, build_vec_mat_2d_iterref
-
 const phi = [
     ((xi...) -> ((1 - xi[1])*(1 - xi[2]) / 4) :: Float64),
     ((xi...) -> ((1 + xi[1])*(1 - xi[2]) / 4) :: Float64),
@@ -189,6 +181,58 @@ function build_small_mat_2d(
     K
 end
 
+function build_small_mat_2d_ref!(
+    ref_out :: Ref{Matrix{Float64}},
+    alpha :: Float64, beta :: Float64,
+    dx2xis :: Array{Float64, 3},
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64,
+) :: Ref{Matrix{Float64}}
+
+    fill!(ref_out[], 0.0)
+
+    for g_i in 1:gauss_n
+        local phi_derivs_i = view(phi_derivs, g_i, 2, :)
+        for g_j in 1:gauss_n
+            local phis_ = view(phis, g_i, g_j, :)
+
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
+            local invJ = 1.0 / J
+
+            local H1_1 = (_J[4]*_J[4] + _J[2]*_J[2])
+            local H1_2 = - (_J[4]*_J[3] + _J[2]*_J[1])
+
+            local H2_1 = - (_J[4]*_J[3] + _J[2]*_J[1])
+            local H2_2 = (_J[3]*_J[3] + _J[1]*_J[1])
+
+            local alpha_pre_calc = alpha * invJ * ws[g_i] * ws[g_j]
+            local beta_pre_calc = beta * J * ws[g_i] * ws[g_j]
+            local phi_derivs_j = view(phi_derivs, g_j, 1, :)
+            for i in 1:dim
+                local alpha1_pre_calc = alpha_pre_calc * (
+                    (H1_1 * phi_derivs_j[i])
+                    + (H1_2 * phi_derivs_i[i])
+                )
+                local alpha2_pre_calc = alpha_pre_calc * (
+                    (H2_1 * phi_derivs_j[i])
+                    + (H2_2 * phi_derivs_i[i])
+                )
+                for j in 1:dim
+                    local kij = (
+                        (alpha1_pre_calc * phi_derivs_j[j])
+                        + (alpha2_pre_calc * phi_derivs_i[j])
+                        + (beta_pre_calc * (phis_[j]*phis_[i]))
+                    )
+                    ref_out[][i,j] += kij
+                end
+            end
+        end
+    end
+    ref_out
+end
+
 function build_mat_2d(
     alpha :: Float64, beta :: Float64,
     X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
@@ -224,6 +268,117 @@ function build_mat_2d(
     K[begin:end-1, begin:end-1]
 end
 
+function build_mat_2d_ref(
+    alpha :: Float64, beta :: Float64,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: AbstractMatrix{Float64}
+
+    local K = spzeros((m+1, m+1))
+    local ref_Ke = Ref(fill(0.0, (dim, dim)))
+    local ref_dx2xis = Ref(fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], dim)))
+    for e in 1:N_e
+        local LGe = view(LG, :, e)
+        local Xe = view(X, LGe)
+        local Ye = view(Y, LGe)
+
+        dx2xis_f_ref!(ref_dx2xis, phi_derivs, Xe, Ye)
+
+        build_small_mat_2d_ref!(
+            ref_Ke,
+            alpha, beta,
+            ref_dx2xis[],
+            phis, phi_derivs,
+            ws, gauss_n,
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            for j in 1:dim
+                K[EQoLG_[i], EQoLG_[j]] += ref_Ke[][i, j]
+            end
+        end
+    end
+    K[begin:end-1, begin:end-1]
+end
+
+function build_mat_2d_iter(
+    alpha :: Float64, beta :: Float64,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: AbstractMatrix{Float64}
+
+    local iter = FiniteElementIter(
+        X, Y,
+        N_e, LG,
+        phis, phi_derivs,
+    )
+
+    local K = spzeros((m+1, m+1))
+    for (e, x2xis, dx2xis) in iter
+        local K_e = build_small_mat_2d(
+            alpha, beta,
+            dx2xis,
+            phis, phi_derivs,
+            ws, gauss_n,
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            for j in 1:dim
+                K[EQoLG_[i], EQoLG_[j]] += K_e[i, j]
+            end
+        end
+    end
+    K[begin:end-1, begin:end-1]
+end
+
+function build_mat_2d_iterref(
+    alpha :: Float64, beta :: Float64,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: AbstractMatrix{Float64}
+
+    local iter = FiniteElementIterRef(
+        X, Y,
+        N_e, LG,
+        phis, phi_derivs,
+    )
+
+    local K = spzeros((m+1, m+1))
+    for (e, ref_x2xis, ref_dx2xis, ref_Ke, ref_Fe) in iter
+        local x2xis = ref_x2xis[]
+        local dx2xis = ref_dx2xis[]
+        build_small_mat_2d_ref!(
+            ref_Ke,
+            alpha, beta,
+            dx2xis,
+            phis, phi_derivs,
+            ws, gauss_n,
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            for j in 1:dim
+                K[EQoLG_[i], EQoLG_[j]] += ref_Ke[][i, j]
+            end
+        end
+    end
+    K[begin:end-1, begin:end-1]
+end
+
 function build_small_vec_2d(
     f :: Function,
     x2xis :: Array{Float64, 3},
@@ -246,6 +401,31 @@ function build_small_vec_2d(
         end
     end
     F
+end
+
+function build_small_vec_2d_ref!(
+    ref_out :: Ref{Vector{Float64}},
+    f :: Function,
+    x2xis :: Array{Float64, 3},
+    dx2xis :: Array{Float64, 3},
+    phis :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Ref{Vector{Float64}}
+
+    fill!(ref_out[], 0.0)
+    for g_i in 1:gauss_n
+        for g_j in 1:gauss_n
+            local _x = view(x2xis, g_i, g_j, :)
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
+            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x[1], _x[2])
+            local phis_ = view(phis, g_i, g_j, :)
+            for i in 1:dim
+                ref_out[][i] += pre_calc * phis_[i]
+            end
+        end
+    end
+    ref_out
 end
 
 function build_vec_2d(
@@ -276,6 +456,111 @@ function build_vec_2d(
         local EQoLG_ = view(EQoLG, :, e)
         for i in 1:dim
             F[EQoLG_[i]] += F_e[i]
+        end
+    end
+    F[begin:end-1]
+end
+
+function build_vec_2d_ref(
+    f :: Function,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local F = fill(0.0, (m+1,))
+    local ref_Fe = Ref(fill(0.0, (dim,)))
+    local ref_x2xis = Ref(fill(0.0, (size(phis)[1:2]..., sdim)))
+    local ref_dx2xis = Ref(fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], dim)))
+    for e in 1:N_e
+        local LGe = view(LG, :, e)
+        local Xe = view(X, LGe)
+        local Ye = view(Y, LGe)
+
+        x2xis_f_ref!(ref_x2xis, phis, Xe, Ye)
+        dx2xis_f_ref!(ref_dx2xis, phi_derivs, Xe, Ye)
+
+        build_small_vec_2d_ref!(
+            ref_Fe,
+            f,
+            ref_x2xis[], ref_dx2xis[],
+            phis, ws, gauss_n
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += ref_Fe[][i]
+        end
+    end
+    F[begin:end-1]
+end
+
+function build_vec_2d_iter(
+    f :: Function,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local iter = FiniteElementIter(
+        X, Y,
+        N_e, LG,
+        phis, phi_derivs,
+    )
+
+    local F = fill(0.0, (m+1,))
+    for (e, x2xis, dx2xis) in iter
+        local F_e = build_small_vec_2d(
+            f,
+            x2xis, dx2xis,
+            phis, ws, gauss_n
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += F_e[i]
+        end
+    end
+    F[begin:end-1]
+end
+
+function build_vec_2d_iterref(
+    f :: Function,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local iter = FiniteElementIterRef(
+        X, Y,
+        N_e, LG,
+        phis, phi_derivs,
+    )
+
+    local F = fill(0.0, (m+1,))
+    for (e, ref_x2xis, ref_dx2xis, ref_Ke, ref_Fe) in iter
+        local x2xis = ref_x2xis[]
+        local dx2xis = ref_dx2xis[]
+
+        build_small_vec_2d_ref!(
+            ref_Fe,
+            f,
+            x2xis, dx2xis,
+            phis, ws, gauss_n
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += ref_Fe[][i]
         end
     end
     F[begin:end-1]
@@ -373,62 +658,6 @@ function build_vec_mat_2d_ref(
     (F[begin:end-1], K[begin:end-1,begin:end-1])
 end
 
-const FiniteElementState = Int64
-const FiniteElementItem = Tuple{
-    Int64, Array{Float64, 3}, Array{Float64, 3}
-}
-
-struct FiniteElementIter
-    X :: AbstractVector{Float64}
-    Y :: AbstractVector{Float64}
-    N_e :: Int64
-    LG :: AbstractMatrix{Int64}
-    phis :: Array{Float64, 3}
-    phi_derivs :: Array{Float64, 3}
-
-    FiniteElementIter(
-        X :: AbstractVector{Float64},
-        Y :: AbstractVector{Float64},
-        N_e :: Int64,
-        LG :: AbstractMatrix{Int64},
-        phis :: Array{Float64, 3},
-        phi_derivs :: Array{Float64, 3},
-    ) = begin
-        new(
-            X, Y,
-            N_e, LG,
-            phis, phi_derivs,
-        )
-    end
-end
-
-const Base.iterate(
-    iter :: FiniteElementIter,
-    state :: Int = 1,
-) = (!(state <= length(iter))) ? nothing : begin
-    local next_state = state + 1
-    local item = getindex(iter, state)
-    (item, next_state)
-end :: Union{Tuple{FiniteElementItem, FiniteElementState}, Nothing}
-
-const Base.IteratorSize(::Type{FiniteElementIter}) = Base.HasLength()
-const Base.length(iter :: FiniteElementIter) = iter.N_e
-const Base.IteratorEltype(::Type{FiniteElementIter}) = Base.HasEltype()
-const Base.eltype(::Type{FiniteElementIter}) = FiniteElementItem
-const Base.isdone(iter :: FiniteElementIter, state :: Int64 = 0) = Base.length(iter) == state
-
-const Base.getindex(iter :: FiniteElementIter, i :: FiniteElementState) = begin
-    local LGe = view(iter.LG, :, i)
-    local Xe = view(iter.X, LGe)
-    local Ye = view(iter.Y, LGe)
-    local x2xis  = x2xis_f(iter.phis, Xe, Ye)
-    local dx2xis = dx2xis_f(iter.phi_derivs, Xe, Ye)
-    (i, x2xis, dx2xis)
-end :: FiniteElementItem
-const Base.firstindex(iter :: FiniteElementIter) = 1
-const Base.lastindex(iter :: FiniteElementIter) = length(iter)
-const Base.IndexStyle(::Type{FiniteElementIter}) = Base.IndexLinear()
-
 function build_vec_mat_2d_iter(
     f :: Function,
     alpha :: Float64, beta :: Float64,
@@ -473,63 +702,6 @@ function build_vec_mat_2d_iter(
     (F[begin:end-1], K[begin:end-1,begin:end-1])
 end
 
-const FiniteElementItemRef = Tuple{
-    Int64, Ref{Array{Float64, 3}}, Ref{Array{Float64, 3}}
-}
-
-struct FiniteElementIterRef
-    iter :: FiniteElementIter
-    x2xis :: Ref{Array{Float64, 3}}
-    dx2xis :: Ref{Array{Float64, 3}}
-
-    FiniteElementIterRef(
-        iter :: FiniteElementIter,
-    ) = begin
-        local x2xis = Ref(fill(0.0, (size(iter.phis)[1:2]..., sdim)))
-        local dx2xis = Ref(fill(0.0, (size(iter.phi_derivs)[1], size(iter.phi_derivs)[1], dim)))
-        new(iter, x2xis, dx2xis)
-    end
-    FiniteElementIterRef(
-        X :: AbstractVector{Float64},
-        Y :: AbstractVector{Float64},
-        N_e :: Int64,
-        LG :: AbstractMatrix{Int64},
-        phis :: Array{Float64, 3},
-        phi_derivs :: Array{Float64, 3},
-    ) = FiniteElementIterRef(
-        FiniteElementIter(
-            X, Y,
-            N_e, LG,
-            phis, phi_derivs,
-        )
-    )
-end
-
-function getindex!(self :: FiniteElementIterRef, e :: FiniteElementState) :: FiniteElementItemRef
-    local iter = self.iter
-    local LGe = view(iter.LG, :, e)
-    local Xe = view(iter.X, LGe)
-    local Ye = view(iter.Y, LGe)
-    x2xis_f_ref!(self.x2xis, iter.phis, Xe, Ye)
-    dx2xis_f_ref!(self.dx2xis, iter.phi_derivs, Xe, Ye)
-    (e, self.x2xis, self.dx2xis)
-end
-
-const Base.iterate(
-    iter :: FiniteElementIterRef,
-    state :: Int = 1,
-) = (!(state <= length(iter))) ? nothing : begin
-    local next_state = state + 1
-    local item = getindex!(iter, state)
-    (item, next_state)
-end :: Union{Tuple{FiniteElementItemRef, FiniteElementState}, Nothing}
-
-const Base.IteratorSize(::Type{FiniteElementIterRef}) = Base.IteratorSize(Type{FiniteElementIter})
-const Base.length(iter :: FiniteElementIterRef) = Base.length(iter.iter)
-const Base.IteratorEltype(::Type{FiniteElementIterRef}) = Base.IteratorEltype(Type{FiniteElementIter})
-const Base.eltype(::Type{FiniteElementIterRef}) = Base.eltype(Type{FiniteElementIter})
-const Base.isdone(iter :: FiniteElementIterRef, state :: Int64 = 0) = Base.isdone(iter.iter, state)
-
 function build_vec_mat_2d_iterref(
     f :: Function,
     alpha :: Float64, beta :: Float64,
@@ -549,16 +721,18 @@ function build_vec_mat_2d_iterref(
 
     local K = spzeros((m+1, m+1))
     local F = fill(0.0, (m+1,))
-    for (e, ref_x2xis, ref_dx2xis) in iter
+    for (e, ref_x2xis, ref_dx2xis, ref_Ke, ref_Fe) in iter
         local x2xis = ref_x2xis[]
         local dx2xis = ref_dx2xis[]
-        local K_e = build_small_mat_2d(
+        build_small_mat_2d_ref!(
+            ref_Ke,
             alpha, beta,
             dx2xis,
             phis, phi_derivs,
             ws, gauss_n,
         )
-        local F_e = build_small_vec_2d(
+        build_small_vec_2d_ref!(
+            ref_Fe,
             f,
             x2xis, dx2xis,
             phis, ws, gauss_n
@@ -566,9 +740,9 @@ function build_vec_mat_2d_iterref(
 
         local EQoLG_ = view(EQoLG, :, e)
         for i in 1:dim
-            F[EQoLG_[i]] += F_e[i]
+            F[EQoLG_[i]] += ref_Fe[][i]
             for j in 1:dim
-                K[EQoLG_[i], EQoLG_[j]] += K_e[i, j]
+                K[EQoLG_[i], EQoLG_[j]] += ref_Ke[][i, j]
             end
         end
     end
@@ -741,5 +915,123 @@ function instantiate_solution(coefs, phis, hi, Ni, EQoLG)
     end
     )
 end
+
+const FiniteElementState = Int64
+const FiniteElementItem = Tuple{
+    Int64, Array{Float64, 3}, Array{Float64, 3}
+}
+
+struct FiniteElementIter
+    X :: AbstractVector{Float64}
+    Y :: AbstractVector{Float64}
+    N_e :: Int64
+    LG :: AbstractMatrix{Int64}
+    phis :: Array{Float64, 3}
+    phi_derivs :: Array{Float64, 3}
+
+    FiniteElementIter(
+        X :: AbstractVector{Float64},
+        Y :: AbstractVector{Float64},
+        N_e :: Int64,
+        LG :: AbstractMatrix{Int64},
+        phis :: Array{Float64, 3},
+        phi_derivs :: Array{Float64, 3},
+    ) = begin
+        new(
+            X, Y,
+            N_e, LG,
+            phis, phi_derivs,
+        )
+    end
+end
+
+const Base.iterate(
+    iter :: FiniteElementIter,
+    state :: Int = 1,
+) = (!(state <= length(iter))) ? nothing : begin
+    local next_state = state + 1
+    local item = getindex(iter, state)
+    (item, next_state)
+end :: Union{Tuple{FiniteElementItem, FiniteElementState}, Nothing}
+
+const Base.IteratorSize(::Type{FiniteElementIter}) = Base.HasLength()
+const Base.length(iter :: FiniteElementIter) = iter.N_e
+const Base.IteratorEltype(::Type{FiniteElementIter}) = Base.HasEltype()
+const Base.eltype(::Type{FiniteElementIter}) = FiniteElementItem
+const Base.isdone(iter :: FiniteElementIter, state :: Int64 = 0) = Base.length(iter) == state
+
+const Base.getindex(iter :: FiniteElementIter, i :: FiniteElementState) = begin
+    local LGe = view(iter.LG, :, i)
+    local Xe = view(iter.X, LGe)
+    local Ye = view(iter.Y, LGe)
+    local x2xis  = x2xis_f(iter.phis, Xe, Ye)
+    local dx2xis = dx2xis_f(iter.phi_derivs, Xe, Ye)
+    (i, x2xis, dx2xis)
+end :: FiniteElementItem
+const Base.firstindex(iter :: FiniteElementIter) = 1
+const Base.lastindex(iter :: FiniteElementIter) = length(iter)
+const Base.IndexStyle(::Type{FiniteElementIter}) = Base.IndexLinear()
+
+const FiniteElementItemRef = Tuple{
+    Int64, Ref{Array{Float64, 3}}, Ref{Array{Float64, 3}},
+    Ref{Matrix{Float64}}, Ref{Vector{Float64}},
+}
+
+struct FiniteElementIterRef
+    iter :: FiniteElementIter
+    x2xis :: Ref{Array{Float64, 3}}
+    dx2xis :: Ref{Array{Float64, 3}}
+    Ke :: Ref{Matrix{Float64}}
+    Fe :: Ref{Vector{Float64}}
+
+    FiniteElementIterRef(
+        iter :: FiniteElementIter,
+    ) = begin
+        local x2xis = Ref(fill(0.0, (size(iter.phis)[1:2]..., sdim)))
+        local dx2xis = Ref(fill(0.0, (size(iter.phi_derivs)[1], size(iter.phi_derivs)[1], dim)))
+        local Ke = Ref(fill(0.0, (dim, dim)))
+        local Fe = Ref(fill(0.0, (dim,)))
+        new(iter, x2xis, dx2xis, Ke, Fe)
+    end
+    FiniteElementIterRef(
+        X :: AbstractVector{Float64},
+        Y :: AbstractVector{Float64},
+        N_e :: Int64,
+        LG :: AbstractMatrix{Int64},
+        phis :: Array{Float64, 3},
+        phi_derivs :: Array{Float64, 3},
+    ) = FiniteElementIterRef(
+        FiniteElementIter(
+            X, Y,
+            N_e, LG,
+            phis, phi_derivs,
+        )
+    )
+end
+
+function getindex!(self :: FiniteElementIterRef, e :: FiniteElementState) :: FiniteElementItemRef
+    local iter = self.iter
+    local LGe = view(iter.LG, :, e)
+    local Xe = view(iter.X, LGe)
+    local Ye = view(iter.Y, LGe)
+    x2xis_f_ref!(self.x2xis, iter.phis, Xe, Ye)
+    dx2xis_f_ref!(self.dx2xis, iter.phi_derivs, Xe, Ye)
+    (e, self.x2xis, self.dx2xis, self.Ke, self.Fe)
+end
+
+const Base.iterate(
+    iter :: FiniteElementIterRef,
+    state :: Int = 1,
+) = (!(state <= length(iter))) ? nothing : begin
+    local next_state = state + 1
+    local item = getindex!(iter, state)
+    (item, next_state)
+end :: Union{Tuple{FiniteElementItemRef, FiniteElementState}, Nothing}
+
+const Base.IteratorSize(::Type{FiniteElementIterRef}) = Base.IteratorSize(Type{FiniteElementIter})
+const Base.length(iter :: FiniteElementIterRef) = Base.length(iter.iter)
+const Base.IteratorEltype(::Type{FiniteElementIterRef}) = Base.IteratorEltype(Type{FiniteElementIter})
+const Base.eltype(::Type{FiniteElementIterRef}) = Base.eltype(Type{FiniteElementIter})
+const Base.isdone(iter :: FiniteElementIterRef, state :: Int64 = 0) = Base.isdone(iter.iter, state)
 
 end # module FiniteElements
