@@ -6,8 +6,12 @@ using .FiniteElements: generate_space
 using .FiniteElements: build_LG, build_EQ
 using .FiniteElements: phis_f, phi_derivs_f
 
-using .FiniteElements: build_vec_2d
-using .FiniteElements: build_mat_2d
+
+using .FiniteElements: build_vec_2d, build_vec_2d_ref
+using .FiniteElements: build_vec_2d_iter, build_vec_2d_iterref
+
+using .FiniteElements: build_mat_2d, build_mat_2d_ref
+using .FiniteElements: build_mat_2d_iter, build_mat_2d_iterref
 
 using .FiniteElements: build_vec_mat_2d, build_vec_mat_2d_ref
 using .FiniteElements: build_vec_mat_2d_iter, build_vec_mat_2d_iterref
@@ -27,9 +31,15 @@ const tests = [
 const tests_groups = (;
     build_vec  = [
         (:baseline, build_vec_2d),
+        (:ref     , build_vec_2d_ref),
+        (:iter    , build_vec_2d_iter),
+        (:iter_ref, build_vec_2d_iterref),
     ],
     build_mat  = [
         (:baseline, build_mat_2d),
+        (:ref     , build_mat_2d_ref),
+        (:iter    , build_mat_2d_iter),
+        (:iter_ref, build_mat_2d_iterref),
     ],
     build_both = [
         (:baseline, build_vec_mat_2d),
