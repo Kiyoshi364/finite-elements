@@ -89,6 +89,20 @@
             ];
           };
 
+          typst = myShell {
+            name = "typst";
+            buildInputs = with pkgs; [
+              typst
+
+              (aspellWithDicts (dicts: with dicts; [
+                pt_BR
+              ]))
+
+              poppler_utils
+              zathura
+            ];
+          };
+
           md = myShell {
             name = "markdown";
             buildInputs = with pkgs; [

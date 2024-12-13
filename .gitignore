@@ -8,3 +8,5 @@ results.json
 **/folder-build/*.log
 **/folder-build/*.out
 **/folder-build/*.txt
+**/folder-build/*.bcf
+**/folder-build/*.run.xml
