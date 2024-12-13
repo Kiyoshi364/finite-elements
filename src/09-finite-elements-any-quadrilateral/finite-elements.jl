@@ -130,6 +130,193 @@ const dx2xis_f_ref! = (
     ref_out
 end :: Ref{Array{Float64, 3}}
 
+function build_small_vec_2d(
+    f :: Function,
+    x2xis :: Array{Float64, 3},
+    dx2xis :: Array{Float64, 3},
+    phis :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local F = fill(0.0, (dim,))
+    for g_i in 1:gauss_n
+        for g_j in 1:gauss_n
+            local _x = view(x2xis, g_i, g_j, :)
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
+            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x[1], _x[2])
+            local phis_ = view(phis, g_i, g_j, :)
+            for i in 1:dim
+                F[i] += pre_calc * phis_[i]
+            end
+        end
+    end
+    F
+end
+
+function build_small_vec_2d_ref!(
+    ref_out :: Ref{Vector{Float64}},
+    f :: Function,
+    x2xis :: Array{Float64, 3},
+    dx2xis :: Array{Float64, 3},
+    phis :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Ref{Vector{Float64}}
+
+    fill!(ref_out[], 0.0)
+    for g_i in 1:gauss_n
+        for g_j in 1:gauss_n
+            local _x = view(x2xis, g_i, g_j, :)
+            local _J = view(dx2xis, g_i, g_j, :)
+            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
+            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x[1], _x[2])
+            local phis_ = view(phis, g_i, g_j, :)
+            for i in 1:dim
+                ref_out[][i] += pre_calc * phis_[i]
+            end
+        end
+    end
+    ref_out
+end
+
+function build_vec_2d(
+    f :: Function,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local F = fill(0.0, (m+1,))
+    for e in 1:N_e
+        local LGe = view(LG, :, e)
+        local Xe = view(X, LGe)
+        local Ye = view(Y, LGe)
+
+        local x2xis = x2xis_f(phis, Xe, Ye)
+        local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
+
+        local F_e = build_small_vec_2d(
+            f,
+            x2xis, dx2xis,
+            phis, ws, gauss_n
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += F_e[i]
+        end
+    end
+    F[begin:end-1]
+end
+
+function build_vec_2d_ref(
+    f :: Function,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local F = fill(0.0, (m+1,))
+    local ref_Fe = Ref(fill(0.0, (dim,)))
+    local ref_x2xis = Ref(fill(0.0, (size(phis)[1:2]..., sdim)))
+    local ref_dx2xis = Ref(fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], dim)))
+    for e in 1:N_e
+        local LGe = view(LG, :, e)
+        local Xe = view(X, LGe)
+        local Ye = view(Y, LGe)
+
+        x2xis_f_ref!(ref_x2xis, phis, Xe, Ye)
+        dx2xis_f_ref!(ref_dx2xis, phi_derivs, Xe, Ye)
+
+        build_small_vec_2d_ref!(
+            ref_Fe,
+            f,
+            ref_x2xis[], ref_dx2xis[],
+            phis, ws, gauss_n
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += ref_Fe[][i]
+        end
+    end
+    F[begin:end-1]
+end
+
+function build_vec_2d_iter(
+    f :: Function,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local iter = FiniteElementIter(
+        X, Y,
+        N_e, LG,
+        phis, phi_derivs,
+    )
+
+    local F = fill(0.0, (m+1,))
+    for (e, x2xis, dx2xis) in iter
+        local F_e = build_small_vec_2d(
+            f,
+            x2xis, dx2xis,
+            phis, ws, gauss_n
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += F_e[i]
+        end
+    end
+    F[begin:end-1]
+end
+
+function build_vec_2d_iterref(
+    f :: Function,
+    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
+    N_e :: Int64, LG :: AbstractMatrix{Int64},
+    EQoLG :: Matrix{Int64}, m :: Int64,
+    phis :: Array{Float64, 3},
+    phi_derivs :: Array{Float64, 3},
+    ws :: Vector{Float64}, gauss_n :: Int64
+) :: Vector{Float64}
+
+    local iter = FiniteElementIterRef(
+        X, Y,
+        N_e, LG,
+        phis, phi_derivs,
+    )
+
+    local F = fill(0.0, (m+1,))
+    for (e, ref_x2xis, ref_dx2xis, ref_Ke, ref_Fe) in iter
+        local x2xis = ref_x2xis[]
+        local dx2xis = ref_dx2xis[]
+
+        build_small_vec_2d_ref!(
+            ref_Fe,
+            f,
+            x2xis, dx2xis,
+            phis, ws, gauss_n
+        )
+
+        local EQoLG_ = view(EQoLG, :, e)
+        for i in 1:dim
+            F[EQoLG_[i]] += ref_Fe[][i]
+        end
+    end
+    F[begin:end-1]
+end
+
 function build_small_mat_2d(
     alpha :: Float64, beta :: Float64,
     dx2xis :: Array{Float64, 3},
@@ -377,193 +564,6 @@ function build_mat_2d_iterref(
         end
     end
     K[begin:end-1, begin:end-1]
-end
-
-function build_small_vec_2d(
-    f :: Function,
-    x2xis :: Array{Float64, 3},
-    dx2xis :: Array{Float64, 3},
-    phis :: Array{Float64, 3},
-    ws :: Vector{Float64}, gauss_n :: Int64
-) :: Vector{Float64}
-
-    local F = fill(0.0, (dim,))
-    for g_i in 1:gauss_n
-        for g_j in 1:gauss_n
-            local _x = view(x2xis, g_i, g_j, :)
-            local _J = view(dx2xis, g_i, g_j, :)
-            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
-            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x[1], _x[2])
-            local phis_ = view(phis, g_i, g_j, :)
-            for i in 1:dim
-                F[i] += pre_calc * phis_[i]
-            end
-        end
-    end
-    F
-end
-
-function build_small_vec_2d_ref!(
-    ref_out :: Ref{Vector{Float64}},
-    f :: Function,
-    x2xis :: Array{Float64, 3},
-    dx2xis :: Array{Float64, 3},
-    phis :: Array{Float64, 3},
-    ws :: Vector{Float64}, gauss_n :: Int64
-) :: Ref{Vector{Float64}}
-
-    fill!(ref_out[], 0.0)
-    for g_i in 1:gauss_n
-        for g_j in 1:gauss_n
-            local _x = view(x2xis, g_i, g_j, :)
-            local _J = view(dx2xis, g_i, g_j, :)
-            local J = (_J[1] * _J[4]) - (_J[2] * _J[3])
-            local pre_calc = J * ws[g_i] * ws[g_j] * f(_x[1], _x[2])
-            local phis_ = view(phis, g_i, g_j, :)
-            for i in 1:dim
-                ref_out[][i] += pre_calc * phis_[i]
-            end
-        end
-    end
-    ref_out
-end
-
-function build_vec_2d(
-    f :: Function,
-    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
-    N_e :: Int64, LG :: AbstractMatrix{Int64},
-    EQoLG :: Matrix{Int64}, m :: Int64,
-    phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 3},
-    ws :: Vector{Float64}, gauss_n :: Int64
-) :: Vector{Float64}
-
-    local F = fill(0.0, (m+1,))
-    for e in 1:N_e
-        local LGe = view(LG, :, e)
-        local Xe = view(X, LGe)
-        local Ye = view(Y, LGe)
-
-        local x2xis = x2xis_f(phis, Xe, Ye)
-        local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
-
-        local F_e = build_small_vec_2d(
-            f,
-            x2xis, dx2xis,
-            phis, ws, gauss_n
-        )
-
-        local EQoLG_ = view(EQoLG, :, e)
-        for i in 1:dim
-            F[EQoLG_[i]] += F_e[i]
-        end
-    end
-    F[begin:end-1]
-end
-
-function build_vec_2d_ref(
-    f :: Function,
-    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
-    N_e :: Int64, LG :: AbstractMatrix{Int64},
-    EQoLG :: Matrix{Int64}, m :: Int64,
-    phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 3},
-    ws :: Vector{Float64}, gauss_n :: Int64
-) :: Vector{Float64}
-
-    local F = fill(0.0, (m+1,))
-    local ref_Fe = Ref(fill(0.0, (dim,)))
-    local ref_x2xis = Ref(fill(0.0, (size(phis)[1:2]..., sdim)))
-    local ref_dx2xis = Ref(fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], dim)))
-    for e in 1:N_e
-        local LGe = view(LG, :, e)
-        local Xe = view(X, LGe)
-        local Ye = view(Y, LGe)
-
-        x2xis_f_ref!(ref_x2xis, phis, Xe, Ye)
-        dx2xis_f_ref!(ref_dx2xis, phi_derivs, Xe, Ye)
-
-        build_small_vec_2d_ref!(
-            ref_Fe,
-            f,
-            ref_x2xis[], ref_dx2xis[],
-            phis, ws, gauss_n
-        )
-
-        local EQoLG_ = view(EQoLG, :, e)
-        for i in 1:dim
-            F[EQoLG_[i]] += ref_Fe[][i]
-        end
-    end
-    F[begin:end-1]
-end
-
-function build_vec_2d_iter(
-    f :: Function,
-    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
-    N_e :: Int64, LG :: AbstractMatrix{Int64},
-    EQoLG :: Matrix{Int64}, m :: Int64,
-    phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 3},
-    ws :: Vector{Float64}, gauss_n :: Int64
-) :: Vector{Float64}
-
-    local iter = FiniteElementIter(
-        X, Y,
-        N_e, LG,
-        phis, phi_derivs,
-    )
-
-    local F = fill(0.0, (m+1,))
-    for (e, x2xis, dx2xis) in iter
-        local F_e = build_small_vec_2d(
-            f,
-            x2xis, dx2xis,
-            phis, ws, gauss_n
-        )
-
-        local EQoLG_ = view(EQoLG, :, e)
-        for i in 1:dim
-            F[EQoLG_[i]] += F_e[i]
-        end
-    end
-    F[begin:end-1]
-end
-
-function build_vec_2d_iterref(
-    f :: Function,
-    X :: AbstractVector{Float64}, Y :: AbstractVector{Float64},
-    N_e :: Int64, LG :: AbstractMatrix{Int64},
-    EQoLG :: Matrix{Int64}, m :: Int64,
-    phis :: Array{Float64, 3},
-    phi_derivs :: Array{Float64, 3},
-    ws :: Vector{Float64}, gauss_n :: Int64
-) :: Vector{Float64}
-
-    local iter = FiniteElementIterRef(
-        X, Y,
-        N_e, LG,
-        phis, phi_derivs,
-    )
-
-    local F = fill(0.0, (m+1,))
-    for (e, ref_x2xis, ref_dx2xis, ref_Ke, ref_Fe) in iter
-        local x2xis = ref_x2xis[]
-        local dx2xis = ref_dx2xis[]
-
-        build_small_vec_2d_ref!(
-            ref_Fe,
-            f,
-            x2xis, dx2xis,
-            phis, ws, gauss_n
-        )
-
-        local EQoLG_ = view(EQoLG, :, e)
-        for i in 1:dim
-            F[EQoLG_[i]] += ref_Fe[][i]
-        end
-    end
-    F[begin:end-1]
 end
 
 function build_vec_mat_2d(
