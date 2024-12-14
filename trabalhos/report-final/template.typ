@@ -1,10 +1,14 @@
+#let fakepar() = par(text(fill: white, [~ #v(-1.75em)]))
+
 #let template(
   // Text
+  text-size: 11pt,
   font-type: "New Computer Modern",
   lang: "pt",
   region: "br",
 
   // Par
+  indent-first: true,
   indent: 2em,
 
   // Me
@@ -20,6 +24,7 @@
 
   set text(
     font: font-type,
+    size: text-size,
     lang: lang,
     region: region,
   )
@@ -35,7 +40,7 @@
 
   show heading: c => {
     c
-    par(text(fill: white, [a #v(-1.5em)]))
+    if indent-first { fakepar() }
   }
 
   align(center)[

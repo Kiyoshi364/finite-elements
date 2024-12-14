@@ -1,4 +1,12 @@
-#import "template.typ": template
+#import "template.typ": template, fakepar
+
+#let qquad = math.wide
+#let varphi = sym.phi.alt
+#let mathblock(numbered: true, body) = math.equation(
+    block: true,
+    numbering: if numbered { "(1)" } else { none },
+    body,
+)
 
 #let title = [
     Usando iteradores e valores pre-computados
@@ -21,7 +29,13 @@
     body
 }
 
+#let todo(body) = {
+    text(fill: rgb("#ff0000"))[TODO:]
+    body
+}
+
 #show: template.with(
+    indent-first: false,
     title: title,
     author: author,
 )
@@ -31,9 +45,25 @@
 - elementos finitos
 - performance
 - implementaçoes
+- nossa proposta
 - sumário
 
-= Especificação do Problema
+= Especificação do Problema e o Método de Elementos Finitos
+
+Nessa seção, vamos
+formalizar o problema teórico;
+revisar como
+o método de elementos finitos
+aproxima a solução,
+chegando a formulação matricial;
+e depois
+discutir como as matrizes são construídas.
+O objetivo dessa seção
+é criar um contexto para
+que seja possível compreender melhor
+a melhoria proposta.
+
+== Especificação do Problema
 
 Nesse trabalho estamos aplicando elementos finitos
 no seguinte problema:
@@ -45,16 +75,13 @@ no seguinte problema:
     encontre
     uma função $u : accent(Omega, macron) -> RR$
     tal que
-    #math.equation(
-        block: true,
-        numbering: "(1)"
-    )[$
+    #mathblock()[$
         cases(
             - alpha Delta u(arrow(x)) + beta u(arrow(x))
                 = f(arrow(x))
-                \,&#h(3em) x in Omega,
+                \,&qquad x in Omega,
             u(arrow(x)) = 0
-                \,&#h(3em) x in Gamma
+                \,&qquad x in Gamma,
         )
     $] <problema-forte>
     para algum sub-espaço $Omega subset RR^2$,
@@ -62,12 +89,9 @@ no seguinte problema:
     $accent(Omega, macron) = Omega union Gamma$.
 ]
 
-A versão fraca do @problema-forte[Problema]
-é dado pela seguinte equação:
-#math.equation(
-    block: true,
-    numbering: "(1)"
-)[$
+Obtemos a versão fraca do @problema-forte[Problema]
+substituindo a equação principal pela seguinte:
+#mathblock()[$
     alpha integral_Omega
         nabla u(arrow(x)) dot nabla v(arrow(x))
         d Omega
@@ -77,7 +101,113 @@ A versão fraca do @problema-forte[Problema]
     =  integral_Omega
         f(arrow(x)) v(arrow(x))
         d Omega
-$]
+$] <eq:fraca-ext>
+onde $v : accent(Omega, macron) -> RR$
+é qualquer função suficentemente suave
+tal que $forall arrow(y) in Gamma, v(arrow(y)) = 0$.
+Comumente, introduzimos operadores
+para esconder a complexidade da equação
+#mathblock()[$
+    kappa(u, v) = (f, v)
+$] <eq:fraca>
+#fakepar()
+
+O Método de Elementos Finitos
+pode ser aplicado depois de fazermos duas discretizações:
+uma no domínio $accent(Omega, macron)$,
+e outra na dimensão do espaço das funções.
+A primeira divide o domíno $accent(Omega, macron)$
+em $N$ regiões contínuas $r_1, dots.h, r_N$.
+Cada região contínua
+não compartilha nenhum ponto com as outras regiões,
+ou seja,
+$forall 1 <= i, j <= N, i != j <=> r_i sect r_j = emptyset$.
+Chamamos cada região $r_e$ ($1 <= e <= N$) de elemento $e$.
+
+A segunda discretização
+reduz o espaço de funções para dimensão $m$,
+isso significa que vamos ter $m$
+funções da base $phi_1, dots.h, phi_m$.
+Com isso podemos representar a nossa função solução $u^h$
+usando um vetor $c$:
+$u^h (arrow(x)) = sum_(j=1)^m c_j phi_j (x)$.
+
+Agora, para que @eq:fraca se mantenha verdade
+para todas as funções do espaço discretizado,
+basta que seja verdade
+para as funções da base $phi_1, dots.h, phi_m$.
+Transformando o problema infinito
+em um sistema finito de equações da seguinte forma:
+#mathblock()[$
+    cases(
+        c_1 kappa(phi_1, phi_1) &+ c_2 kappa(phi_2, phi_1)
+            &+ dots.h.c + c_m kappa(phi_m, phi_1) &= (f, phi_1),
+        c_1 kappa(phi_1, phi_2) &+ c_2 kappa(phi_2, phi_2)
+            &+ dots.h.c + c_m kappa(phi_m, phi_2) &= (f, phi_2),
+        med dots.v,
+        c_1 kappa(phi_1, phi_m) &+ c_2 kappa(phi_2, phi_m)
+            &+ dots.h.c + c_m kappa(phi_m, phi_m) &= (f, phi_m),
+    )
+$] <eq:sis:discreto>
+#fakepar()
+
+O @eq:sis:discreto[Sistema]
+pode ser reescrito
+em uma única equação matricial:
+#mathblock()[$
+    KK med c = FF
+$] <eq:matriz>
+onde $KK$ e $FF$ são definidas como:
+$
+    KK_(a,b) = kappa(phi_b, phi_a)
+    qquad "e" qquad
+    FF_a = (f, phi_a)
+    , qquad qquad "com" 1 <= a, b <= m
+$
+
+== Sistema Matricial e Construção das Matrizes
+
+No caso geral,
+resolver um sistema matricial
+com $r$ linhas e $c$ colunas é custoso
+tanto para tempo quanto para memória.
+Entretanto é comum fazer escolhas espertas
+de funções da base,
+que torne $0$ muitos coeficientes de $KK$,
+tornando $KK$ uma matriz esparsa
+e reduzindo a complexidade da solução do sistema matricial.
+
+Com esse truque em mente,
+a estratégia
+para montar $KK$ e $FF$
+já estabelecida na literatura
+é calcular a contribuição de cada elemento
+para essas matrizes.
+Para isso,
+fazemos todos os cálculos
+de um certo elemento $e$
+em um mesmo mundo canônico
+refletimos sua contribuição nas $KK$ e $FF$.
+Nós chamamos as _coisas_
+relacionadas ao sistema matricial
+de _coisas_ globais,
+enquanto chamamos as _coisas_
+relacionadas ao mundo canônico
+de _coisas_ locais.
+
+#todo[continue from here]
+
+$
+phi quad varphi
+$
+
+= A Melhoria Proposta e Implementação Realizada
+
+#todo[
+descrever a
+proposta de melhoria na implementação,
+mais especificamente na montagem das matrizes.
+]
 
 = Resultados
 
