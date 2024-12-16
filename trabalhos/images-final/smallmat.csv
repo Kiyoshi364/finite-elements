@@ -1,0 +1,6 @@
+Name,min_time (ns),allocs,memory (bytes)
+Baseline,1179.6,4,1152
+Baseline with precalculation,671.2371794871794,2,208
+Ref,1103.4,2,944
+Ref with precalculation,621.8604651162791,0,0
+Bruno Carmo,1569.6,110,5280

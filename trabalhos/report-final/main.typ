@@ -8,6 +8,8 @@
     body,
 )
 
+#let images-folder = "images/"
+
 #let title = [
     Usando iteradores e valores pre-computados
     #linebreak()
@@ -210,6 +212,67 @@ mais especificamente na montagem das matrizes.
 ]
 
 = Resultados
+
+== Resultados locais
+
+#let readcsv = name => csv(images-folder + name + ".csv")
+#let csv_as_table(it) = align(
+    center,
+    grid(
+        columns: (auto,) + ((1fr,) * (it.at(0).len() - 1)),
+        row-gutter: 0.5em,
+        align: (left,) + ((center,) * (it.at(0).len() - 1)),
+        ..it.at(0).map(it => align(center, [*#it*])),
+        ..it.slice(1).map(row => (
+            row.at(0),
+            ..row.slice(1).map(s => {
+                let ss = s.split(".")
+                if ss.len() == 1 {
+                    ss.at(0)
+                } else {
+                    let len = ss.at(1).len()
+                    ss.at(0)
+                    [.]
+                    ss.at(1).slice(0,calc.min(3,len))
+                }
+            })
+        )).flatten()
+    )
+)
+
+#csv_as_table(readcsv("smallvec"))
+#csv_as_table(readcsv("smallmat"))
+
+== Resultados Globais
+
+#let magic_grid(names, files) = {
+    let types = ("vec", "mat", "both")
+    let len = names.len()
+    grid(
+        columns: (auto, 1fr, 1fr, 1fr),
+        column-gutter: (1em),
+        align: horizon,
+        ..([], [Vetor], [Matriz], [Ambos]).map(body => align(center, body)),
+        ..(array.range(len)).map(i => (
+            names.at(i),
+            types.map(type =>
+                image(images-folder + type + "-" + files.at(i) + ".svg")
+            ),
+        )).flatten()
+    )
+}
+
+#let graph_names = ("Tempo", "Memória", "Alocações")
+#let graph_files = ("min_time", "min_memory", "min_alloc")
+
+#magic_grid(graph_names, graph_files)
+
+== Resultados Globais para cada Implementação
+
+#let impls_names = ("Baseline", "Ref", "Iter", "Iter and Ref", "Bruno Carmo")
+#let impls_files = ("baseline", "ref", "iter", "iter_ref", "bacarmo")
+
+#magic_grid(impls_names, impls_files)
 
 = Conclusão
 
