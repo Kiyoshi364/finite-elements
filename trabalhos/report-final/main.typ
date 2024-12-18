@@ -7,6 +7,17 @@
     numbering: if numbered { "(1)" } else { none },
     body,
 )
+#let julia(body) = raw(
+    block: true,
+    lang: "julia",
+    body,
+)
+#let compare-julia(namel, namer, codel, coder) = grid(
+    columns: (1fr, 1fr),
+    align: left,
+    ..(namel, namer).map(it => align(center, it)),
+    julia(codel), julia(coder),
+)
 
 #let images-folder = "images/"
 
@@ -32,7 +43,7 @@
 }
 
 #let todo(body) = {
-    text(fill: rgb("#ff0000"))[TODO: ]
+    text(fill: rgb("#ff0000"))[TODO#(if body != [] [: ] else [])]
     body
 }
 
@@ -119,12 +130,12 @@ pode ser aplicado depois de fazermos duas discretizações:
 uma no domínio $accent(Omega, macron)$,
 e outra na dimensão do espaço das funções.
 A primeira divide o domíno $accent(Omega, macron)$
-em $N$ regiões contínuas $r_1, dots.h, r_N$.
+em $N$ regiões contínuas $Omega_1, dots.h, Omega_N$.
 Cada região contínua
 não compartilha nenhum ponto com as outras regiões,
 ou seja,
-$forall 1 <= i, j <= N, i != j <=> r_i sect r_j = emptyset$.
-Chamamos cada região $r_e$ ($1 <= e <= N$) de elemento $e$.
+$forall 1 <= i, j <= N, i != j <=> Omega_i sect Omega_j = emptyset$.
+Chamamos cada região $Omega_e$ ($1 <= e <= N$) de elemento $e$.
 
 A segunda discretização
 reduz o espaço de funções para dimensão $m$,
@@ -184,12 +195,14 @@ a estratégia
 para montar $KK$ e $FF$
 já estabelecida na literatura
 é calcular a contribuição de cada elemento
-para essas matrizes.
+para cada componente dessas matrizes.
 Para isso,
 fazemos todos os cálculos
 de um certo elemento $e$
-em um mesmo mundo canônico
-refletimos sua contribuição nas $KK$ e $FF$.
+em um mesmo mundo canônico,
+gerando matrizes menores $KK^e$ e $FF^e$.
+E então,
+refletimos suas contribuição nas $KK$ e $FF$ originais.
 Nós chamamos as _coisas_
 relacionadas ao sistema matricial
 de _coisas_ globais,
@@ -197,21 +210,332 @@ enquanto chamamos as _coisas_
 relacionadas ao mundo canônico
 de _coisas_ locais.
 
-#todo[continue from here]
+No mundo local,
+ao invés de usar a base $phi_1, dots.h, phi_m$
+vamos usar funções $varphi_1, dots.h, varphi_d : cal(R) -> RR$,
+sendo $d$ o número de funções
+em que um elemento tem contribuições,
+ou seja,
+o número de funções que retorna um valor diferente de $0$
+quando recebe algum ponto do elemento.
+$cal(R)$ é o espaço canônico,
+um quadrado no intervalo aberto
+$]-1, 1[ times ]-1, 1[$.
+As funções $varphi_i$ não variam
+de acordo ao elemento escolhido.
 
+Dessa forma,
+para um elemento $e$,
+calculamos $KK^e$ e $FF^e$
+da seguinte forma:
+#mathblock()[$
+    KK^e_(a,b) =
+        alpha integral_(cal(R))
+            frac(1, |J(arrow(xi))|)
+            nabla varphi_b (arrow(xi))^T
+            dot.c
+            (H (arrow(xi))^T dot.c H (arrow(xi)))
+            dot.c
+            nabla varphi_a (arrow(xi))
+            d arrow(xi)
+        + beta integral_(cal(R))
+            |J(arrow(xi))|
+            varphi_b (arrow(xi))
+            varphi_a (arrow(xi))
+            d arrow(xi)
+$] <Ke>
+#mathblock()[$
+    FF^e_a =
+        integral_(cal(R))
+            |J(arrow(xi))|
+            f(x_e (arrow(xi)))
+            varphi_a (arrow(xi))
+            d arrow(xi)
+$] <Fe>
+onde
+$x_e : cal(R) -> Omega_e$ é a função que mapeia
+$arrow(xi)$
+de volta o ponto global relativo que está no elemento $e$,
+$x_(e 1)$ e $x_(e 2)$ mapeiam apenas
+para a primeira e segunda coordenada, respectivamente,
+do resultado de $x_e$.
+$J(arrow(xi))$ é o determinante da matriz Jacobiana de $x_e$,
+$H(arrow(xi))$ é uma matriz.
+$J(arrow(xi))$ e $H(arrow(xi))$ são definidas como
 $
-phi quad varphi
+    #let dd(i, j) = $frac(partial x_(e#i), partial arrow(xi)_#j)(arrow(xi))$
+    J(arrow(xi)) = dd(1, 1) dd(2, 2) - dd(1, 2) dd(2, 1)
+    qquad e qquad
+    H(arrow(xi)) = mat(
+        delim: "[",
+        dd(2, 2), -dd(2, 1);
+        -dd(1, 2), dd(1, 1);
+    )
 $
 
 = A Melhoria Proposta e Implementação Realizada
 
-#todo[
-descrever a
-proposta de melhoria na implementação,
-mais especificamente na montagem das matrizes.
-]
+Nessa seção,
+descrevemos a proposta de melhoria
+na implementação da montagem das matrizes,
+os cálculos que podem ser reaproveitados,
+e depois discutimos a implementação realizada.
+
+== Aproveitamento dos Cálculos
+
+As integrações nos cálculos de $KK^e$ (@Ke) e $FF^e$ (@Fe)
+(e por sua vez $KK$ e $FF$)
+geralmente
+são feitas usando os pontos e pesos de gauss.
+Mas todos os cálculos são feitos
+no mesmo mundo local,
+ou seja,
+com os mesmos pontos de gauss e com as mesmas $varphi_i$'s.
+Por isso, acabamos recalculando o mesmo valor diversas vezes.
+Por exemplo,
+os vetores $nabla varphi_i (arrow(xi))$ ($1 <= i <= d$)
+são usados em todas as matrizes $KK^e$,
+enquanto
+os valores $varphi_i (arrow(xi))$ ($1 <= i <= d$)
+são usados em todas matrizes $KK^e$ e vetores $FF^e$.
+
+Os outros elementos da fórmula
+dependem apenas de $x_e$.
+Entretanto, dependendo do mapeamento escolhido,
+podemos definir $x_e$ em termos de $varphi_i$.
+Por exemplo, no caso específico de
+uma discretização do espaço em quadrados
+e base linear;
+se $X^e$ é o vetor com as primeiras componentes
+do quadrilátero $e$
+e $Y^e$ é o vetor com as segundas componentes
+do quadrilátero $e$,
+podemos definir
+#mathblock[$
+    x_e (arrow(xi)) = vec(
+        sum_(i=0)^d (X^e)_i dot.c varphi_i (arrow(xi)),
+        sum_(i=0)^d (Y^e)_i dot.c varphi_i (arrow(xi))
+    )
+$] <x2xis>
+#fakepar()
+
+Considerando isso,
+propormos pré-calcular os valores de
+$varphi_i (arrow(xi))$ e
+$nabla varphi_i (arrow(xi))$
+para cada ponto de gauss em uma tabela.
+Então durante cálculo das matrizes locais
+podemos apenas olhar o valor na tabela
+evitanto cálculos já realizados.
+
+== Implementação
+
+Para essa implementação,
+usamos uma discretização de espaço
+em quadriláteros possívelmente não regulares
+e base linear.
+Dessa forma,
+temos $4$ funções locais da base ($d = 4$) e
+definimos as funções $varphi_i$ e $nabla varphi_i$
+da seguinte forma
+#mathblock()[$
+    #let def(q, w) = $frac((1 #q arrow(xi)_1) (1 #w arrow(xi)_2), 4)$
+    varphi_1 (arrow(xi)) = def(-, -) qquad , qquad
+    varphi_2 (arrow(xi)) = def(+, -) ,\
+    varphi_3 (arrow(xi)) = def(+, +) qquad "e" qquad
+    varphi_4 (arrow(xi)) = def(-, +)
+$] <varphis>
+#mathblock()[$
+    #let de(q, w, i) = $#(if w == [+] [] else [#w]) frac(1 #q arrow(xi)_#i, 4)$
+    #let def(q, w) = $vec(de(#w, #q, 2), de(#q, #w, 1))$
+    nabla varphi_1 (arrow(xi)) = def(-, -) qquad , qquad
+    nabla varphi_2 (arrow(xi)) = def(+, -) ,\
+    nabla varphi_3 (arrow(xi)) = def(+, +) qquad "e" qquad
+    nabla varphi_4 (arrow(xi)) = def(-, +)
+$] <dvarphis>
+Por dividir cada elemento em um quadrilátero,
+usamos o mesmo mapeamento local-global
+descrito na @x2xis.
+
+Fizemos 2 implementações de construtores de $KK^e$ e $FF^e$
+separadamente,
+totalizando em 4.
+Todas utilizando os valores pré-calculados em uma tabela.
+As implementações do primeiro grupo de construtores locais
+(chamadas de `Baseline`)
+alocam a matriz internamente e retornam ela,
+enquanto as do segundo grupo
+(chamadas de `Ref`)
+recebem memória já alocada e sobreescrevem ela
+com o resultado.
+
+Fizemos 4 implementações de construtores de $KK^e$ e $FF^e$
+separadamente,
+e depois as mesmas 4 implementações
+calculando ambas as matrizes juntas,
+totalizando em 12 implementações.
+Essas implementações são divididas em 2 critérios:
+reutilizar a memória das matrizes locais
+entre elementos; e
+utilizar uma abstração de iterador da linguagem Julia.
+O grupo de implementações `Baseline`
+não cumpre nenhum dos dois critérios.
+`Ref` cumpre apenas o primeiro;
+`Iter` cumpre apenas o segundo;
+e finalmente,
+`Iter and Ref` cumpre os dois.
+
+O primeiro critério
+indica que a implementação reserva toda a memória necessária
+antes de iterar os elementos,
+reutiliza elas durate as iterações
+e utiliza as versões `Ref` das implementações locais.
+Esse critério está aí para ver
+se o compilador de Julia
+consegue perceber
+que poderíamos estar reutilizando
+a mesma memória.
+As diferenças mais notáveis são
+a alocação explícita antes do loop principal
+e o uso de funções de mutação.
+
+#compare-julia(
+    `Baseline`, `Ref`,
+    "
+local F = fill(0.0, (m+1,))
+
+
+
+
+
+for e in 1:N_e
+    local LGe = view(LG, :, e)
+    local Xe = view(X, LGe)
+    local Ye = view(Y, LGe)
+
+    local x2xis = x2xis_f(phis, Xe, Ye)
+    local dx2xis = dx2xis_f(phi_derivs, Xe, Ye)
+
+    local F_e = build_small_vec_2d(
+
+        f,
+        x2xis, dx2xis,
+        phis, ws, gauss_n
+    )
+
+    local EQoLG_ = view(EQoLG, :, e)
+    for i in 1:dim
+        F[EQoLG_[i]] += F_e[i]
+    end
+end
+F[begin:end-1]
+    ", "
+local F = fill(0.0, (m+1,))
+local Fe = Ref(fill(0.0, (dim,)))
+local x2xis = Ref(fill(0.0, (size(phis)[1:2]..., sdim)))
+local dx2xis = Ref(fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], dim)))
+for e in 1:N_e
+    local LGe = view(LG, :, e)
+    local Xe = view(X, LGe)
+    local Ye = view(Y, LGe)
+
+    x2xis_f_ref!(x2xis, phis, Xe, Ye)
+    dx2xis_f_ref!(dx2xis, phi_derivs, Xe, Ye)
+
+    build_small_vec_2d_ref!(
+        Fe,
+        f,
+        x2xis[], dx2xis[],
+        phis, ws, gauss_n
+    )
+
+    local EQoLG_ = view(EQoLG, :, e)
+    for i in 1:dim
+        F[EQoLG_[i]] += Fe[][i]
+    end
+end
+F[begin:end-1]
+    ",
+)
+#fakepar()
+
+Já o segundo critério
+indica que a implementação utiliza iteradores
+para fazer os pré-calculos de $J(arrow(xi))$ e $H(arrow(xi))$
+ao invés de pré-calcular explicitamente dentro do loop.
+A ideia desse critério é tentar deixar corpo do loop mais compacto,
+simples e com menos variáveis intermediárias visíveis;
+ela também testa o quanto o Julia consegue otimizar
+a abstração de iterador.
+Abaixo temos um exemplo do corpo da implementação
+da construção de $FF$ de `Baseline` e `Iter`.
+A principal diferença entre as implementações
+é o uso do iterador `FiniteElementIter` e
+o cálculo implícito das variáveis
+`LGe`, `Xe`, `Ye`, `x2xis` e `dx2xis`.
+
+#compare-julia(
+    `Baseline`, `Iter`,
+    "
+
+
+
+
+
+local F = fill(0.0, (m+1,))
+for e in 1:N_e
+    local LGe = view(LG, :, e)
+    local Xe = view(X, LGe)
+    local Ye = view(Y, LGe)
+
+    local x2xis = x2xis_f(phis, Xe, Ye)
+    local dx2xis = dx2xis_f(dphis, Xe, Ye)
+
+    local F_e = build_small_vec_2d(
+        f,
+        x2xis, dx2xis,
+        phis, ws, gauss_n
+    )
+
+    local EQoLG_ = view(EQoLG, :, e)
+    for i in 1:dim
+        F[EQoLG_[i]] += F_e[i]
+    end
+end
+F[begin:end-1]
+    ", "
+local iter = FiniteElementIter(
+    X, Y,
+    N_e, LG,
+    phis, dphis,
+)
+local F = fill(0.0, (m+1,))
+for (e, x2xis, dx2xis) in iter
+
+
+
+
+
+
+
+    local F_e = build_small_vec_2d(
+        f,
+        x2xis, dx2xis,
+        phis, ws, gauss_n
+    )
+
+    local EQoLG_ = view(EQoLG, :, e)
+    for i in 1:dim
+        F[EQoLG_[i]] += F_e[i]
+    end
+end
+F[begin:end-1]
+    ",
+)
 
 = Resultados
+
+#todo[]
 
 == Resultados locais
 
@@ -224,7 +548,7 @@ mais especificamente na montagem das matrizes.
         align: (left,) + ((center,) * (it.at(0).len() - 1)),
         ..it.at(0).map(it => align(center, [*#it*])),
         ..it.slice(1).map(row => (
-            row.at(0),
+            raw(row.at(0)),
             ..row.slice(1).map(s => {
                 let ss = s.split(".")
                 if ss.len() == 1 {
@@ -253,9 +577,10 @@ mais especificamente na montagem das matrizes.
     let len = names.len()
     grid(
         columns: (auto, 1fr, 1fr, 1fr),
-        column-gutter: (1em),
+        column-gutter: (1em,),
+        row-gutter: (0.5em,),
         align: horizon,
-        ..([], [Vetor], [Matriz], [Ambos]).map(body => align(center, body)),
+        ..([], [Vetor ($FF$)], [Matriz ($KK$)], [Ambos ($FF$ e $KK$)]).map(body => align(center, body)),
         ..(array.range(len)).map(i => (
             names.at(i),
             types.map(type =>
@@ -272,7 +597,7 @@ mais especificamente na montagem das matrizes.
 
 == Resultados Globais para cada Implementação
 
-#let impls_names = ("Baseline", "Ref", "Iter", "Iter and Ref", "Bruno Carmo")
+#let impls_names = (`Baseline`, `Ref`, `Iter`, `Iter and Ref`, `Bruno Carmo`)
 #let impls_files = ("baseline", "ref", "iter", "iter_ref", "bacarmo")
 
 #magic_grid(impls_names, impls_files)
@@ -283,5 +608,6 @@ mais especificamente na montagem das matrizes.
 
 - Aproveitar memória na LG
 - Entender porque a construção da matriz está lenta
+- Usar a memória de $KK^e$ para construir $FF^e$
 
 #lorem(200)
