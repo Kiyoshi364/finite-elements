@@ -32,7 +32,7 @@
 }
 
 #let todo(body) = {
-    text(fill: rgb("#ff0000"))[TODO:]
+    text(fill: rgb("#ff0000"))[TODO: ]
     body
 }
 
