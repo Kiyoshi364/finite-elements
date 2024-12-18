@@ -231,9 +231,12 @@ mais especificamente na montagem das matrizes.
                     ss.at(0)
                 } else {
                     let len = ss.at(1).len()
+                    let acc = 3
+                    let min = calc.min(acc,len)
                     ss.at(0)
                     [.]
-                    ss.at(1).slice(0,calc.min(3,len))
+                    ss.at(1).slice(0,min)
+                    [0] * (acc - min)
                 }
             })
         )).flatten()
