@@ -384,6 +384,9 @@ não cumpre nenhum dos dois critérios.
 `Iter` cumpre apenas o segundo;
 e finalmente,
 `Iter and Ref` cumpre os dois.
+Vamos mostrar o corpo da implementação
+da construção de $FF$
+para exemplificar as diferentes versões.
 
 O primeiro critério
 indica que a implementação reserva toda a memória necessária
@@ -467,8 +470,6 @@ A ideia desse critério é tentar deixar corpo do loop mais compacto,
 simples e com menos variáveis intermediárias visíveis;
 ela também testa o quanto o Julia consegue otimizar
 a abstração de iterador.
-Abaixo temos um exemplo do corpo da implementação
-da construção de $FF$ de `Baseline` e `Iter`.
 A principal diferença entre as implementações
 é o uso do iterador `FiniteElementIter` e
 o cálculo implícito das variáveis
@@ -532,6 +533,83 @@ end
 F[begin:end-1]
     ",
 )
+
+A implementação de `Iter and Ref`
+procura esconder o reaproveitamento de memória
+dentro da abstração de iterador.
+Então, comparando com `Ref`,
+vemos que temos bem mais linhas de código implícitas.
+
+#compare-julia(
+    `Ref`, `Iter and Ref`,
+    "
+
+
+
+
+
+
+local F = fill(0.0, (m+1,))
+local Fe = Ref(fill(0.0, (dim,)))
+local x2xis = Ref(fill(0.0, (size(phis)[1:2]..., sdim)))
+local dx2xis = Ref(fill(0.0, (size(phi_derivs)[1], size(phi_derivs)[1], dim)))
+for e in 1:N_e
+    local LGe = view(LG, :, e)
+    local Xe = view(X, LGe)
+    local Ye = view(Y, LGe)
+
+    x2xis_f_ref!(x2xis, phis, Xe, Ye)
+    dx2xis_f_ref!(dx2xis, phi_derivs, Xe, Ye)
+
+    build_small_vec_2d_ref!(
+        Fe,
+        f,
+        x2xis[], dx2xis[],
+        phis, ws, gauss_n
+    )
+
+    local EQoLG_ = view(EQoLG, :, e)
+    for i in 1:dim
+        F[EQoLG_[i]] += Fe[][i]
+    end
+end
+F[begin:end-1]
+    ", "
+local iter = FiniteElementIterRef(
+    X, Y,
+    N_e, LG,
+    phis, phi_derivs,
+)
+
+local F = fill(0.0, (m+1,))
+
+
+
+
+
+for (e, ref_x2xis, ref_dx2xis, ref_Ke, ref_Fe) in iter
+    local x2xis = ref_x2xis[]
+    local dx2xis = ref_dx2xis[]
+
+
+
+
+    build_small_vec_2d_ref!(
+        ref_Fe,
+        f,
+        x2xis, dx2xis,
+        phis, ws, gauss_n
+    )
+
+    local EQoLG_ = view(EQoLG, :, e)
+    for i in 1:dim
+        F[EQoLG_[i]] += ref_Fe[][i]
+    end
+end
+F[begin:end-1]
+    ",
+)
+#fakepar()
 
 = Resultados
 
