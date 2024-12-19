@@ -611,6 +611,24 @@ F[begin:end-1]
 )
 #fakepar()
 
+== Artefatos Entregues
+
+#todo[
+- implementação em `finite-elements.jl`
+- testes unitários em `tests.jl`
+- benchmarks em `make_benchmarks.jl`
+- gerador de gráficos e tabelas em `compile_benchmarks.jl`
+- gerador de convergência de erro em `errors.jl`
+]
+
+Mostramos que todas as implementações funcionam
+fazendo gráficos de convergência de erro
+para cada implementação.
+
+#todo[
+    Grafos de Convergência de erro
+]
+
 = Resultados
 
 #todo[]
