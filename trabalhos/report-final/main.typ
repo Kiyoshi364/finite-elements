@@ -12,11 +12,17 @@
     lang: "julia",
     body,
 )
-#let compare-julia(namel, namer, codel, coder) = grid(
-    columns: (1fr, 1fr),
-    align: left,
-    ..(namel, namer).map(it => align(center, it)),
-    julia(codel), julia(coder),
+#let compare-julia(name1, name2, code1, code2) = figure(
+    grid(
+        columns: (1fr, 1fr),
+        align: left,
+        ..(name1, name2).map(it => align(center, it)),
+        julia(code1), julia(code2),
+    ),
+    caption: [#(name1) and #(name2)],
+    placement: auto,
+    supplement: [Comparação de Código],
+    kind: "julia-compare",
 )
 
 #let images-folder = "images/"
@@ -398,7 +404,9 @@ se o compilador de Julia
 consegue perceber
 que poderíamos estar reutilizando
 a mesma memória.
-As diferenças mais notáveis são
+Em @comparacao:base-ref,
+percebemos que
+as diferenças mais notáveis são
 a alocação explícita antes do loop principal
 e o uso de funções de mutação.
 
@@ -459,7 +467,7 @@ for e in 1:N_e
 end
 F[begin:end-1]
     ",
-)
+) <comparacao:base-ref>
 #fakepar()
 
 Já o segundo critério
@@ -471,6 +479,7 @@ simples e com menos variáveis intermediárias visíveis;
 ela também testa o quanto o Julia consegue otimizar
 a abstração de iterador.
 A principal diferença entre as implementações
+(em @comparacao:base-iter)
 é o uso do iterador `FiniteElementIter` e
 o cálculo implícito das variáveis
 `LGe`, `Xe`, `Ye`, `x2xis` e `dx2xis`.
@@ -532,12 +541,12 @@ for (e, x2xis, dx2xis) in iter
 end
 F[begin:end-1]
     ",
-)
+) <comparacao:base-iter>
 
 A implementação de `Iter and Ref`
 procura esconder o reaproveitamento de memória
 dentro da abstração de iterador.
-Então, comparando com `Ref`,
+Então, em @comparacao:ref-refiter,
 vemos que temos bem mais linhas de código implícitas.
 
 #compare-julia(
@@ -608,7 +617,7 @@ for (e, ref_x2xis, ref_dx2xis, ref_Ke, ref_Fe) in iter
 end
 F[begin:end-1]
     ",
-)
+) <comparacao:ref-refiter>
 #fakepar()
 
 == Artefatos Entregues
