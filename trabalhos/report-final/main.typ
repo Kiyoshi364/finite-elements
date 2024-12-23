@@ -622,12 +622,70 @@ F[begin:end-1]
 
 == Artefatos Entregues
 
+#let commit = "06321afce88290a35a9b5d822c021d58d88fefb4"
+#let github-repo = "https://github.com/Kiyoshi364/finite-elements/"
+#let github-commit(commit: commit) = github-repo + "tree/" + commit + "/"
+#let src-folder = "src/09-finite-elements-any-quadrilateral/"
+#let link-raw(the-link, body) = {
+    link(the-link, box(raw(body)))
+}
+#let link-file(file-name, commit: commit, ..args) = {
+    let args_pos = args.pos()
+    let body = if args_pos.len() == 1 {
+        args_pos.at(0)
+    } else if args_pos.len() > 1 {
+        panic("More than one extra pos argument to link-file:", ..args_pos)
+    } else {
+        file-name
+    }
+    link-raw(github-commit(commit: commit) + src-folder + file-name, body)
+}
+
+A implementação desenvolvida durante esse trabalho
+está disponível em
+#link-raw(github-repo, github-repo).
+O commit usado para produzir os resultados é
+#link-raw(github-commit(), commit).
+O código está na pasta
+#link-file(src-folder).
+O arquivo
+#link-file("finite-elements.jl")
+tem todas as implementações.
+O script
+#link-file("tests.jl")
+testa a corretude
+dos bloquinhos usados pelas implementações.
+O script
+#link-file("make_benchmarks.jl")
+faz as benchmarks
+e gera o arquivo `results.json`.
+O script
+#link-file("compile_benchmarks.jl")
+analiza o `results.json` e gera
+tabelas e gráficos mostrados na @sec:Resultados.
+Os resultados do benchmark
+que usamos para gerar as tabelas e gráficos
+da @sec:Resultados
+estão em
+#link-file("results-" + commit + ".json").
+Finalmente,
+o script
+#link-file("errors.jl")
+gera o gráfico de convergência de erro
+da implementação padrão (`Ref`).
 #todo[
-- implementação em `finite-elements.jl`
-- testes unitários em `tests.jl`
-- benchmarks em `make_benchmarks.jl`
-- gerador de gráficos e tabelas em `compile_benchmarks.jl`
-- gerador de convergência de erro em `errors.jl`
+Em uma versão futura de
+#{
+let future-commit = "TO BE INCLUDED"
+link-file("errors.jl")
+[
+    (no commit
+    #link-raw(github-commit(commit: future-commit), future-commit)),
+]
+}
+o script gera
+os gráficos de convergência do erro
+para todas as implementações.
 ]
 
 Mostramos que todas as implementações funcionam
@@ -638,7 +696,7 @@ para cada implementação.
     Grafos de Convergência de erro
 ]
 
-= Resultados
+= Resultados <sec:Resultados>
 
 #todo[]
 
