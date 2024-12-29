@@ -655,6 +655,18 @@ O script
 #link-file("tests.jl")
 testa a corretude
 dos bloquinhos usados pelas implementações.
+O arquivo
+#link-file("bacarmo.jl")
+é uma implementação adaptada
+de Bruno Carmo
+#footnote[implementação original disponível em
+#{
+let l = "https://github.com/bacarmo/Elementos_Finitos/blob/dba5361b423a32933118b3fca65edb93fe1cc425/2024_02/Estacionario_2D_equacao1_Pluto.jl"
+link-raw(l, l)
+}].
+O intuito de incluir essa implementação
+nos benchmarks é
+ter uma comparação com outras implementações.
 O script
 #link-file("make_benchmarks.jl")
 faz as benchmarks
