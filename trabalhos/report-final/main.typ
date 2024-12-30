@@ -704,9 +704,24 @@ Mostramos que todas as implementações funcionam
 fazendo gráficos de convergência de erro
 para cada implementação.
 
-#todo[
-    Grafos de Convergência de erro
-]
+#let error-grid(names, files) = {
+    grid(
+        columns: (1fr, 1fr, 1fr, 1fr),
+        column-gutter: (1em,),
+        align: center,
+        ..array.range(files.len()).map(i => {
+            let file = files.at(i)
+            let name = names.at(i)
+            image(images-folder + "error-" + file + ".svg")
+            name
+        }),
+    )
+}
+
+#let impls_names = (`Baseline`, `Ref`, `Iter`, `Iter and Ref`, `Bruno Carmo`)
+#let impls_files = ("baseline", "ref", "iter", "iter_ref", "bacarmo")
+
+#error-grid(impls_names.slice(0, impls_names.len() - 1), impls_files.slice(0, impls_files.len() - 1))
 
 = Resultados <sec:Resultados>
 
@@ -771,9 +786,6 @@ para cada implementação.
 #magic_grid(graph_names, graph_files)
 
 == Resultados Globais para cada Implementação
-
-#let impls_names = (`Baseline`, `Ref`, `Iter`, `Iter and Ref`, `Bruno Carmo`)
-#let impls_files = ("baseline", "ref", "iter", "iter_ref", "bacarmo")
 
 #magic_grid(impls_names, impls_files)
 
