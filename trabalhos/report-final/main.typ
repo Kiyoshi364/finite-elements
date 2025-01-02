@@ -685,10 +685,10 @@ o script
 #link-file("errors.jl")
 gera o gráfico de convergência de erro
 da implementação padrão (`Ref`).
-#todo[
+
 Em uma versão futura de
 #{
-let future-commit = "TO BE INCLUDED"
+let future-commit = "beae74b93459cc28e7f57e05e2400d773a463ba4"
 link-file("errors.jl")
 [
     (no commit
@@ -698,13 +698,12 @@ link-file("errors.jl")
 o script gera
 os gráficos de convergência do erro
 para todas as implementações.
-]
-
-Mostramos que todas as implementações funcionam
+Na @conv-erros,
+mostramos que todas as implementações funcionam
 fazendo gráficos de convergência de erro
 para cada implementação.
 
-#let error-grid(names, files) = {
+#let error-grid(names, files) = figure(
     grid(
         columns: (1fr, 1fr, 1fr, 1fr),
         column-gutter: (1em,),
@@ -715,13 +714,18 @@ para cada implementação.
             image(images-folder + "error-" + file + ".svg")
             name
         }),
-    )
-}
+    ),
+    caption: [Convergência de Erros],
+    placement: auto,
+    supplement: [Convergência de Erros],
+    kind: "errors-onvergence",
+)
 
 #let impls_names = (`Baseline`, `Ref`, `Iter`, `Iter and Ref`, `Bruno Carmo`)
 #let impls_files = ("baseline", "ref", "iter", "iter_ref", "bacarmo")
 
 #error-grid(impls_names.slice(0, impls_names.len() - 1), impls_files.slice(0, impls_files.len() - 1))
+<conv-erros>
 
 = Resultados <sec:Resultados>
 
