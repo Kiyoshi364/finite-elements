@@ -729,13 +729,14 @@ para cada implementação.
 
 = Resultados <sec:Resultados>
 
-#todo[]
+Nessa seção,
+mostramos e discutimos os resultados
+dos benchmarks realizados sobre as implementações.
 
 == Resultados locais
 
 #let readcsv = name => csv(images-folder + name + ".csv")
-#let csv_as_table(it) = align(
-    center,
+#let csv_as_table(name, it) = figure(
     grid(
         columns: (auto,) + ((1fr,) * (it.at(0).len() - 1)),
         row-gutter: 0.5em,
@@ -758,18 +759,46 @@ para cada implementação.
                 }
             })
         )).flatten()
-    )
+    ),
+    caption: [#name],
+    placement: auto,
+    supplement: [Benchmarks],
+    kind: "benchmarks",
 )
 
-#csv_as_table(readcsv("smallvec"))
-#csv_as_table(readcsv("smallmat"))
+#csv_as_table([Vetores Locais ($FF^e$)], readcsv("smallvec")) <bench-smallvec>
+#csv_as_table([Matrizes Locais ($KK^e$)], readcsv("smallmat")) <bench-smallmat>
+
+Nos @bench-smallvec e @bench-smallmat,
+mostramos os tabelas com os resultados de benchmark
+para a construção de $FF^e$ e $KK^e$,
+respectivamente.
+Em ambas as tabelas,
+aparecem uma versão `with precalculation`.
+A diferença entre a versão normal e a `with precalculation`
+é que
+a versão normal inclui o tempo do pré-calculo
+de valores auxiliares
+(que seriam compartilhados
+na construção simultânea de $FF$ e $KK$)
+e valores auxilares para a conversão de coordenada
+(apenas no benchmark da $FF^e$).
+
+Em ambos os resultados,
+percebemos que,
+tanto para construção de $FF^e$ quanto $KK^e$,
+as melhores implementações foram
+as `Ref`, seguidas pelas `Baseline`
+e então as do `Bruno Carmo`.
+Também que as versões `Ref`
+apenas realizam alocações durante a fase de pré-calculo.
 
 == Resultados Globais
 
-#let magic_grid(names, files) = {
+#let magic_grid(name, names, files) = {
     let types = ("vec", "mat", "both")
     let len = names.len()
-    grid(
+    let g = grid(
         columns: (auto, 1fr, 1fr, 1fr),
         column-gutter: (1em,),
         row-gutter: (0.5em,),
@@ -782,23 +811,75 @@ para cada implementação.
             ),
         )).flatten()
     )
+    figure(
+        g,
+        caption: [#name],
+        placement: auto,
+        supplement: [Benchmarks],
+        kind: "benchmarks",
+    )
 }
 
 #let graph_names = ("Tempo", "Memória", "Alocações")
 #let graph_files = ("min_time", "min_memory", "min_alloc")
 
-#magic_grid(graph_names, graph_files)
+Nos @bench-compareimpl e @bench-eachimpl,
+mostramos os resultados dos benchmarks
+para as implementações globais.
+@bench-compareimpl
+mostra todas as implementações
+de forma comparativa entre si,
+enquanto
+@bench-eachimpl
+mostra cada implementação isoladamente.
+Todos os gráficos,
+tem em sua coordenada x
+os números de elementos finitos da matriz construída.
+Todos os eixos estão em escala logarítmica.
 
-== Resultados Globais para cada Implementação
+Nas colunas de construção de $FF$ percebemos
+um ganho em todas as implementações
+comparados com `Bruno Carmo`.
+Entretanto esse ganho
+desaparece na construção de $KK$.
+Na construção de $KK$,
+todas as implementações que não são `Bruno Carmo`
+aparentam usar tempo assintoticamente maior que exponencial;
+e por isso,
+acaba dominando o tempo
+da construção de ambas matrizes $FF$ e $KK$.
 
-#magic_grid(impls_names, impls_files)
+Sobre as implementações,
+o reuso de memória em `Ref`
+teve uma melhora nas três métricas
+tempo, memória e alocações
+comparando com a sua versão sem o reuso `Baseline`;
+enquanto o reuso de memória em `Iter and Ref`
+apenas reduziu o uso de memória na construção de $FF$
+comparando com `Iter`.
+Já a utilização de um iterador
+como uma conveniência não contribuiu
+para melhoras em execução:
+`Ref` sempre foi melhor que `Iter and Ref`
+e `Baseline` sempre foi melhor que `Iter`.
+`Ref` aparenta ser a melhor implementação.
+
+#magic_grid([Comparação de Implementações], graph_names, graph_files)
+<bench-compareimpl>
+
+#magic_grid([Resultados para cada Implementação], impls_names, impls_files)
+<bench-eachimpl>
 
 = Conclusão
 
+#todo[]
+
 == Trabalhos Futuros
 
+#todo[
 - Aproveitar memória na LG
 - Entender porque a construção da matriz está lenta
 - Usar a memória de $KK^e$ para construir $FF^e$
+]
 
 #lorem(200)
