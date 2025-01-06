@@ -872,14 +872,98 @@ e `Baseline` sempre foi melhor que `Iter`.
 
 = Conclusão
 
-#todo[]
+Nesse trabalho implementamos
+construção de matrizes
+para o método de elementos finitos
+na linguagem de programação Julia
+de quatro formas diferentes
+buscando economizar recursos.
+Então, comparamos as implementações entre si
+e com uma implementação externa.
+Todas as quatro implementações buscaram
+pre-calcular valores,
+com destaque em $varphi$ e $nabla varphi$
+aplicados nos pontos de gauss.
+
+As principal diferença entre as implementações
+foi o uso ou não de reaproveitamento de memória
+e uso ou não de um iterador para conveniência da implementação.
+Parece que
+as quatro implementações tiveram algum problema
+na montagem da matriz $KK$:
+o tempo utilizado para construir a matriz
+cresce assintoticamente mais rápido que o esperado.
+
+Com isso, concluímos que,
+mesmo com o defeito de implementação,
+o pre-cálculo desses valores
+contribui para a redução do tempo.
+Também que reutilizar a memória
+contribui tanto para utilizar e alocar menos memória
+quanto para construír a matriz em menos tempo.
+E finalmente que
+essa implementação de iterador,
+focada em dar conveniência ao programador,
+gera gastos de tempo, memória e alocação.
+Acreditamos que esse gasto extra,
+da-se por o compilador não ser capaz
+de desfazer dessa abstração,
+então impedindo otimizações que seria capaz
+nas outras implementações.
 
 == Trabalhos Futuros
 
-#todo[
-- Aproveitar memória na LG
-- Entender porque a construção da matriz está lenta
-- Usar a memória de $KK^e$ para construir $FF^e$
-]
+Entre os trabahos futuros temos três pontos:
+entender porque a construção de $KK$ está lenta;
+usar a memória de $KK^e$ para construir $FF^e$; e
+reaproveitar memória na construção parcial da LG.
+Sobre o primeiro ponto,
+temos que o código de construção de $KK$
+é análogo ao código de construção de $FF$ e
+à implementação de Bruno Carmo.
+Isso se faz surpreendente que a implementação
+demore consideravelmente mais.
+Talvez isso tenha acontecido por algum motivo
+de otimização ou "pessimização"
+do compilador.
 
-#lorem(200)
+O segundo ponto é mais simples.
+Na implementação `Ref` da construção das matrizes locais,
+passamos uma região de memória para armazenar o resultado.
+Atualmente reservamos
+uma região para $KK^e$ e outra para $FF^e$,
+mas podemos reutilizar a mesma região para as duas
+se realizarmos as operações na seguinte ordem:
+construir matriz local 1; mover para matriz global 1;
+construir matriz local 2; e então mover para matriz global 2.
+Chamo as matrizes $FF$ e $KK$ (locais e globais)
+de matrizes 1 e 2,
+pois a ordem não afeta o algorítmo.
+Não imaginamos que essa otimização
+vai trazer grandes contribuições,
+pois estamos apenas removendo
+1 alocação de $n times ("size of float")$,
+onde $n$ é o número de elementos finitos
+influenciados por uma função da base.
+Em uma base linear e um sub-espaço de $RR^2$,
+economizaríamos 32 bytes para 4 floats de 64 bits.
+
+Finalmente,
+o último ponto é sobre economizar memória na LG.
+O mapa LG é utilizado para traduzir
+índices locais para índices globais,
+muito importante para a construção de $FF$ e $KK$.
+Geralmente ela é implementada como uma matriz,
+sendo uma forma de "tabela de lookup".
+Em muitos casos de particionamento do espaço,
+essa tabela é completamente previsível
+dados poucos parâmetros.
+Julia possui um grande sistema de interfaces
+e é possível fazer uma implementação de uma `AbstractMatrix`:
+um objeto que se comporta como uma matriz normal,
+mas pode ter implementações mais espertas por baixo dos panos.
+Um exemplo bem conhecido de objeto
+que implementa essa interface é `SparseMatrixCSC`
+que considera que muitos elementos da matriz
+são iguais (geralmente a 0)
+e apenas guarda os a posição e valor dos elementos diferentes.
