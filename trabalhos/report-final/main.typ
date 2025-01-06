@@ -61,13 +61,81 @@
 
 = Introdução
 
-- elementos finitos
-- performance
-- implementaçoes
-- nossa proposta
-- sumário
+Muitos fenômenos do mundo real
+são modelados por sistemas de equações diferenciais.
+Alguns desses sistemas possuem solução analítica,
+mas muitos deles não.
+Uma alternativa para esse problema
+é buscar soluções discretas
+próximas o suficiente da solução real
+com a ajuda de um computador.
+O Método de Elementos Finitos
+segue essa ideia,
+sendo capaz de resolver
+uma grande variedade de classes de sistemas de equações.
 
-= Especificação do Problema e o Método de Elementos Finitos
+Resolver um sistema de equações diferenciais
+com um refinamento adequado
+pode requerir altos custos computacionais,
+tanto em tempo quanto em memória.
+Dessa forma,
+uma solução refinada o suficiente
+pode acabar sendo inviável de ser computada,
+por demorar muito tempo ou
+simplemente não caber na memória do computador.
+Por isso,
+temos a preocupação de otimizar implementações
+desse método para que
+seja possível encontrar soluções
+mais refinadas e em menos tempo.
+
+A arquitetura geral de uma implementação
+do Método de Elementos Finitos
+já é bem estabelecida
+e geralmente segue os seguintes passos:
+particionar o espaço em elementos finitos;
+escolher funções base para representar
+a solução como combinação linear delas;
+montar matrizes que relacionam
+as restrições das funções base com a solução,
+formando um sistema linear;
+e resolver o sistema linear.
+Escolhas espertas nos dois primeiros passos
+podem simplificar
+tanto a montagem quanto a solução do sistema linear.
+
+Nesse trabalho,
+damos foco na construção das matrizes
+que representam o sistema linear.
+E propomos estratégias
+para construir essas matrizes
+de uma forma que economize
+os recursos computacionais tempo e memória.
+As implementações propostas
+se baseam na ideia de pre-calcular
+valores que se espera que seram utilizados várias vezes
+e usar uma abstração de iteradores,
+que a linguagem de programação Julia
+disponibiliza.
+E então,
+testamos implementações em Julia
+dessas propostas com benchmarks.
+
+Na @sec:spec,
+especificamos o problema
+que essas implementações buscam solucionar
+e introduzimos rapidamente
+o Método de Elementos Finitos.
+Na @sec:impl,
+descrevemos as melhorias propostas
+e discutimos as implementações realizadas.
+Na @sec:results,
+mostramos e discutimos os resultados
+dos benchmarks das implementações.
+E concluímos o artigo
+na @sec:conclusion.
+
+= Especificação do Problema e o Método de Elementos Finitos <sec:spec>
 
 Nessa seção, vamos
 formalizar o problema teórico;
@@ -279,7 +347,7 @@ $
     )
 $
 
-= A Melhoria Proposta e Implementação Realizada
+= A Melhoria Proposta e Implementação Realizada <sec:impl>
 
 Nessa seção,
 descrevemos a proposta de melhoria
@@ -674,10 +742,10 @@ e gera o arquivo `results.json`.
 O script
 #link-file("compile_benchmarks.jl")
 analiza o `results.json` e gera
-tabelas e gráficos mostrados na @sec:Resultados.
+tabelas e gráficos mostrados na @sec:results.
 Os resultados do benchmark
 que usamos para gerar as tabelas e gráficos
-da @sec:Resultados
+da @sec:results
 estão em
 #link-file("results-" + commit + ".json").
 Finalmente,
@@ -727,7 +795,7 @@ para cada implementação.
 #error-grid(impls_names.slice(0, impls_names.len() - 1), impls_files.slice(0, impls_files.len() - 1))
 <conv-erros>
 
-= Resultados <sec:Resultados>
+= Resultados <sec:results>
 
 Nessa seção,
 mostramos e discutimos os resultados
@@ -870,7 +938,7 @@ e `Baseline` sempre foi melhor que `Iter`.
 #magic_grid([Resultados para cada Implementação], impls_names, impls_files)
 <bench-eachimpl>
 
-= Conclusão
+= Conclusão <sec:conclusion>
 
 Nesse trabalho implementamos
 construção de matrizes
