@@ -10,3 +10,4 @@ results.json
 **/folder-build/*.txt
 **/folder-build/*.bcf
 **/folder-build/*.run.xml
+**/folder-build/svg-inkscape/

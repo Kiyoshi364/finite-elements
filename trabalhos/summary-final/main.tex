@@ -2,7 +2,7 @@
 
 % { Template
 
-\usepackage[english]{babel} % texto em Inglês
+\usepackage[brazil]{babel} % texto em Português
 \usepackage[utf8]{inputenc} % acentuação em Português UTF-8
 
 \usepackage[T1]{fontenc}
@@ -24,10 +24,19 @@
 
 % Template }
 
+\usepackage{svg}
+\svgpath{{images/}}
+
+\newcommand{\titlelinebreak}{\texorpdfstring{\\}{ }}
 \newcommand{\templauthoremail}[2]{{\large #1}\thanks{#2}}
 \newcommand{\templlocation}[1]{{\small #1}}
 
-\title{Using precalculated values and iterators to save resources in finite elements matrix-construction}
+\title{Usando valores pré-computados
+    para economizar recursos
+    na construção de matrizes
+    para Método de Elementos Finitos
+    com a Linguagem de Programação Julia
+}
 
 \author{
     \templauthoremail{Daniel K. Hashimoto V. de Andrade}{dkhashimoto@ic.ufrj.br} \\
@@ -36,17 +45,86 @@
 
 \begin{document}
 
-\maketitle
+\criartitulo
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas tincidunt neque lacus, nec dictum urna feugiat ut. Integer varius orci quis eleifend posuere. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Cras finibus augue eu metus maximus, et dignissim lectus malesuada. Nulla mollis non massa vitae scelerisque. Etiam aliquam volutpat sem et ultricies. Ut sit amet tortor bibendum, vehicula ipsum posuere, facilisis augue. Duis at vulputate nunc, a pulvinar purus. Curabitur suscipit, velit ornare ultricies semper, ligula est congue dui, eget laoreet justo ligula non diam. Etiam euismod tristique urna at molestie. Proin scelerisque rutrum ullamcorper.
+Muitos fenômenos do mundo real
+são modelados por sistemas de equações diferenciais.
+Alguns desses sistemas possuem solução analítica,
+mas muitos deles não.
+Uma alternativa para esse problema
+é buscar soluções discretas
+próximas o suficiente da solução real
+com a ajuda de um computador.
+O Método de Elementos Finitos
+segue essa ideia,
+sendo capaz de resolver
+uma grande variedade de classes de sistemas de equações.
 
-Vestibulum iaculis arcu id odio lobortis lacinia. Sed commodo fringilla orci, sit amet placerat nulla mattis at. Mauris sem libero, rutrum at porttitor sed, consectetur a quam. Nam et accumsan ex. Cras dapibus sodales viverra. Mauris quis imperdiet quam. Fusce et erat mauris. Integer hendrerit odio vel arcu rhoncus, eget tincidunt nunc blandit. Vivamus nisl neque, auctor at eros sit amet, malesuada varius urna. Nam malesuada, metus tempus elementum sodales, enim ligula maximus justo, a lobortis justo elit a quam. Morbi eu ligula sapien. Aliquam eget lobortis arcu, et vehicula nulla. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ut mi leo.
+Resolver um sistema de equações diferenciais
+com um refinamento adequado
+pode requisitar altos custos computacionais,
+tanto em tempo quanto em memória.
+Dessa forma,
+uma solução refinada o suficiente
+pode acabar sendo inviável de ser computada,
+por demorar muito tempo ou
+simplesmente não caber na memória do computador.
+Por isso,
+temos a preocupação de otimizar implementações
+desse método para que
+seja possível encontrar soluções
+mais refinadas e em menos tempo.
 
-Nulla ac congue massa, eget feugiat est. Sed turpis turpis, ultrices nec consequat pulvinar, maximus in massa. Nullam eget velit porttitor, iaculis nulla ut, rhoncus ex. Mauris tempus eros et tincidunt dapibus. Donec egestas, tellus at accumsan consequat, massa mauris fermentum arcu, tincidunt vulputate magna erat quis ligula. Sed euismod ut augue quis lobortis. Quisque sollicitudin tempus ante. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Aliquam non convallis eros. Mauris finibus tellus mauris, in lacinia erat eleifend at. Pellentesque pulvinar vehicula neque, bibendum gravida odio mattis non. Praesent malesuada viverra tellus, aliquam vehicula ipsum viverra sed. Nulla facilisis dui aliquam ligula congue, eu congue ante gravida. Morbi ac felis ut lacus pharetra porta.
+A arquitetura geral de uma implementação
+do Método de Elementos Finitos
+já é bem estabelecida
+e geralmente segue os seguintes passos:
+particionar o espaço em elementos finitos;
+escolher funções base para representar
+a solução como combinação linear delas;
+montar matrizes que relacionam
+as restrições das funções base com a solução,
+formando um sistema linear;
+e resolver o sistema linear.
+Escolhas espertas nos dois primeiros passos
+podem simplificar
+tanto a montagem quanto a solução do sistema linear.
 
-Duis quis eros metus. Nulla nec justo nibh. Morbi ornare aliquam vestibulum. Phasellus vitae ante eu dui dignissim condimentum eget sit amet turpis. Etiam sed lacus at tortor scelerisque commodo. Nunc bibendum dictum rhoncus. Proin orci felis, varius in diam sed, molestie volutpat purus. Sed venenatis mollis tellus in molestie. Suspendisse non vulputate felis. Donec non eros pretium, ultricies magna ut, fringilla quam. Duis cursus augue nec diam elementum ultricies. Ut euismod facilisis posuere. In eu lacinia diam, convallis iaculis arcu. Curabitur scelerisque non lorem nec placerat.
+Nesse trabalho,
+damos foco na construção das matrizes
+que representam o sistema linear.
+E propomos estratégias
+para construir essas matrizes
+de uma forma que economize
+os recursos computacionais tempo e memória.
+As implementações propostas
+se baseiam na ideia de pré-calcular
+valores que se espera que serão utilizados várias vezes
+e usar uma abstração de iteradores,
+que a linguagem de programação Julia
+disponibiliza.
+E então,
+testamos implementações em Julia
+dessas propostas com benchmarks.
 
-Vestibulum suscipit massa eros, ut faucibus enim tempor eget. Aliquam dapibus neque vitae metus pretium suscipit. Nunc mollis odio diam, ut hendrerit sem pretium eu. Nullam eget pharetra urna. Sed convallis ligula velit, sed venenatis orci lacinia quis. In hac habitasse platea dictumst. Nunc a magna ac elit lobortis lacinia non eu quam. Praesent a tincidunt est. Duis lobortis nunc ut purus vulputate imperdiet. Aenean ut ipsum blandit, venenatis urna in, posuere justo. 
+% \begin{figure} \centering
+%     \includesvg[width=0.5\textwidth]{vec-min_time}
+%     \caption{Implementações: Tempo por número de elementos}
+% \end{figure}
+
+\section*{Agradecimentos}
+
+% A Portaria nº 206/2018 - CAPES
+% pede para usar exatamente a frase a seguir:
+O presente trabalho foi realizado com apoio da
+Coordenação de Aperfeiçoamento de Pessoal de Nível Superior
+-- Brasil (CAPES) --
+Código de Financiamento~001.
+
+% This study was financed in part by the
+% Coordenação de Aperfeiçoamento de Pessoal de Nível Superior
+% -- Brasil (CAPES) --
+% Finance Code~001.
 
 % { Template
 \printbibliography

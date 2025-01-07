@@ -77,12 +77,20 @@
 
                   biblatex
                   csquotes
+
+                  catchfile
+                  transparent
+                  trimspaces
+                  svg
                 ; }
               )
 
               (aspellWithDicts (dicts: with dicts; [
                 en
+                pt_BR
               ]))
+
+              inkscape
 
               poppler_utils
               zathura
