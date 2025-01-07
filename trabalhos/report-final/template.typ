@@ -6,6 +6,7 @@
   font-type: "New Computer Modern",
   lang: "pt",
   region: "br",
+  ligatures: false,
 
   // Par
   indent-first: true,
@@ -27,6 +28,7 @@
     size: text-size,
     lang: lang,
     region: region,
+    ligatures: ligatures,
   )
 
   set par(

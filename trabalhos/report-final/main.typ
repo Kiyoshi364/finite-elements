@@ -28,9 +28,9 @@
 #let images-folder = "images/"
 
 #let title = [
-    Usando iteradores e valores pre-computados
+    Usando iteradores e valores pré-computados
     #linebreak()
-    para economizar recusos
+    para economizar recursos
     na construção de matrizes
     #linebreak()
     para Método de Elementos Finitos
@@ -76,13 +76,13 @@ uma grande variedade de classes de sistemas de equações.
 
 Resolver um sistema de equações diferenciais
 com um refinamento adequado
-pode requerir altos custos computacionais,
+pode requisitar altos custos computacionais,
 tanto em tempo quanto em memória.
 Dessa forma,
 uma solução refinada o suficiente
 pode acabar sendo inviável de ser computada,
 por demorar muito tempo ou
-simplemente não caber na memória do computador.
+simplesmente não caber na memória do computador.
 Por isso,
 temos a preocupação de otimizar implementações
 desse método para que
@@ -112,8 +112,8 @@ para construir essas matrizes
 de uma forma que economize
 os recursos computacionais tempo e memória.
 As implementações propostas
-se baseam na ideia de pre-calcular
-valores que se espera que seram utilizados várias vezes
+se baseiam na ideia de pré-calcular
+valores que se espera que serão utilizados várias vezes
 e usar uma abstração de iteradores,
 que a linguagem de programação Julia
 disponibiliza.
@@ -171,7 +171,7 @@ no seguinte problema:
                 \,&qquad x in Gamma,
         )
     $] <problema-forte>
-    para algum sub-espaço $Omega subset RR^2$,
+    para algum subespaço $Omega subset RR^2$,
     com $Gamma$ fronteira de $Omega$ e
     $accent(Omega, macron) = Omega union Gamma$.
 ]
@@ -190,7 +190,7 @@ substituindo a equação principal pela seguinte:
         d Omega
 $] <eq:fraca-ext>
 onde $v : accent(Omega, macron) -> RR$
-é qualquer função suficentemente suave
+é qualquer função suficientemente suave
 tal que $forall arrow(y) in Gamma, v(arrow(y)) = 0$.
 Comumente, introduzimos operadores
 para esconder a complexidade da equação
@@ -203,7 +203,7 @@ O Método de Elementos Finitos
 pode ser aplicado depois de fazermos duas discretizações:
 uma no domínio $accent(Omega, macron)$,
 e outra na dimensão do espaço das funções.
-A primeira divide o domíno $accent(Omega, macron)$
+A primeira divide o domínio $accent(Omega, macron)$
 em $N$ regiões contínuas $Omega_1, dots.h, Omega_N$.
 Cada região contínua
 não compartilha nenhum ponto com as outras regiões,
@@ -400,13 +400,13 @@ $nabla varphi_i (arrow(xi))$
 para cada ponto de gauss em uma tabela.
 Então durante cálculo das matrizes locais
 podemos apenas olhar o valor na tabela
-evitanto cálculos já realizados.
+evitando cálculos já realizados.
 
 == Implementação
 
 Para essa implementação,
 usamos uma discretização de espaço
-em quadriláteros possívelmente não regulares
+em quadriláteros possivelmente não regulares
 e base linear.
 Dessa forma,
 temos $4$ funções locais da base ($d = 4$) e
@@ -428,7 +428,7 @@ $] <varphis>
     nabla varphi_4 (arrow(xi)) = def(-, +)
 $] <dvarphis>
 Por dividir cada elemento em um quadrilátero,
-usamos o mesmo mapeamento local-global
+usamos o mesmo mapeamento local/global
 descrito na @x2xis.
 
 Fizemos 2 implementações de construtores de $KK^e$ e $FF^e$
@@ -440,7 +440,7 @@ As implementações do primeiro grupo de construtores locais
 alocam a matriz internamente e retornam ela,
 enquanto as do segundo grupo
 (chamadas de `Ref`)
-recebem memória já alocada e sobreescrevem ela
+recebem memória já alocada e sobrescrevem ela
 com o resultado.
 
 Fizemos 4 implementações de construtores de $KK^e$ e $FF^e$
@@ -465,7 +465,7 @@ para exemplificar as diferentes versões.
 O primeiro critério
 indica que a implementação reserva toda a memória necessária
 antes de iterar os elementos,
-reutiliza elas durate as iterações
+reutiliza elas durante as iterações
 e utiliza as versões `Ref` das implementações locais.
 Esse critério está aí para ver
 se o compilador de Julia
@@ -741,7 +741,7 @@ faz as benchmarks
 e gera o arquivo `results.json`.
 O script
 #link-file("compile_benchmarks.jl")
-analiza o `results.json` e gera
+analisa o `results.json` e gera
 tabelas e gráficos mostrados na @sec:results.
 Os resultados do benchmark
 que usamos para gerar as tabelas e gráficos
@@ -845,11 +845,11 @@ Em ambas as tabelas,
 aparecem uma versão `with precalculation`.
 A diferença entre a versão normal e a `with precalculation`
 é que
-a versão normal inclui o tempo do pré-calculo
+a versão normal inclui o tempo do pré-cálculo
 de valores auxiliares
 (que seriam compartilhados
 na construção simultânea de $FF$ e $KK$)
-e valores auxilares para a conversão de coordenada
+e valores auxiliares para a conversão de coordenada
 (apenas no benchmark da $FF^e$).
 
 Em ambos os resultados,
@@ -859,7 +859,7 @@ as melhores implementações foram
 as `Ref`, seguidas pelas `Baseline`
 e então as do `Bruno Carmo`.
 Também que as versões `Ref`
-apenas realizam alocações durante a fase de pré-calculo.
+apenas realizam alocações durante a fase de pré-cálculo.
 
 == Resultados Globais
 
@@ -949,7 +949,7 @@ buscando economizar recursos.
 Então, comparamos as implementações entre si
 e com uma implementação externa.
 Todas as quatro implementações buscaram
-pre-calcular valores,
+pré-calcular valores,
 com destaque em $varphi$ e $nabla varphi$
 aplicados nos pontos de gauss.
 
@@ -964,24 +964,24 @@ cresce assintoticamente mais rápido que o esperado.
 
 Com isso, concluímos que,
 mesmo com o defeito de implementação,
-o pre-cálculo desses valores
+o pré-cálculo desses valores
 contribui para a redução do tempo.
 Também que reutilizar a memória
 contribui tanto para utilizar e alocar menos memória
-quanto para construír a matriz em menos tempo.
+quanto para construir a matriz em menos tempo.
 E finalmente que
 essa implementação de iterador,
 focada em dar conveniência ao programador,
 gera gastos de tempo, memória e alocação.
 Acreditamos que esse gasto extra,
-da-se por o compilador não ser capaz
+dá-se por o compilador não ser capaz
 de desfazer dessa abstração,
 então impedindo otimizações que seria capaz
 nas outras implementações.
 
 == Trabalhos Futuros
 
-Entre os trabahos futuros temos três pontos:
+Entre os trabalhos futuros temos três pontos:
 entender porque a construção de $KK$ está lenta;
 usar a memória de $KK^e$ para construir $FF^e$; e
 reaproveitar memória na construção parcial da LG.
@@ -1006,14 +1006,14 @@ construir matriz local 1; mover para matriz global 1;
 construir matriz local 2; e então mover para matriz global 2.
 Chamo as matrizes $FF$ e $KK$ (locais e globais)
 de matrizes 1 e 2,
-pois a ordem não afeta o algorítmo.
+pois a ordem não afeta o algoritmo.
 Não imaginamos que essa otimização
 vai trazer grandes contribuições,
 pois estamos apenas removendo
-1 alocação de $n times ("size of float")$,
+1 alocação de $n times ("tamanho do float")$,
 onde $n$ é o número de elementos finitos
 influenciados por uma função da base.
-Em uma base linear e um sub-espaço de $RR^2$,
+Em uma base linear e um subespaço de $RR^2$,
 economizaríamos 32 bytes para 4 floats de 64 bits.
 
 Finalmente,
