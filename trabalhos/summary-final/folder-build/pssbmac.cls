@@ -23,7 +23,7 @@
 %HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
      {\normalsize {\bf Proceeding Series of the Brazilian
 Society of Computational and Applied Mathematics}}\\
-    \vspace{-0.5em}{\normalsize Preprint}\\
+    % \vspace{-0.5em}{\normalsize Preprint}\\
 %HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
      \rule{\textwidth}{0.6pt} 
    \end{minipage}
